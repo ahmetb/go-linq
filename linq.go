@@ -8,9 +8,10 @@ type Queryable struct {
 }
 
 var (
-	ErrNilFunc   = errors.New("linq: passed evaluation function is nil")
-	ErrNilInput  = errors.New("linq: nil input passed to From")
-	ErrNoElement = errors.New("linq: element satisfying the conditions does not exist")
+	ErrNilFunc       = errors.New("linq: passed evaluation function is nil")
+	ErrNilInput      = errors.New("linq: nil input passed to From")
+	ErrNoElement     = errors.New("linq: element satisfying the conditions does not exist")
+	ErrNegativeParam = errors.New("linq: parameter cannot be negative")
 )
 
 func From(input []interface{}) Queryable {
@@ -368,5 +369,35 @@ func (q Queryable) Reverse() (r Queryable) {
 		r.values[j] = q.values[i]
 		j++
 	}
+	return
+}
+
+func (q Queryable) Take(n int) (r Queryable) {
+	if q.err != nil {
+		r.err = q.err
+		return
+	}
+	if n < 0 {
+		n = 0
+	}
+	if n >= len(q.values) {
+		n = len(q.values)
+	}
+	r.values = q.values[:n]
+	return
+}
+
+func (q Queryable) Skip(n int) (r Queryable) {
+	if q.err != nil {
+		r.err = q.err
+		return
+	}
+	if n < 0 {
+		n = 0
+	}
+	if n >= len(q.values) {
+		n = len(q.values)
+	}
+	r.values = q.values[n:]
 	return
 }

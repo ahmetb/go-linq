@@ -528,3 +528,81 @@ func TestReverse(t *testing.T) {
 		})
 	})
 }
+
+func TestTake(t *testing.T) {
+	Convey("Previous error is reflected in result", t, func() {
+		_, err := From(arr0).Where(erroneusBinaryFunc).Take(1).Results()
+		So(err, ShouldNotEqual, nil)
+	})
+	Convey("Empty slice take n>0", t, func() {
+		res, err := From(empty).Take(1).Results()
+		So(err, ShouldEqual, nil)
+		So(res, ShouldResemble, empty)
+	})
+
+	Convey("Take 0", t, func() {
+		res, _ := From(arr0).Take(0).Results()
+		So(res, ShouldResemble, empty)
+	})
+
+	Convey("Take n < 0", t, func() {
+		res, err := From(arr0).Take(-1).Results()
+		So(err, ShouldEqual, nil)
+		So(res, ShouldResemble, empty)
+	})
+
+	Convey("Take n > 0", t, func() {
+		in := []interface{}{1, 2, 3, 4, 5}
+		res, _ := From(in).Take(3).Results()
+		So(res, ShouldResemble, []interface{}{1, 2, 3})
+
+		Convey("Take n ≥ len(arr)", func() {
+			res, _ := From(in).Take(len(in)).Results()
+			So(res, ShouldResemble, res)
+			res, _ = From(in).Take(len(in) + 1).Results()
+			So(res, ShouldResemble, res)
+		})
+	})
+}
+
+func TestSkip(t *testing.T) {
+	Convey("Previous error is reflected in result", t, func() {
+		_, err := From(arr0).Where(erroneusBinaryFunc).Skip(1).Results()
+		So(err, ShouldNotEqual, nil)
+	})
+	Convey("Empty slice Skip n>0", t, func() {
+		res, err := From(empty).Skip(1).Results()
+		So(err, ShouldEqual, nil)
+		So(res, ShouldResemble, empty)
+	})
+
+	Convey("Skip 0", t, func() {
+		res, _ := From(arr0).Skip(0).Results()
+		So(res, ShouldResemble, arr0)
+	})
+
+	Convey("Skip n < 0", t, func() {
+		res, err := From(arr0).Skip(-1).Results()
+		So(err, ShouldEqual, nil)
+		So(res, ShouldResemble, arr0)
+	})
+
+	Convey("Skip n > 0", t, func() {
+		in := []interface{}{1, 2, 3, 4, 5}
+		res, _ := From(in).Skip(3).Results()
+		So(res, ShouldResemble, []interface{}{4, 5})
+
+		Convey("Skip n ≥ len(arr)", func() {
+			res, _ := From(in).Skip(len(in)).Results()
+			So(res, ShouldResemble, empty)
+			res, _ = From(in).Skip(len(in) + 1).Results()
+			So(res, ShouldResemble, empty)
+		})
+	})
+
+	Convey("Skip & take & skip", t, func() {
+		in := []interface{}{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+		res, _ := From(in).Skip(0).Skip(-1000).Skip(1).Take(1000).Take(5).Results()
+		So(res, ShouldResemble, []interface{}{1, 2, 3, 4, 5})
+	})
+}
