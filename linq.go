@@ -323,14 +323,14 @@ func (q Queryable) lastBy(f func(interface{}) (bool, error)) (elem interface{}, 
 		return
 	}
 	for i := len(q.values) - 1; i >= 0; i-- {
-		val := q.values[i]
-		ok, e := f(val)
+		item := q.values[i]
+		ok, e := f(item)
 		if e != nil {
 			err = e // TODO add extra messages
 			return
 		}
 		if ok {
-			elem = i
+			elem = item
 			found = true
 			break
 		}
@@ -352,6 +352,21 @@ func (q Queryable) LastOrNilBy(f func(interface{}) (bool, error)) (elem interfac
 	elem, found, err := q.lastBy(f)
 	if !found {
 		elem = nil
+	}
+	return
+}
+
+func (q Queryable) Reverse() (r Queryable) {
+	if q.err != nil {
+		r.err = q.err
+		return
+	}
+	c := len(q.values)
+	j := 0
+	r.values = make([]interface{}, c)
+	for i := c - 1; i >= 0; i-- {
+		r.values[j] = q.values[i]
+		j++
 	}
 	return
 }

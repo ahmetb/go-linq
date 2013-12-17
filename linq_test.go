@@ -478,12 +478,12 @@ func TestLastBy_LastOrNilBy(t *testing.T) {
 		So(err1, ShouldNotEqual, nil)
 		So(err2, ShouldNotEqual, nil)
 	})
-	Convey("empty.LastBy is ErrNoElement", t, t, func() {
+	Convey("empty.LastBy is ErrNoElement", t, func() {
 		_, err1 := From(empty).LastBy(alwaysFalse)
 		So(err1, ShouldEqual, ErrNoElement)
 	})
 
-	Convey("empty.LastOrNilBy is ErrNoElement", t, t, func() {
+	Convey("empty.LastOrNilBy is ErrNoElement", t, func() {
 		_, err1 := From(empty).LastBy(alwaysFalse)
 		So(err1, ShouldEqual, ErrNoElement)
 	})
@@ -502,4 +502,29 @@ func TestLastBy_LastOrNilBy(t *testing.T) {
 		So(elm, ShouldEqual, nil)
 	})
 
+}
+
+func TestReverse(t *testing.T) {
+	Convey("Previous errors are returned", t, func() {
+		_, err := From(arr0).Where(erroneusBinaryFunc).Reverse().Results()
+		So(err, ShouldNotEqual, nil)
+	})
+	Convey("Reversing empty", t, func() {
+		res, err := From(empty).Reverse().Results()
+		So(err, ShouldEqual, nil)
+		So(res, ShouldResemble, empty)
+	})
+	Convey("Actual reverse", t, func() {
+		arr := []interface{}{1, 2, 3, 4, 5}
+		rev := []interface{}{5, 4, 3, 2, 1}
+		res, _ := From(arr).Reverse().Results()
+		So(res, ShouldResemble, rev)
+
+		Convey("Slice containing nils", func() {
+			arr := []interface{}{1, nil, nil, 2, nil, 3, nil}
+			rev := []interface{}{nil, 3, nil, 2, nil, nil, 1}
+			res, _ := From(arr).Reverse().Results()
+			So(res, ShouldResemble, rev)
+		})
+	})
 }
