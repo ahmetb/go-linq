@@ -103,7 +103,7 @@ func (q Queryable) distinct(f func(interface{}, interface{}) (bool, error)) (r Q
 		// basic equality comparison using dict
 		dict := make(map[interface{}]bool)
 		for _, v := range q.values {
-			if !dict[v] {
+			if _, ok := dict[v]; !ok {
 				dict[v] = true
 			}
 		}
@@ -144,6 +144,86 @@ func (q Queryable) distinct(f func(interface{}, interface{}) (bool, error)) (r Q
 	return
 }
 
+func (q Queryable) Union(in []interface{}) (r Queryable) {
+	if q.err != nil {
+		r.err = q.err
+		return
+	}
+	var set map[interface{}]bool = make(map[interface{}]bool)
+
+	for _, v := range q.values {
+		if _, ok := set[v]; !ok {
+			set[v] = true
+		}
+	}
+	for _, v := range in {
+		if _, ok := set[v]; !ok {
+			set[v] = true
+		}
+	}
+	r.values = make([]interface{}, len(set))
+	i := 0
+	for k, _ := range set {
+		r.values[i] = k
+		i++
+	}
+	return
+}
+
+func (q Queryable) Intersect(in []interface{}) (r Queryable) {
+	if q.err != nil {
+		r.err = q.err
+		return
+	}
+	var set map[interface{}]bool = make(map[interface{}]bool)
+	var intersection map[interface{}]bool = make(map[interface{}]bool)
+
+	for _, v := range q.values {
+		if _, ok := set[v]; !ok {
+			set[v] = true
+		}
+	}
+	for _, v := range in {
+		if _, ok := set[v]; ok {
+			delete(set, v)
+			if _, added := intersection[v]; !added {
+				intersection[v] = true
+			}
+		}
+	}
+	r.values = make([]interface{}, len(intersection))
+	i := 0
+	for k, _ := range intersection {
+		r.values[i] = k
+		i++
+	}
+	return
+}
+
+func (q Queryable) Except(except []interface{}) (r Queryable) {
+	if q.err != nil {
+		r.err = q.err
+		return
+	}
+	var set map[interface{}]bool = make(map[interface{}]bool)
+
+	for _, v := range q.values {
+		if _, ok := set[v]; !ok {
+			set[v] = true
+		}
+	}
+	for _, v := range except {
+		delete(set, v)
+	}
+	r.values = make([]interface{}, len(set))
+	i := 0
+	for k, _ := range set {
+		r.values[i] = k
+		i++
+	}
+	return
+}
+
 func (q Queryable) Count() (count int, err error) {
 	return len(q.values), q.err
 }
@@ -171,7 +251,11 @@ func (q Queryable) CountBy(f func(interface{}) (bool, error)) (c int, err error)
 	return
 }
 
-func (q Queryable) Any(f func(interface{}) (bool, error)) (exists bool, err error) {
+func (q Queryable) Any() (exists bool, err error) {
+	return len(q.values) > 0, q.err
+}
+
+func (q Queryable) AnyWith(f func(interface{}) (bool, error)) (exists bool, err error) {
 	if q.err != nil {
 		err = q.err
 		return
@@ -205,7 +289,7 @@ func (q Queryable) All(f func(interface{}) (bool, error)) (all bool, err error) 
 		return
 	}
 
-	all = true
+	all = true // if no elements, result is true
 	for _, i := range q.values {
 		ok, e := f(i)
 		if e != nil {

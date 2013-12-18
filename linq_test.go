@@ -204,10 +204,10 @@ func TestDistinct(t *testing.T) {
 			})
 		})
 
-		Convey("Distinct on []Struct", func() {
-			arr := []interface{}{foo{"A", 0xffff}, foo{"B", 0x7fff}, foo{"A", 0xffff}}
+		Convey("Distinct on structs and nils", func() {
+			arr := []interface{}{foo{"A", 0xffff}, nil, foo{"B", 0x7fff}, nil, foo{"A", 0xffff}}
 			res, _ := From(arr).Distinct().Results()
-			So(len(res), ShouldEqual, 2)
+			So(len(res), ShouldEqual, 3)
 		})
 
 		Convey("Randomly generated integers with likely collisions", func() {
@@ -283,6 +283,71 @@ func TestDistinct(t *testing.T) {
 	})
 }
 
+func TestUnion(t *testing.T) {
+	uniqueArr0 := []interface{}{1, 2, 3, 4, 5}
+	uniqueArr1 := []interface{}{"a", "b", "c"}
+	allSameArr := []interface{}{1, 1, 1, 1}
+	sameStruct0 := []interface{}{foo{"A", 0}, foo{"B", 0}}
+	sameStruct1 := []interface{}{foo{"B", 0}, foo{"A", 0}}
+	Convey("Empty ∪ empty", t, func() {
+		res, _ := From(empty).Union(empty).Results()
+		So(res, ShouldResemble, empty)
+	})
+	Convey("Empty ∪ non-empty", t, func() {
+		res, _ := From(empty).Union(uniqueArr0).Results()
+		So(res, ShouldResemble, uniqueArr0)
+	})
+	Convey("Non-empty ∪ empty", t, func() {
+		res, _ := From(uniqueArr0).Union(empty).Results()
+		So(res, ShouldResemble, uniqueArr0)
+	})
+	Convey("(Unique slice) ∪ (itself)", t, func() {
+		res, _ := From(uniqueArr0).Union(uniqueArr0).Results()
+		So(res, ShouldResemble, uniqueArr0)
+	})
+	Convey("(All same slice) ∪ (itself)", t, func() {
+		res, _ := From(allSameArr).Union(allSameArr).Results()
+		So(len(res), ShouldEqual, 1)
+	})
+	Convey("Mixed types", t, func() {
+		res, _ := From(uniqueArr0).Union(uniqueArr1).Results()
+		So(len(res), ShouldEqual, len(uniqueArr0)+len(uniqueArr1))
+	})
+	Convey("Same-type structs", t, func() {
+		res, _ := From(sameStruct0).Union(sameStruct1).Results()
+		So(len(res), ShouldEqual, len(sameStruct1))
+	})
+}
+
+func TestExcept(t *testing.T) {
+	uniqueArr := []interface{}{1, 2, 3, 4, 5}
+	allSameArr := []interface{}{1, 1, 1, 1}
+	Convey("Empty ∖ empty", t, func() {
+		res, _ := From(empty).Except(empty).Results()
+		So(res, ShouldResemble, empty)
+	})
+	Convey("Empty ∖ non-empty", t, func() {
+		res, _ := From(empty).Except(uniqueArr).Results()
+		So(res, ShouldResemble, empty)
+	})
+	Convey("Non-empty ∖ empty", t, func() {
+		res, _ := From(uniqueArr).Except(empty).Results()
+		So(res, ShouldResemble, uniqueArr)
+	})
+	Convey("(Unique set) ∖ (itself)", t, func() {
+		res, _ := From(uniqueArr).Except(uniqueArr).Results()
+		So(res, ShouldResemble, empty)
+	})
+	Convey("(All same slice) ∖ (itself)", t, func() {
+		res, _ := From(allSameArr).Except(allSameArr).Results()
+		So(len(res), ShouldEqual, 0)
+	})
+	Convey("There is some intersection", t, func() {
+		res, _ := From([]interface{}{1, 2, 3, 4, 5}).Except([]interface{}{3, 4, 5, 6, 7}).Results()
+		So(res, ShouldResemble, []interface{}{1, 2})
+	})
+}
+
 func TestCount(t *testing.T) {
 	Convey("Given a nil function, ErrNilFunc is returned", t, func() {
 		_, err := From(arr0).Where(alwaysTrue).CountBy(nil)
@@ -297,30 +362,38 @@ func TestCount(t *testing.T) {
 	Convey("No matches", t, func() {
 		c, _ := From(arr0).CountBy(alwaysFalse)
 		So(c, ShouldEqual, 0)
+		c, _ = From(arr0).Where(alwaysFalse).Count()
+		So(c, ShouldEqual, 0)
 	})
 	Convey("All matches", t, func() {
 		c, _ := From(arr0).CountBy(alwaysTrue)
+		So(c, ShouldEqual, len(arr0))
+		c, _ = From(arr0).Count()
 		So(c, ShouldEqual, len(arr0))
 	})
 }
 
 func TestAny(t *testing.T) {
 	Convey("Given a nil function, ErrNilFunc is returned", t, func() {
-		_, err := From(arr0).Where(alwaysTrue).Any(nil)
+		_, err := From(arr0).Where(alwaysTrue).AnyWith(nil)
 		So(err, ShouldNotEqual, nil)
 	})
 	Convey("An error returned from f is reflected on Result", t, func() {
-		_, err := From(arr0).Where(alwaysTrue).Any(erroneusBinaryFunc)
+		_, err := From(arr0).Where(alwaysTrue).AnyWith(erroneusBinaryFunc)
 		So(err, ShouldNotEqual, nil)
-		_, err = From(arr0).Where(alwaysFalse).Any(erroneusBinaryFunc)
+		_, err = From(arr0).Where(alwaysFalse).AnyWith(erroneusBinaryFunc)
 		So(err, ShouldEqual, nil)
 	})
 	Convey("No matches", t, func() {
-		r, _ := From(arr0).Any(alwaysFalse)
+		r, _ := From(arr0).AnyWith(alwaysFalse)
+		So(r, ShouldEqual, false)
+		r, _ = From(arr0).Where(alwaysFalse).Any()
 		So(r, ShouldEqual, false)
 	})
 	Convey("All matches", t, func() {
-		r, _ := From(arr0).Any(alwaysTrue)
+		r, _ := From(arr0).AnyWith(alwaysTrue)
+		So(r, ShouldEqual, true)
+		r, _ = From(arr0).Where(alwaysTrue).Any()
 		So(r, ShouldEqual, true)
 	})
 }
@@ -345,7 +418,7 @@ func TestSingle(t *testing.T) {
 		So(r, ShouldEqual, false)
 	})
 	Convey("Only one match", t, func() {
-		match0 := func(i interface{}) (bool, error) {
+		var match0 = func(i interface{}) (bool, error) {
 			return i.(int) == 0, nil
 		}
 		r, _ := From([]interface{}{-1, -1, 0, 1, 1}).Single(match0)
