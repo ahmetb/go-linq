@@ -495,27 +495,10 @@ func (q queryable) Take(n int) (r queryable) {
 }
 
 func (q queryable) TakeWhile(f func(interface{}) (bool, error)) (r queryable) {
-	if q.err != nil {
-		r.err = q.err
+	n, err := q.findWhileTerminationIndex(f)
+	if err != nil {
+		r.err = err
 		return
-	}
-	if f == nil {
-		r.err = ErrNilFunc
-		return
-	}
-
-	n := 0
-	for _, v := range q.values {
-		ok, err := f(v)
-		if err != nil {
-			r.err = err
-			return
-		}
-		if ok {
-			n++
-		} else {
-			break
-		}
 	}
 	return q.Take(n)
 }
@@ -536,20 +519,28 @@ func (q queryable) Skip(n int) (r queryable) {
 }
 
 func (q queryable) SkipWhile(f func(interface{}) (bool, error)) (r queryable) {
+	n, err := q.findWhileTerminationIndex(f)
+	if err != nil {
+		r.err = err
+		return
+	}
+	return q.Skip(n)
+}
+
+func (q queryable) findWhileTerminationIndex(f func(interface{}) (bool, error)) (n int, err error) {
 	if q.err != nil {
-		r.err = q.err
+		err = q.err
 		return
 	}
 	if f == nil {
-		r.err = ErrNilFunc
+		err = ErrNilFunc
 		return
 	}
-
-	n := 0
+	n = 0
 	for _, v := range q.values {
-		ok, err := f(v)
-		if err != nil {
-			r.err = err
+		ok, e := f(v)
+		if e != nil {
+			err = e
 			return
 		}
 		if ok {
@@ -558,7 +549,7 @@ func (q queryable) SkipWhile(f func(interface{}) (bool, error)) (r queryable) {
 			break
 		}
 	}
-	return q.Skip(n)
+	return
 }
 
 //TODO document: only sorts int, string, float64
