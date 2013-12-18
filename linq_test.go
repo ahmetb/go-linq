@@ -324,6 +324,39 @@ func TestUnion(t *testing.T) {
 	})
 }
 
+func TestIntersect(t *testing.T) {
+	uniqueArr := []interface{}{1, 2, 3, 4, 5}
+	allSameArr := []interface{}{1, 1, 1, 1}
+	Convey("Empty ∩ nil", t, func() {
+		_, err := From(empty).Intersect(nil).Results()
+		So(err, ShouldEqual, ErrNilInput)
+	})
+	Convey("Empty ∩ empty", t, func() {
+		res, _ := From(empty).Intersect(empty).Results()
+		So(res, ShouldResemble, empty)
+	})
+	Convey("Empty ∩ non-empty", t, func() {
+		res, _ := From(empty).Intersect(uniqueArr).Results()
+		So(res, ShouldResemble, empty)
+	})
+	Convey("Non-empty ∩ empty", t, func() {
+		res, _ := From(uniqueArr).Intersect(empty).Results()
+		So(res, ShouldResemble, empty)
+	})
+	Convey("(Unique set) ∩ (itself)", t, func() {
+		res, _ := From(uniqueArr).Intersect(uniqueArr).Results()
+		So(res, ShouldResemble, uniqueArr)
+	})
+	Convey("(All same slice) ∩ (itself)", t, func() {
+		res, _ := From(allSameArr).Intersect(allSameArr).Results()
+		So(len(res), ShouldEqual, 1)
+	})
+	Convey("There is some intersection", t, func() {
+		res, _ := From([]interface{}{1, 2, 3, 4, 5}).Intersect([]interface{}{3, 4, 5, 6, 7}).Results()
+		So(res, ShouldResemble, []interface{}{3, 4, 5})
+	})
+}
+
 func TestExcept(t *testing.T) {
 	uniqueArr := []interface{}{1, 2, 3, 4, 5}
 	allSameArr := []interface{}{1, 1, 1, 1}
