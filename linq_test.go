@@ -13,8 +13,6 @@ type foo struct {
 	num int
 }
 
-var genericError = errors.New("")
-
 var (
 	empty = []interface{}{}
 	arr0  = []interface{}{1, 2, 3, 1, 2}
@@ -22,6 +20,19 @@ var (
 	arr2  = []interface{}{nil, "foo", 3.14, true, false}
 	arr3  = []interface{}{foo{"A", 0}, foo{"B", 1}, foo{"C", -1}}
 	arr4  = []interface{}{&foo{"C", 0xffff}, nil, &foo{"D", 0x7fff}, byte(12), nil}
+)
+
+var (
+	genericError = errors.New("")
+	alwaysTrue   = func(i interface{}) (bool, error) {
+		return true, nil
+	}
+	alwaysFalse = func(i interface{}) (bool, error) {
+		return false, nil
+	}
+	erroneusBinaryFunc = func(i interface{}) (bool, error) {
+		return true, genericError
+	}
 )
 
 func TestFrom(t *testing.T) {
@@ -69,16 +80,6 @@ func TestResults(t *testing.T) {
 		So(err, ShouldEqual, nil)
 		So(val, ShouldResemble, arr0)
 	})
-}
-
-var alwaysTrue = func(i interface{}) (bool, error) {
-	return true, nil
-}
-var alwaysFalse = func(i interface{}) (bool, error) {
-	return false, nil
-}
-var erroneusBinaryFunc = func(i interface{}) (bool, error) {
-	return true, genericError
 }
 
 func TestWhere(t *testing.T) {
@@ -949,5 +950,22 @@ func TestJoins(t *testing.T) {
 			So(err, ShouldEqual, nil)
 			So(res, ShouldResemble, groupJoinExpected)
 		})
+	})
+}
+
+func TestRange(t *testing.T) {
+	Convey("count < 0", t, func() {
+		_, err := Range(1, -1).Results()
+		So(err, ShouldEqual, ErrNegativeParam)
+	})
+	Convey("count = 0", t, func() {
+		res, err := Range(1, 0).Results()
+		So(err, ShouldEqual, nil)
+		So(res, ShouldResemble, empty)
+	})
+	Convey("range(1,10)", t, func() {
+		res, err := Range(1, 10).Results()
+		So(err, ShouldEqual, nil)
+		So(res, ShouldResemble, []interface{}{1, 2, 3, 4, 5, 6, 7, 8, 9, 10})
 	})
 }

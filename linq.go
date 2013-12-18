@@ -691,3 +691,16 @@ func (q queryable) GroupJoin(innerCollection []interface{},
 	}
 	return
 }
+
+//TODO document integer oveflows are not handled
+func Range(start, count int) (q queryable) {
+	if count < 0 {
+		q.err = ErrNegativeParam
+		return
+	}
+	q.values = make([]interface{}, count)
+	for i := 0; i < count; i++ {
+		q.values[i] = start + i
+	}
+	return
+}
