@@ -1,10 +1,12 @@
 package linq
 
-import "testing"
-import "errors"
-import "math/rand"
-import "time"
-import . "github.com/smartystreets/goconvey/convey"
+import (
+	"errors"
+	. "github.com/smartystreets/goconvey/convey"
+	"math/rand"
+	"testing"
+	"time"
+)
 
 type foo struct {
 	str string
@@ -55,14 +57,14 @@ func TestResults(t *testing.T) {
 	Convey("If error exists in given queryable, error is returned", t, func() {
 		errMsg := "dummy error"
 		q := Queryable{
-			nil,
-			errors.New(errMsg)}
+			values: nil,
+			err:    errors.New(errMsg)}
 		_, err := q.Results()
 		So(err, ShouldNotEqual, nil)
 		So(err.Error(), ShouldEqual, errMsg)
 	})
 	Convey("Given no errors exist, non-nil results are returned", t, func() {
-		q := Queryable{arr0, nil}
+		q := Queryable{values: arr0, err: nil}
 		val, err := q.Results()
 		So(err, ShouldEqual, nil)
 		So(val, ShouldResemble, arr0)
@@ -604,5 +606,59 @@ func TestSkip(t *testing.T) {
 		in := []interface{}{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
 		res, _ := From(in).Skip(0).Skip(-1000).Skip(1).Take(1000).Take(5).Results()
 		So(res, ShouldResemble, []interface{}{1, 2, 3, 4, 5})
+	})
+}
+
+func TestOrder(t *testing.T) {
+	Convey("Sort empty", t, func() {
+		res, _ := From(empty).Order().Results()
+		So(len(res), ShouldResemble, len(empty))
+	})
+	Convey("Sort ints", t, func() {
+		in := []interface{}{6, 1, 4, 0, -1, 2}
+		res, _ := From(in).Order().Results()
+		So(res, ShouldResemble, []interface{}{-1, 0, 1, 2, 4, 6})
+	})
+	Convey("Sort float64s", t, func() {
+		in := []interface{}{1.000000001, 1.0000000001, 0.1, 0.01, 0.00001, 0.0000000000001}
+		res, _ := From(in).Order().Results()
+		So(res, ShouldResemble, []interface{}{0.0000000000001, 0.00001, 0.01, 0.1, 1.0000000001, 1.000000001})
+	})
+	Convey("Sort strings", t, func() {
+		in := []interface{}{"c", "a", "", "aa", "b"}
+		res, _ := From(in).Order().Results()
+		So(res, ShouldResemble, []interface{}{"", "a", "aa", "b", "c"})
+	})
+	Convey("Attempt with unsupported types", t, func() {
+		in := []interface{}{true, false, true, nil, byte(10)}
+		_, err := From(in).Order().Results()
+		So(err, ShouldEqual, ErrUnsupportedType)
+	})
+}
+
+func TestOrderBy(t *testing.T) {
+	unsorted := []interface{}{&foo{"A", 5}, &foo{"B", 1}, &foo{"C", 3}}
+	sorted := []interface{}{&foo{"B", 1}, &foo{"C", 3}, &foo{"A", 5}}
+	sortByNum := func(this interface{}, that interface{}) bool {
+		_this := this.(*foo)
+		_that := that.(*foo)
+		return _this.num <= _that.num
+	}
+
+	Convey("Nil comparator passed", t, func() {
+		_, err := From(unsorted).OrderBy(nil).Results()
+		So(err, ShouldEqual, ErrNilFunc)
+	})
+	Convey("Previous error is reflected in result", t, func() {
+		_, err := From(unsorted).Where(erroneusBinaryFunc).OrderBy(sortByNum).Results()
+		So(err, ShouldNotEqual, nil)
+	})
+	Convey("Sort empty", t, func() {
+		res, _ := From(empty).OrderBy(sortByNum).Results()
+		So(res, ShouldResemble, empty)
+	})
+	Convey("Sort on structs", t, func() {
+		res, _ := From(unsorted).OrderBy(sortByNum).Results()
+		So(res, ShouldResemble, sorted)
 	})
 }

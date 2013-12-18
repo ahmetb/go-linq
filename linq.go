@@ -1,25 +1,36 @@
 package linq
 
-import "errors"
+import (
+	"errors"
+	"sort"
+)
 
 type Queryable struct {
 	values []interface{}
 	err    error
+	less   func(this, that interface{}) bool
 }
 
+func (q Queryable) Len() int           { return len(q.values) }
+func (q Queryable) Swap(i, j int)      { q.values[i], q.values[j] = q.values[j], q.values[i] }
+func (q Queryable) Less(i, j int) bool { return q.less(q.values[i], q.values[j]) }
+
 var (
-	ErrNilFunc       = errors.New("linq: passed evaluation function is nil")
-	ErrNilInput      = errors.New("linq: nil input passed to From")
-	ErrNoElement     = errors.New("linq: element satisfying the conditions does not exist")
-	ErrNegativeParam = errors.New("linq: parameter cannot be negative")
+	ErrNilFunc         = errors.New("linq: passed evaluation function is nil")
+	ErrNilInput        = errors.New("linq: nil input passed to From")
+	ErrNoElement       = errors.New("linq: element satisfying the conditions does not exist")
+	ErrNegativeParam   = errors.New("linq: parameter cannot be negative")
+	ErrUnsupportedType = errors.New("linq: sorting this type with Order is not supported, use OrderBy")
 )
 
 func From(input []interface{}) Queryable {
-	var err error
+	var _err error
 	if input == nil {
-		err = ErrNilInput
+		_err = ErrNilInput
 	}
-	return Queryable{input, err}
+	return Queryable{
+		values: input,
+		err:    _err}
 }
 
 func (q Queryable) Results() ([]interface{}, error) {
@@ -399,5 +410,49 @@ func (q Queryable) Skip(n int) (r Queryable) {
 		n = len(q.values)
 	}
 	r.values = q.values[n:]
+	return
+}
+
+//TODO document: only sorts int, string, float64
+func (q Queryable) Order() (r Queryable) {
+	if q.err != nil {
+		r.err = q.err
+		return
+	}
+
+	if len(q.values) > 0 {
+		f := q.values[0]
+		if _, ints := f.(int); ints {
+			vals := toInts(q.values)
+			sort.Ints(vals)
+			r.values = intsToInterface(vals)
+		} else if _, strings := f.(string); strings {
+			vals := toStrings(q.values)
+			sort.Strings(vals)
+			r.values = stringsToInterface(vals)
+		} else if _, float64s := f.(float64); float64s {
+			vals := toFloat64s(q.values)
+			sort.Float64s(vals)
+			r.values = float64sToInterface(vals)
+		} else {
+			r.err = ErrUnsupportedType
+		}
+	}
+	return
+}
+
+func (q Queryable) OrderBy(less func(this interface{}, that interface{}) bool) (r Queryable) {
+	if q.err != nil {
+		r.err = q.err
+		return
+	}
+	if less == nil {
+		r.err = ErrNilFunc
+		return
+	}
+	r.less = less
+	r.values = make([]interface{}, len(q.values))
+	_ = copy(r.values, q.values)
+	sort.Sort(r)
 	return
 }
