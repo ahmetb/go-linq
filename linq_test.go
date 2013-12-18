@@ -136,6 +136,11 @@ func TestSelect(t *testing.T) {
 		return nil, genericError
 	}
 
+	Convey("Previous error is reflected on result", t, func() {
+		_, err := From(arr0).Where(erroneusBinaryFunc).Select(asIs).Results()
+		So(err, ShouldNotEqual, nil)
+	})
+
 	Convey("Nil func returns error", t, func() {
 		_, err := From(arr0).Select(nil).Results()
 		So(err, ShouldEqual, ErrNilFunc)
@@ -194,7 +199,10 @@ func TestDistinct(t *testing.T) {
 	allNil := []interface{}{nil, nil, nil, nil, nil, nil, nil, nil, nil}
 
 	Convey("With default equality comparer ==", t, func() {
-
+		Convey("Previous error is reflected on result", func() {
+			_, err := From(arr0).Where(erroneusBinaryFunc).Distinct().Results()
+			So(err, ShouldNotEqual, nil)
+		})
 		Convey("All elements are the same", func() {
 			res, _ := From(allSameInt).Distinct().Results()
 			So(res, ShouldResemble, []interface{}{allSameInt[0]})
@@ -238,6 +246,16 @@ func TestDistinct(t *testing.T) {
 		erroneusComparer := func(i interface{}, j interface{}) (bool, error) {
 			return false, genericError
 		}
+
+		Convey("Previous error is reflected on result", func() {
+			_, err := From(allSameStruct).Where(erroneusBinaryFunc).DistinctBy(fooComparer).Results()
+			So(err, ShouldNotEqual, nil)
+		})
+
+		Convey("Provided func is nil", func() {
+			_, err := From(allSameStruct).DistinctBy(nil).Results()
+			So(err, ShouldEqual, ErrNilFunc)
+		})
 
 		Convey("Comparer returns error", func() {
 			_, err := From(arr0).DistinctBy(erroneusComparer).Results()
@@ -292,6 +310,10 @@ func TestUnion(t *testing.T) {
 	allSameArr := []interface{}{1, 1, 1, 1}
 	sameStruct0 := []interface{}{foo{"A", 0}, foo{"B", 0}}
 	sameStruct1 := []interface{}{foo{"B", 0}, foo{"A", 0}}
+	Convey("Previous error is reflected on result", t, func() {
+		_, err := From(uniqueArr0).Where(erroneusBinaryFunc).Union(uniqueArr0).Results()
+		So(err, ShouldNotEqual, nil)
+	})
 	Convey("Empty ∪ nil", t, func() {
 		_, err := From(empty).Union(nil).Results()
 		So(err, ShouldEqual, ErrNilInput)
@@ -329,6 +351,10 @@ func TestUnion(t *testing.T) {
 func TestIntersect(t *testing.T) {
 	uniqueArr := []interface{}{1, 2, 3, 4, 5}
 	allSameArr := []interface{}{1, 1, 1, 1}
+	Convey("Previous error is reflected on result", t, func() {
+		_, err := From(uniqueArr).Where(erroneusBinaryFunc).Intersect(uniqueArr).Results()
+		So(err, ShouldNotEqual, nil)
+	})
 	Convey("Empty ∩ nil", t, func() {
 		_, err := From(empty).Intersect(nil).Results()
 		So(err, ShouldEqual, ErrNilInput)
@@ -362,6 +388,10 @@ func TestIntersect(t *testing.T) {
 func TestExcept(t *testing.T) {
 	uniqueArr := []interface{}{1, 2, 3, 4, 5}
 	allSameArr := []interface{}{1, 1, 1, 1}
+	Convey("Previous error is reflected on result", t, func() {
+		_, err := From(uniqueArr).Where(erroneusBinaryFunc).Except(uniqueArr).Results()
+		So(err, ShouldNotEqual, nil)
+	})
 	Convey("Empty ∖ nil", t, func() {
 		_, err := From(empty).Except(nil).Results()
 		So(err, ShouldEqual, ErrNilInput)
@@ -393,6 +423,10 @@ func TestExcept(t *testing.T) {
 }
 
 func TestCount(t *testing.T) {
+	Convey("Previous error is reflected on result", t, func() {
+		_, err := From(arr0).Where(erroneusBinaryFunc).CountBy(erroneusBinaryFunc)
+		So(err, ShouldNotEqual, nil)
+	})
 	Convey("Given a nil function, ErrNilFunc is returned", t, func() {
 		_, err := From(arr0).Where(alwaysTrue).CountBy(nil)
 		So(err, ShouldNotEqual, nil)
@@ -418,6 +452,10 @@ func TestCount(t *testing.T) {
 }
 
 func TestAny(t *testing.T) {
+	Convey("Previous error is reflected on result", t, func() {
+		_, err := From(arr0).Where(erroneusBinaryFunc).AnyWith(alwaysTrue)
+		So(err, ShouldNotEqual, nil)
+	})
 	Convey("Given a nil function, ErrNilFunc is returned", t, func() {
 		_, err := From(arr0).Where(alwaysTrue).AnyWith(nil)
 		So(err, ShouldNotEqual, nil)
@@ -443,6 +481,10 @@ func TestAny(t *testing.T) {
 }
 
 func TestSingle(t *testing.T) {
+	Convey("Previous error is reflected on result", t, func() {
+		_, err := From(arr0).Where(erroneusBinaryFunc).Single(nil)
+		So(err, ShouldNotEqual, nil)
+	})
 	Convey("Given a nil function, ErrNilFunc is returned", t, func() {
 		_, err := From(arr0).Where(alwaysTrue).Single(nil)
 		So(err, ShouldNotEqual, nil)
@@ -473,6 +515,10 @@ func TestSingle(t *testing.T) {
 }
 
 func TestAll(t *testing.T) {
+	Convey("Previous error is reflected on result", t, func() {
+		_, err := From(arr0).Where(erroneusBinaryFunc).All(nil)
+		So(err, ShouldNotEqual, nil)
+	})
 	Convey("Given a nil function, ErrNilFunc is returned", t, func() {
 		_, err := From(arr0).Where(alwaysTrue).All(nil)
 		So(err, ShouldNotEqual, nil)
@@ -516,6 +562,8 @@ func TestFirst_FirstOrNil(t *testing.T) {
 	Convey("first element is returned", t, func() {
 		v, _ := From(arr3).First()
 		So(v, ShouldResemble, arr3[0])
+		v, _ = From(arr3).FirstOrNil()
+		So(v, ShouldResemble, arr3[0])
 	})
 	Convey("previous errors are reflected", t, func() {
 		_, err1 := From(arr0).Where(erroneusBinaryFunc).First()
@@ -526,13 +574,18 @@ func TestFirst_FirstOrNil(t *testing.T) {
 }
 
 func TestFirstBy_FirstOrNilBy(t *testing.T) {
+	Convey("previous errors are reflected", t, func() {
+		_, err1 := From(arr0).Where(erroneusBinaryFunc).FirstBy(alwaysTrue)
+		_, err2 := From(arr0).Where(erroneusBinaryFunc).FirstOrNilBy(alwaysTrue)
+		So(err1, ShouldNotEqual, nil)
+		So(err2, ShouldNotEqual, nil)
+	})
 	Convey("Given a nil function, ErrNilFunc is returned", t, func() {
 		_, err1 := From(arr0).FirstBy(nil)
 		_, err2 := From(arr0).FirstBy(nil)
 		So(err1, ShouldNotEqual, nil)
 		So(err2, ShouldNotEqual, nil)
 	})
-
 	Convey("erroneus function reflected on result", t, func() {
 		_, err1 := From(arr0).FirstBy(erroneusBinaryFunc)
 		_, err2 := From(arr0).FirstBy(erroneusBinaryFunc)
@@ -574,6 +627,8 @@ func TestLast_LastOrNil(t *testing.T) {
 	Convey("Last element is returned", t, func() {
 		v, _ := From(arr3).Last()
 		So(v, ShouldResemble, arr3[len(arr3)-1])
+		v, _ = From(arr3).LastOrNil()
+		So(v, ShouldResemble, arr3[len(arr3)-1])
 	})
 	Convey("previous errors are reflected", t, func() {
 		_, err1 := From(arr0).Where(erroneusBinaryFunc).Last()
@@ -584,6 +639,11 @@ func TestLast_LastOrNil(t *testing.T) {
 }
 
 func TestLastBy_LastOrNilBy(t *testing.T) {
+	Convey("Previous error is reflected on result", t, func() {
+		_, err := From(arr0).Where(erroneusBinaryFunc).LastBy(alwaysTrue)
+		So(err, ShouldNotEqual, nil)
+	})
+
 	Convey("Given a nil function, ErrNilFunc is returned", t, func() {
 		_, err1 := From(arr0).LastBy(nil)
 		_, err2 := From(arr0).LastBy(nil)
@@ -693,6 +753,10 @@ func TestTakeWhile(t *testing.T) {
 		_, err := From(arr0).TakeWhile(nil).Results()
 		So(err, ShouldEqual, ErrNilFunc)
 	})
+	Convey("Error returned from passed func is reflected in result", t, func() {
+		_, err := From(arr0).TakeWhile(erroneusBinaryFunc).Results()
+		So(err, ShouldNotEqual, nil)
+	})
 	Convey("Empty slice take all", t, func() {
 		res, err := From(empty).TakeWhile(alwaysTrue).Results()
 		So(err, ShouldEqual, nil)
@@ -763,6 +827,10 @@ func TestSkipWhile(t *testing.T) {
 		_, err := From(arr0).SkipWhile(nil).Results()
 		So(err, ShouldEqual, ErrNilFunc)
 	})
+	Convey("Error returned from passed func is reflected in result", t, func() {
+		_, err := From(arr0).SkipWhile(erroneusBinaryFunc).Results()
+		So(err, ShouldNotEqual, nil)
+	})
 	Convey("Empty slice Skip all", t, func() {
 		res, err := From(empty).SkipWhile(alwaysTrue).Results()
 		So(err, ShouldEqual, nil)
@@ -795,13 +863,17 @@ func TestSkipWhile(t *testing.T) {
 }
 
 func TestOrder(t *testing.T) {
+	intArr := []interface{}{6, 1, 4, 0, -1, 2}
+	Convey("Previous error is reflected on result", t, func() {
+		_, err := From(intArr).Where(erroneusBinaryFunc).Order().Results()
+		So(err, ShouldNotEqual, nil)
+	})
 	Convey("Sort empty", t, func() {
 		res, _ := From(empty).Order().Results()
 		So(len(res), ShouldResemble, len(empty))
 	})
 	Convey("Sort ints", t, func() {
-		in := []interface{}{6, 1, 4, 0, -1, 2}
-		res, _ := From(in).Order().Results()
+		res, _ := From(intArr).Order().Results()
 		So(res, ShouldResemble, []interface{}{-1, 0, 1, 2, 4, 6})
 	})
 	Convey("Sort float64s", t, func() {

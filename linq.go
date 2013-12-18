@@ -50,7 +50,7 @@ func (q queryable) Where(f func(interface{}) (bool, error)) (r queryable) {
 	for _, i := range q.values {
 		ok, err := f(i)
 		if err != nil {
-			r.err = err // TODO add extra messages
+			r.err = err
 			return r
 		}
 		if ok {
@@ -73,7 +73,7 @@ func (q queryable) Select(f func(interface{}) (interface{}, error)) (r queryable
 	for _, i := range q.values {
 		val, err := f(i)
 		if err != nil {
-			r.err = err // TODO add extra messages
+			r.err = err
 			return r
 		}
 		r.values = append(r.values, val)
@@ -253,7 +253,7 @@ func (q queryable) CountBy(f func(interface{}) (bool, error)) (c int, err error)
 	for _, i := range q.values {
 		ok, e := f(i)
 		if e != nil {
-			err = e // TODO add extra messages
+			err = e
 			return
 		}
 		if ok {
@@ -280,7 +280,7 @@ func (q queryable) AnyWith(f func(interface{}) (bool, error)) (exists bool, err 
 	for _, i := range q.values {
 		ok, e := f(i)
 		if e != nil {
-			err = e // TODO add extra messages
+			err = e
 			return
 		}
 		if ok {
@@ -305,7 +305,7 @@ func (q queryable) All(f func(interface{}) (bool, error)) (all bool, err error) 
 	for _, i := range q.values {
 		ok, e := f(i)
 		if e != nil {
-			err = e // TODO add extra messages
+			err = e
 			return
 		}
 		all = all && ok
@@ -367,7 +367,7 @@ func (q queryable) firstBy(f func(interface{}) (bool, error)) (elem interface{},
 	for _, i := range q.values {
 		ok, e := f(i)
 		if e != nil {
-			err = e // TODO add extra messages
+			err = e
 			return
 		}
 		if ok {
@@ -434,7 +434,7 @@ func (q queryable) lastBy(f func(interface{}) (bool, error)) (elem interface{}, 
 		item := q.values[i]
 		ok, e := f(item)
 		if e != nil {
-			err = e // TODO add extra messages
+			err = e
 			return
 		}
 		if ok {
