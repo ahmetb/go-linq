@@ -550,6 +550,48 @@ func TestAll(t *testing.T) {
 	})
 }
 
+func TestElementAt_ElementAtOrNil(t *testing.T) {
+	intArr := []interface{}{1, 2, 3, 4, 5}
+	Convey("empty.ElementAt is ErrNoElement", t, func() {
+		_, err := From(empty).ElementAt(1)
+		So(err, ShouldEqual, ErrNoElement)
+	})
+	Convey("empty.ElementAtOrNil is nil", t, func() {
+		v, _ := From(empty).ElementAtOrNil(1)
+		So(v, ShouldEqual, nil)
+	})
+	Convey("negative index returns is ErrNegativeParam", t, func() {
+		_, err := From(empty).ElementAt(-1)
+		So(err, ShouldEqual, ErrNegativeParam)
+		_, err = From(empty).ElementAtOrNil(-1)
+		So(err, ShouldEqual, ErrNegativeParam)
+	})
+	Convey("first element is returned", t, func() {
+		v, _ := From(intArr).ElementAt(0)
+		So(v, ShouldResemble, intArr[0])
+		v, _ = From(intArr).ElementAtOrNil(0)
+		So(v, ShouldResemble, intArr[0])
+	})
+	Convey("last element is returned", t, func() {
+		v, _ := From(intArr).ElementAt(len(intArr) - 1)
+		So(v, ShouldResemble, intArr[len(intArr)-1])
+		v, _ = From(intArr).ElementAtOrNil(len(intArr) - 1)
+		So(v, ShouldResemble, intArr[len(intArr)-1])
+	})
+	Convey("out of index returns ErrNoElement on non-empty slice", t, func() {
+		_, err := From(intArr).ElementAt(len(intArr))
+		So(err, ShouldEqual, ErrNoElement)
+		_, err = From(intArr).ElementAtOrNil(len(intArr))
+		So(err, ShouldEqual, nil)
+	})
+	Convey("previous errors are reflected", t, func() {
+		_, err1 := From(arr0).Where(erroneusBinaryFunc).ElementAt(0)
+		_, err2 := From(arr0).Where(erroneusBinaryFunc).ElementAtOrNil(0)
+		So(err1, ShouldNotEqual, nil)
+		So(err2, ShouldNotEqual, nil)
+	})
+}
+
 func TestFirst_FirstOrNil(t *testing.T) {
 	Convey("empty.First is ErrNoElement", t, func() {
 		_, err := From(empty).First()

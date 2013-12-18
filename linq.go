@@ -331,6 +331,38 @@ func (q queryable) Single(f func(interface{}) (bool, error)) (single bool, err e
 	return
 }
 
+func (q queryable) ElementAt(i int) (elem interface{}, err error) {
+	if q.err != nil {
+		err = q.err
+		return
+	}
+	if i < 0 {
+		err = ErrNegativeParam
+		return
+	}
+	if len(q.values) < i+1 {
+		err = ErrNoElement
+	} else {
+		elem = q.values[i]
+	}
+	return
+}
+
+func (q queryable) ElementAtOrNil(i int) (elem interface{}, err error) {
+	if q.err != nil {
+		err = q.err
+		return
+	}
+	if i < 0 {
+		err = ErrNegativeParam
+		return
+	}
+	if len(q.values) > i {
+		elem = q.values[i]
+	}
+	return
+}
+
 func (q queryable) First() (elem interface{}, err error) {
 	if q.err != nil {
 		err = q.err
