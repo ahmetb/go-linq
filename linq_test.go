@@ -683,6 +683,34 @@ func TestTake(t *testing.T) {
 	})
 }
 
+func TestTakeWhile(t *testing.T) {
+	Convey("Previous error is reflected in result", t, func() {
+		_, err := From(arr0).Where(erroneusBinaryFunc).TakeWhile(alwaysTrue).Results()
+		So(err, ShouldNotEqual, nil)
+	})
+	Convey("Nil func passed", t, func() {
+		_, err := From(arr0).TakeWhile(nil).Results()
+		So(err, ShouldEqual, ErrNilFunc)
+	})
+	Convey("Empty slice take all", t, func() {
+		res, err := From(empty).TakeWhile(alwaysTrue).Results()
+		So(err, ShouldEqual, nil)
+		So(res, ShouldResemble, empty)
+	})
+
+	Convey("Take none", t, func() {
+		res, _ := From(arr0).TakeWhile(alwaysFalse).Results()
+		So(res, ShouldResemble, empty)
+	})
+
+	Convey("Take only first", t, func() {
+		in := []interface{}{1, 2, 3, 4, 5}
+		res, err := From(in).TakeWhile(func(i interface{}) (bool, error) { return i.(int) < 2, nil }).Results()
+		So(err, ShouldEqual, nil)
+		So(res, ShouldResemble, in[:1])
+	})
+}
+
 func TestSkip(t *testing.T) {
 	Convey("Previous error is reflected in result", t, func() {
 		_, err := From(arr0).Where(erroneusBinaryFunc).Skip(1).Results()
@@ -722,6 +750,46 @@ func TestSkip(t *testing.T) {
 		in := []interface{}{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
 		res, _ := From(in).Skip(0).Skip(-1000).Skip(1).Take(1000).Take(5).Results()
 		So(res, ShouldResemble, []interface{}{1, 2, 3, 4, 5})
+	})
+}
+
+func TestSkipWhile(t *testing.T) {
+	Convey("Previous error is reflected in result", t, func() {
+		_, err := From(arr0).Where(erroneusBinaryFunc).SkipWhile(alwaysTrue).Results()
+		So(err, ShouldNotEqual, nil)
+	})
+	Convey("Nil func passed", t, func() {
+		_, err := From(arr0).SkipWhile(nil).Results()
+		So(err, ShouldEqual, ErrNilFunc)
+	})
+	Convey("Empty slice Skip all", t, func() {
+		res, err := From(empty).SkipWhile(alwaysTrue).Results()
+		So(err, ShouldEqual, nil)
+		So(res, ShouldResemble, empty)
+	})
+
+	Convey("Skip none", t, func() {
+		res, _ := From(arr0).SkipWhile(alwaysFalse).Results()
+		So(res, ShouldResemble, arr0)
+	})
+
+	Convey("Skip all", t, func() {
+		res, _ := From(arr0).SkipWhile(alwaysTrue).Results()
+		So(res, ShouldResemble, empty)
+	})
+
+	Convey("Skip only first", t, func() {
+		in := []interface{}{1, 2, 3, 4, 5}
+		res, _ := From(in).SkipWhile(func(i interface{}) (bool, error) { return i.(int) < 2, nil }).Results()
+		So(res, ShouldResemble, in[1:])
+	})
+
+	Convey("SkipWhile & TakeWhile & SkipWhile", t, func() {
+		in := []interface{}{1, 2, 3, 4, 5, 6, 7, 8, 9}
+		lessThanTwo := func(i interface{}) (bool, error) { return i.(int) < 2, nil }
+		lessThanSix := func(i interface{}) (bool, error) { return i.(int) < 6, nil }
+		res, _ := From(in).SkipWhile(alwaysFalse).SkipWhile(lessThanTwo).TakeWhile(lessThanSix).Results()
+		So(res, ShouldResemble, []interface{}{2, 3, 4, 5})
 	})
 }
 

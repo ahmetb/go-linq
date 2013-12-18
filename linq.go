@@ -494,6 +494,32 @@ func (q queryable) Take(n int) (r queryable) {
 	return
 }
 
+func (q queryable) TakeWhile(f func(interface{}) (bool, error)) (r queryable) {
+	if q.err != nil {
+		r.err = q.err
+		return
+	}
+	if f == nil {
+		r.err = ErrNilFunc
+		return
+	}
+
+	n := 0
+	for _, v := range q.values {
+		ok, err := f(v)
+		if err != nil {
+			r.err = err
+			return
+		}
+		if ok {
+			n++
+		} else {
+			break
+		}
+	}
+	return q.Take(n)
+}
+
 func (q queryable) Skip(n int) (r queryable) {
 	if q.err != nil {
 		r.err = q.err
@@ -507,6 +533,32 @@ func (q queryable) Skip(n int) (r queryable) {
 	}
 	r.values = q.values[n:]
 	return
+}
+
+func (q queryable) SkipWhile(f func(interface{}) (bool, error)) (r queryable) {
+	if q.err != nil {
+		r.err = q.err
+		return
+	}
+	if f == nil {
+		r.err = ErrNilFunc
+		return
+	}
+
+	n := 0
+	for _, v := range q.values {
+		ok, err := f(v)
+		if err != nil {
+			r.err = err
+			return
+		}
+		if ok {
+			n++
+		} else {
+			break
+		}
+	}
+	return q.Skip(n)
 }
 
 //TODO document: only sorts int, string, float64
