@@ -259,7 +259,8 @@ func TestDistinct(t *testing.T) {
 		})
 
 		Convey("Ensure leftmost appearance is returned in multiple occurrence cases", func() {
-			arr := []interface{}{&foo{"A", 0}, &foo{"B", 0}, &foo{"A", 0}, &foo{"C", 0}, &foo{"A", 0}, &foo{"B", 0}}
+			arr := []interface{}{&foo{"A", 0}, &foo{"B", 0}, &foo{"A", 0}, &foo{"C", 0},
+				&foo{"A", 0}, &foo{"B", 0}}
 			res, _ := From(arr).DistinctBy(fooPtrComparer).Results()
 			So(len(res), ShouldResemble, 3)
 			So(res[0], ShouldEqual, arr[0]) // A
@@ -778,13 +779,17 @@ func TestOrderBy(t *testing.T) {
 	})
 }
 
-func TestJoin(t *testing.T) {
+func TestJoins(t *testing.T) {
 	type Person struct{ Name string }
 	type Pet struct {
 		Name  string
 		Owner Person
 	}
 	type ResultPair struct{ OwnerName, PetName string }
+	type ResultGroup struct {
+		OwnerName string
+		Pets      []interface{}
+	}
 	magnus := Person{Name: "Hedlund, Magnus"}
 	terry := Person{Name: "Adams, Terry"}
 	charlotte := Person{Name: "Weiss, Charlotte"}
@@ -801,38 +806,80 @@ func TestJoin(t *testing.T) {
 	pets := []interface{}{barley, boots, whiskers, daisy, sasha}
 
 	var dummyKeySelector = func(i interface{}) interface{} { return i }
-	var dummyValueSelector = func(i, j interface{}) interface{} { return nil }
+	var dummyResultSelector = func(i, j interface{}) interface{} { return nil }
+	var dummyGroupResultSelector = func(outer interface{}, inner []interface{}) interface{} { return nil }
 
-	natJoinExpected := []interface{}{
+	equiJoinExpected := []interface{}{
 		ResultPair{magnus.Name, daisy.Name},
 		ResultPair{terry.Name, barley.Name},
 		ResultPair{terry.Name, boots.Name},
 		ResultPair{charlotte.Name, whiskers.Name}}
 
-	Convey("Errors from the previous of the chain are carried on", t, func() {
-		_, err := From(people).Where(erroneusBinaryFunc).Join(pets, dummyKeySelector, dummyKeySelector, dummyValueSelector).Results()
-		So(err, ShouldNotEqual, nil)
+	groupJoinExpected := []interface{}{
+		ResultGroup{magnus.Name, []interface{}{daisy}},
+		ResultGroup{terry.Name, []interface{}{barley, boots}},
+		ResultGroup{charlotte.Name, []interface{}{whiskers}},
+		ResultGroup{ahmet.Name, []interface{}{}}}
+
+	Convey("Equi-join", t, func() {
+		Convey("Errors from the previous of the chain are carried on", func() {
+			_, err := From(people).Where(erroneusBinaryFunc).Join(pets, dummyKeySelector,
+				dummyKeySelector, dummyResultSelector).Results()
+			So(err, ShouldNotEqual, nil)
+		})
+
+		Convey("Nil funcs passed", func() {
+			_, err := From(people).Join(pets, nil, nil, nil).Results()
+			So(err, ShouldEqual, ErrNilFunc)
+		})
+
+		Convey("Nil input passed", func() {
+			_, err := From(people).Join(nil, dummyKeySelector, dummyKeySelector,
+				dummyResultSelector).Results()
+			So(err, ShouldEqual, ErrNilInput)
+		})
+
+		Convey("Pets & owners example join (also checks preserving the order)", func() {
+
+			res, err := From(people).Join(pets,
+				func(person interface{}) interface{} { return person.(Person).Name },
+				func(pet interface{}) interface{} { return pet.(Pet).Owner.Name },
+				func(outer interface{}, inner interface{}) interface{} {
+					return ResultPair{outer.(Person).Name, inner.(Pet).Name}
+				}).Results()
+			So(err, ShouldEqual, nil)
+			So(res, ShouldResemble, equiJoinExpected)
+		})
 	})
 
-	Convey("Nil func passed", t, func() {
-		_, err := From(people).Join(pets, nil, nil, nil).Results()
-		So(err, ShouldEqual, ErrNilFunc)
-	})
+	Convey("Group-join", t, func() {
+		Convey("Errors from the previous of the chain are carried on", func() {
+			_, err := From(people).Where(erroneusBinaryFunc).GroupJoin(pets, dummyKeySelector,
+				dummyKeySelector, dummyGroupResultSelector).Results()
+			So(err, ShouldNotEqual, nil)
+		})
 
-	Convey("Nil input passed", t, func() {
-		_, err := From(people).Join(nil, dummyKeySelector, dummyKeySelector, dummyValueSelector).Results()
-		So(err, ShouldEqual, ErrNilInput)
-	})
+		Convey("Nil funcs passed", func() {
+			_, err := From(people).GroupJoin(pets, nil, nil, nil).Results()
+			So(err, ShouldEqual, ErrNilFunc)
+		})
 
-	Convey("Pets & owners example join (also checks preserving the order)", t, func() {
+		Convey("Nil input passed", func() {
+			_, err := From(people).GroupJoin(nil, dummyKeySelector, dummyKeySelector,
+				dummyGroupResultSelector).Results()
+			So(err, ShouldEqual, ErrNilInput)
+		})
 
-		res, err := From(people).Join(pets,
-			func(person interface{}) interface{} { return person.(Person).Name },
-			func(pet interface{}) interface{} { return pet.(Pet).Owner.Name },
-			func(outer interface{}, inner interface{}) interface{} {
-				return ResultPair{outer.(Person).Name, inner.(Pet).Name}
-			}).Results()
-		So(err, ShouldEqual, nil)
-		So(res, ShouldResemble, natJoinExpected)
+		Convey("Pets & owners example join (also checks preserving the order)", func() {
+
+			res, err := From(people).GroupJoin(pets,
+				func(person interface{}) interface{} { return person.(Person).Name },
+				func(pet interface{}) interface{} { return pet.(Pet).Owner.Name },
+				func(outer interface{}, inners []interface{}) interface{} {
+					return ResultGroup{outer.(Person).Name, inners}
+				}).Results()
+			So(err, ShouldEqual, nil)
+			So(res, ShouldResemble, groupJoinExpected)
+		})
 	})
 }

@@ -557,8 +557,8 @@ func (q queryable) Join(innerCollection []interface{},
 	outerKeySelector func(interface{}) interface{},
 	innerKeySelector func(interface{}) interface{},
 	resultSelector func(
-		inner interface{},
-		outer interface{}) interface{}) (r queryable) {
+		outer interface{},
+		inner interface{}) interface{}) (r queryable) {
 	if q.err != nil {
 		r.err = q.err
 		return
@@ -587,6 +587,55 @@ func (q queryable) Join(innerCollection []interface{},
 				r.values = append(r.values, elem)
 			}
 		}
+	}
+	return
+}
+
+func (q queryable) GroupJoin(innerCollection []interface{},
+	outerKeySelector func(interface{}) interface{},
+	innerKeySelector func(interface{}) interface{},
+	resultSelector func(
+		outer interface{},
+		inners []interface{}) interface{}) (r queryable) {
+	if q.err != nil {
+		r.err = q.err
+		return
+	}
+	if innerCollection == nil {
+		r.err = ErrNilInput
+		return
+	}
+	if outerKeySelector == nil || innerKeySelector == nil || resultSelector == nil {
+		r.err = ErrNilFunc
+		return
+	}
+	var outerCollection = q.values
+	innerKeyLookup := make(map[interface{}]interface{})
+
+	var results = make(map[interface{}][]interface{}) // outer --> inner...
+	for _, outer := range outerCollection {
+		outerKey := outerKeySelector(outer)
+		bucket := make([]interface{}, 0)
+		results[outer] = bucket
+		for _, inner := range innerCollection {
+			innerKey, ok := innerKeyLookup[inner]
+			if !ok {
+				innerKey = innerKeySelector(inner)
+				innerKeyLookup[inner] = innerKey
+			}
+			if innerKey == outerKey {
+				results[outer] = append(results[outer], inner)
+			}
+		}
+	}
+
+	r.values = make([]interface{}, len(results))
+	i := 0
+	for k, v := range results {
+		outer := k
+		inners := v
+		r.values[i] = resultSelector(outer, inners)
+		i++
 	}
 	return
 }
