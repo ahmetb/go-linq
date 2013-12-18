@@ -290,6 +290,10 @@ func TestUnion(t *testing.T) {
 	allSameArr := []interface{}{1, 1, 1, 1}
 	sameStruct0 := []interface{}{foo{"A", 0}, foo{"B", 0}}
 	sameStruct1 := []interface{}{foo{"B", 0}, foo{"A", 0}}
+	Convey("Empty ∪ nil", t, func() {
+		_, err := From(empty).Union(nil).Results()
+		So(err, ShouldEqual, ErrNilInput)
+	})
 	Convey("Empty ∪ empty", t, func() {
 		res, _ := From(empty).Union(empty).Results()
 		So(res, ShouldResemble, empty)
@@ -323,6 +327,10 @@ func TestUnion(t *testing.T) {
 func TestExcept(t *testing.T) {
 	uniqueArr := []interface{}{1, 2, 3, 4, 5}
 	allSameArr := []interface{}{1, 1, 1, 1}
+	Convey("Empty ∖ nil", t, func() {
+		_, err := From(empty).Except(nil).Results()
+		So(err, ShouldEqual, ErrNilInput)
+	})
 	Convey("Empty ∖ empty", t, func() {
 		res, _ := From(empty).Except(empty).Results()
 		So(res, ShouldResemble, empty)

@@ -149,6 +149,10 @@ func (q queryable) Union(in []interface{}) (r queryable) {
 		r.err = q.err
 		return
 	}
+	if in == nil {
+		r.err = ErrNilInput
+		return
+	}
 	var set map[interface{}]bool = make(map[interface{}]bool)
 
 	for _, v := range q.values {
@@ -173,6 +177,10 @@ func (q queryable) Union(in []interface{}) (r queryable) {
 func (q queryable) Intersect(in []interface{}) (r queryable) {
 	if q.err != nil {
 		r.err = q.err
+		return
+	}
+	if in == nil {
+		r.err = ErrNilInput
 		return
 	}
 	var set map[interface{}]bool = make(map[interface{}]bool)
@@ -200,9 +208,13 @@ func (q queryable) Intersect(in []interface{}) (r queryable) {
 	return
 }
 
-func (q queryable) Except(except []interface{}) (r queryable) {
+func (q queryable) Except(in []interface{}) (r queryable) {
 	if q.err != nil {
 		r.err = q.err
+		return
+	}
+	if in == nil {
+		r.err = ErrNilInput
 		return
 	}
 	var set map[interface{}]bool = make(map[interface{}]bool)
@@ -212,7 +224,7 @@ func (q queryable) Except(except []interface{}) (r queryable) {
 			set[v] = true
 		}
 	}
-	for _, v := range except {
+	for _, v := range in {
 		delete(set, v)
 	}
 	r.values = make([]interface{}, len(set))
