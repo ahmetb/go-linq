@@ -5,15 +5,15 @@ import (
 	"sort"
 )
 
-type Queryable struct {
+type queryable struct {
 	values []interface{}
 	err    error
 	less   func(this, that interface{}) bool
 }
 
-func (q Queryable) Len() int           { return len(q.values) }
-func (q Queryable) Swap(i, j int)      { q.values[i], q.values[j] = q.values[j], q.values[i] }
-func (q Queryable) Less(i, j int) bool { return q.less(q.values[i], q.values[j]) }
+func (q queryable) Len() int           { return len(q.values) }
+func (q queryable) Swap(i, j int)      { q.values[i], q.values[j] = q.values[j], q.values[i] }
+func (q queryable) Less(i, j int) bool { return q.less(q.values[i], q.values[j]) }
 
 var (
 	ErrNilFunc         = errors.New("linq: passed evaluation function is nil")
@@ -23,21 +23,21 @@ var (
 	ErrUnsupportedType = errors.New("linq: sorting this type with Order is not supported, use OrderBy")
 )
 
-func From(input []interface{}) Queryable {
+func From(input []interface{}) queryable {
 	var _err error
 	if input == nil {
 		_err = ErrNilInput
 	}
-	return Queryable{
+	return queryable{
 		values: input,
 		err:    _err}
 }
 
-func (q Queryable) Results() ([]interface{}, error) {
+func (q queryable) Results() ([]interface{}, error) {
 	return q.values, q.err
 }
 
-func (q Queryable) Where(f func(interface{}) (bool, error)) (r Queryable) {
+func (q queryable) Where(f func(interface{}) (bool, error)) (r queryable) {
 	if q.err != nil {
 		r.err = q.err
 		return r
@@ -60,7 +60,7 @@ func (q Queryable) Where(f func(interface{}) (bool, error)) (r Queryable) {
 	return r
 }
 
-func (q Queryable) Select(f func(interface{}) (interface{}, error)) (r Queryable) {
+func (q queryable) Select(f func(interface{}) (interface{}, error)) (r queryable) {
 	if q.err != nil {
 		r.err = q.err
 		return r
@@ -81,11 +81,11 @@ func (q Queryable) Select(f func(interface{}) (interface{}, error)) (r Queryable
 	return
 }
 
-func (q Queryable) Distinct() (r Queryable) {
+func (q queryable) Distinct() (r queryable) {
 	return q.distinct(nil)
 }
 
-func (q Queryable) DistinctBy(f func(interface{}, interface{}) (bool, error)) (r Queryable) {
+func (q queryable) DistinctBy(f func(interface{}, interface{}) (bool, error)) (r queryable) {
 	if f == nil {
 		r.err = ErrNilFunc
 		return
@@ -93,7 +93,7 @@ func (q Queryable) DistinctBy(f func(interface{}, interface{}) (bool, error)) (r
 	return q.distinct(f)
 }
 
-func (q Queryable) distinct(f func(interface{}, interface{}) (bool, error)) (r Queryable) {
+func (q queryable) distinct(f func(interface{}, interface{}) (bool, error)) (r queryable) {
 	if q.err != nil {
 		r.err = q.err
 		return r
@@ -144,7 +144,7 @@ func (q Queryable) distinct(f func(interface{}, interface{}) (bool, error)) (r Q
 	return
 }
 
-func (q Queryable) Union(in []interface{}) (r Queryable) {
+func (q queryable) Union(in []interface{}) (r queryable) {
 	if q.err != nil {
 		r.err = q.err
 		return
@@ -170,7 +170,7 @@ func (q Queryable) Union(in []interface{}) (r Queryable) {
 	return
 }
 
-func (q Queryable) Intersect(in []interface{}) (r Queryable) {
+func (q queryable) Intersect(in []interface{}) (r queryable) {
 	if q.err != nil {
 		r.err = q.err
 		return
@@ -200,7 +200,7 @@ func (q Queryable) Intersect(in []interface{}) (r Queryable) {
 	return
 }
 
-func (q Queryable) Except(except []interface{}) (r Queryable) {
+func (q queryable) Except(except []interface{}) (r queryable) {
 	if q.err != nil {
 		r.err = q.err
 		return
@@ -224,11 +224,11 @@ func (q Queryable) Except(except []interface{}) (r Queryable) {
 	return
 }
 
-func (q Queryable) Count() (count int, err error) {
+func (q queryable) Count() (count int, err error) {
 	return len(q.values), q.err
 }
 
-func (q Queryable) CountBy(f func(interface{}) (bool, error)) (c int, err error) {
+func (q queryable) CountBy(f func(interface{}) (bool, error)) (c int, err error) {
 	if q.err != nil {
 		err = q.err
 		return
@@ -251,11 +251,11 @@ func (q Queryable) CountBy(f func(interface{}) (bool, error)) (c int, err error)
 	return
 }
 
-func (q Queryable) Any() (exists bool, err error) {
+func (q queryable) Any() (exists bool, err error) {
 	return len(q.values) > 0, q.err
 }
 
-func (q Queryable) AnyWith(f func(interface{}) (bool, error)) (exists bool, err error) {
+func (q queryable) AnyWith(f func(interface{}) (bool, error)) (exists bool, err error) {
 	if q.err != nil {
 		err = q.err
 		return
@@ -279,7 +279,7 @@ func (q Queryable) AnyWith(f func(interface{}) (bool, error)) (exists bool, err 
 	return
 }
 
-func (q Queryable) All(f func(interface{}) (bool, error)) (all bool, err error) {
+func (q queryable) All(f func(interface{}) (bool, error)) (all bool, err error) {
 	if q.err != nil {
 		err = q.err
 		return
@@ -301,7 +301,7 @@ func (q Queryable) All(f func(interface{}) (bool, error)) (all bool, err error) 
 	return
 }
 
-func (q Queryable) Single(f func(interface{}) (bool, error)) (single bool, err error) {
+func (q queryable) Single(f func(interface{}) (bool, error)) (single bool, err error) {
 	if q.err != nil {
 		err = q.err
 		return
@@ -319,7 +319,7 @@ func (q Queryable) Single(f func(interface{}) (bool, error)) (single bool, err e
 	return
 }
 
-func (q Queryable) First() (elem interface{}, err error) {
+func (q queryable) First() (elem interface{}, err error) {
 	if q.err != nil {
 		err = q.err
 		return
@@ -332,7 +332,7 @@ func (q Queryable) First() (elem interface{}, err error) {
 	return
 }
 
-func (q Queryable) FirstOrNil() (elem interface{}, err error) {
+func (q queryable) FirstOrNil() (elem interface{}, err error) {
 	if q.err != nil {
 		err = q.err
 		return
@@ -343,7 +343,7 @@ func (q Queryable) FirstOrNil() (elem interface{}, err error) {
 	return
 }
 
-func (q Queryable) firstBy(f func(interface{}) (bool, error)) (elem interface{}, found bool, err error) {
+func (q queryable) firstBy(f func(interface{}) (bool, error)) (elem interface{}, found bool, err error) {
 	if q.err != nil {
 		err = q.err
 		return
@@ -367,7 +367,7 @@ func (q Queryable) firstBy(f func(interface{}) (bool, error)) (elem interface{},
 	return
 }
 
-func (q Queryable) FirstBy(f func(interface{}) (bool, error)) (elem interface{}, err error) {
+func (q queryable) FirstBy(f func(interface{}) (bool, error)) (elem interface{}, err error) {
 	var found bool
 	elem, found, err = q.firstBy(f)
 
@@ -377,7 +377,7 @@ func (q Queryable) FirstBy(f func(interface{}) (bool, error)) (elem interface{},
 	return
 }
 
-func (q Queryable) FirstOrNilBy(f func(interface{}) (bool, error)) (elem interface{}, err error) {
+func (q queryable) FirstOrNilBy(f func(interface{}) (bool, error)) (elem interface{}, err error) {
 	elem, found, err := q.firstBy(f)
 	if !found {
 		elem = nil
@@ -385,7 +385,7 @@ func (q Queryable) FirstOrNilBy(f func(interface{}) (bool, error)) (elem interfa
 	return
 }
 
-func (q Queryable) Last() (elem interface{}, err error) {
+func (q queryable) Last() (elem interface{}, err error) {
 	if q.err != nil {
 		err = q.err
 		return
@@ -398,7 +398,7 @@ func (q Queryable) Last() (elem interface{}, err error) {
 	return
 }
 
-func (q Queryable) LastOrNil() (elem interface{}, err error) {
+func (q queryable) LastOrNil() (elem interface{}, err error) {
 	if q.err != nil {
 		err = q.err
 		return
@@ -409,7 +409,7 @@ func (q Queryable) LastOrNil() (elem interface{}, err error) {
 	return
 }
 
-func (q Queryable) lastBy(f func(interface{}) (bool, error)) (elem interface{}, found bool, err error) {
+func (q queryable) lastBy(f func(interface{}) (bool, error)) (elem interface{}, found bool, err error) {
 	if q.err != nil {
 		err = q.err
 		return
@@ -434,7 +434,7 @@ func (q Queryable) lastBy(f func(interface{}) (bool, error)) (elem interface{}, 
 	return
 }
 
-func (q Queryable) LastBy(f func(interface{}) (bool, error)) (elem interface{}, err error) {
+func (q queryable) LastBy(f func(interface{}) (bool, error)) (elem interface{}, err error) {
 	var found bool
 	elem, found, err = q.lastBy(f)
 
@@ -444,7 +444,7 @@ func (q Queryable) LastBy(f func(interface{}) (bool, error)) (elem interface{}, 
 	return
 }
 
-func (q Queryable) LastOrNilBy(f func(interface{}) (bool, error)) (elem interface{}, err error) {
+func (q queryable) LastOrNilBy(f func(interface{}) (bool, error)) (elem interface{}, err error) {
 	elem, found, err := q.lastBy(f)
 	if !found {
 		elem = nil
@@ -452,7 +452,7 @@ func (q Queryable) LastOrNilBy(f func(interface{}) (bool, error)) (elem interfac
 	return
 }
 
-func (q Queryable) Reverse() (r Queryable) {
+func (q queryable) Reverse() (r queryable) {
 	if q.err != nil {
 		r.err = q.err
 		return
@@ -467,7 +467,7 @@ func (q Queryable) Reverse() (r Queryable) {
 	return
 }
 
-func (q Queryable) Take(n int) (r Queryable) {
+func (q queryable) Take(n int) (r queryable) {
 	if q.err != nil {
 		r.err = q.err
 		return
@@ -482,7 +482,7 @@ func (q Queryable) Take(n int) (r Queryable) {
 	return
 }
 
-func (q Queryable) Skip(n int) (r Queryable) {
+func (q queryable) Skip(n int) (r queryable) {
 	if q.err != nil {
 		r.err = q.err
 		return
@@ -498,7 +498,7 @@ func (q Queryable) Skip(n int) (r Queryable) {
 }
 
 //TODO document: only sorts int, string, float64
-func (q Queryable) Order() (r Queryable) {
+func (q queryable) Order() (r queryable) {
 	if q.err != nil {
 		r.err = q.err
 		return
@@ -525,7 +525,7 @@ func (q Queryable) Order() (r Queryable) {
 	return
 }
 
-func (q Queryable) OrderBy(less func(this interface{}, that interface{}) bool) (r Queryable) {
+func (q queryable) OrderBy(less func(this interface{}, that interface{}) bool) (r queryable) {
 	if q.err != nil {
 		r.err = q.err
 		return
@@ -538,5 +538,43 @@ func (q Queryable) OrderBy(less func(this interface{}, that interface{}) bool) (
 	r.values = make([]interface{}, len(q.values))
 	_ = copy(r.values, q.values)
 	sort.Sort(r)
+	return
+}
+
+func (q queryable) Join(innerCollection []interface{},
+	outerKeySelector func(interface{}) interface{},
+	innerKeySelector func(interface{}) interface{},
+	resultSelector func(
+		inner interface{},
+		outer interface{}) interface{}) (r queryable) {
+	if q.err != nil {
+		r.err = q.err
+		return
+	}
+	if innerCollection == nil {
+		r.err = ErrNilInput
+		return
+	}
+	if outerKeySelector == nil || innerKeySelector == nil || resultSelector == nil {
+		r.err = ErrNilFunc
+		return
+	}
+	var outerCollection = q.values
+	innerKeyLookup := make(map[interface{}]interface{})
+
+	for _, outer := range outerCollection {
+		outerKey := outerKeySelector(outer)
+		for _, inner := range innerCollection {
+			innerKey, ok := innerKeyLookup[inner]
+			if !ok {
+				innerKey = innerKeySelector(inner)
+				innerKeyLookup[inner] = innerKey
+			}
+			if innerKey == outerKey {
+				elem := resultSelector(outer, inner)
+				r.values = append(r.values, elem)
+			}
+		}
+	}
 	return
 }

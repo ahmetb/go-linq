@@ -56,7 +56,7 @@ func TestFrom(t *testing.T) {
 func TestResults(t *testing.T) {
 	Convey("If error exists in given queryable, error is returned", t, func() {
 		errMsg := "dummy error"
-		q := Queryable{
+		q := queryable{
 			values: nil,
 			err:    errors.New(errMsg)}
 		_, err := q.Results()
@@ -64,7 +64,7 @@ func TestResults(t *testing.T) {
 		So(err.Error(), ShouldEqual, errMsg)
 	})
 	Convey("Given no errors exist, non-nil results are returned", t, func() {
-		q := Queryable{values: arr0, err: nil}
+		q := queryable{values: arr0, err: nil}
 		val, err := q.Results()
 		So(err, ShouldEqual, nil)
 		So(val, ShouldResemble, arr0)
@@ -210,9 +210,10 @@ func TestDistinct(t *testing.T) {
 			So(len(res), ShouldEqual, 3)
 		})
 
-		Convey("Randomly generated integers with likely collisions", func() {
+		Convey("Randomly generated integers with duplicates or more", func() {
 			var arr = make([]interface{}, 10000)
 			var dict = make(map[int]bool, len(arr))
+
 			rand.Seed(time.Now().UnixNano())
 			for i := 0; i < len(arr); i++ {
 				r := rand.Intn(len(arr) * 4 / 5) // collision 20%
@@ -733,5 +734,64 @@ func TestOrderBy(t *testing.T) {
 	Convey("Sort on structs", t, func() {
 		res, _ := From(unsorted).OrderBy(sortByNum).Results()
 		So(res, ShouldResemble, sorted)
+	})
+}
+
+func TestJoin(t *testing.T) {
+	type Person struct{ Name string }
+	type Pet struct {
+		Name  string
+		Owner Person
+	}
+	type ResultPair struct{ OwnerName, PetName string }
+	magnus := Person{Name: "Hedlund, Magnus"}
+	terry := Person{Name: "Adams, Terry"}
+	charlotte := Person{Name: "Weiss, Charlotte"}
+	ahmet := Person{Name: "Balkan, Ahmet"}
+	bob := Person{Name: "Marley, Bob"}
+
+	barley := Pet{Name: "Barley", Owner: terry}
+	boots := Pet{Name: "Boots", Owner: terry}
+	whiskers := Pet{Name: "Whiskers", Owner: charlotte}
+	daisy := Pet{Name: "Daisy", Owner: magnus}
+	sasha := Pet{Name: "Sasha", Owner: bob}
+
+	people := []interface{}{magnus, terry, charlotte, ahmet}
+	pets := []interface{}{barley, boots, whiskers, daisy, sasha}
+
+	var dummyKeySelector = func(i interface{}) interface{} { return i }
+	var dummyValueSelector = func(i, j interface{}) interface{} { return nil }
+
+	natJoinExpected := []interface{}{
+		ResultPair{magnus.Name, daisy.Name},
+		ResultPair{terry.Name, barley.Name},
+		ResultPair{terry.Name, boots.Name},
+		ResultPair{charlotte.Name, whiskers.Name}}
+
+	Convey("Errors from the previous of the chain are carried on", t, func() {
+		_, err := From(people).Where(erroneusBinaryFunc).Join(pets, dummyKeySelector, dummyKeySelector, dummyValueSelector).Results()
+		So(err, ShouldNotEqual, nil)
+	})
+
+	Convey("Nil func passed", t, func() {
+		_, err := From(people).Join(pets, nil, nil, nil).Results()
+		So(err, ShouldEqual, ErrNilFunc)
+	})
+
+	Convey("Nil input passed", t, func() {
+		_, err := From(people).Join(nil, dummyKeySelector, dummyKeySelector, dummyValueSelector).Results()
+		So(err, ShouldEqual, ErrNilInput)
+	})
+
+	Convey("Pets & owners example join (also checks preserving the order)", t, func() {
+
+		res, err := From(people).Join(pets,
+			func(person interface{}) interface{} { return person.(Person).Name },
+			func(pet interface{}) interface{} { return pet.(Pet).Owner.Name },
+			func(outer interface{}, inner interface{}) interface{} {
+				return ResultPair{outer.(Person).Name, inner.(Pet).Name}
+			}).Results()
+		So(err, ShouldEqual, nil)
+		So(res, ShouldResemble, natJoinExpected)
 	})
 }
