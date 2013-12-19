@@ -895,34 +895,70 @@ func TestSkipWhile(t *testing.T) {
 }
 
 func TestOrder(t *testing.T) {
-	intArr := []interface{}{6, 1, 4, 0, -1, 2}
-	Convey("Previous error is reflected on result", t, func() {
-		_, err := From(intArr).Where(erroneusBinaryFunc).Order().Results()
-		So(err, ShouldNotEqual, nil)
-	})
-	Convey("Sort empty", t, func() {
-		res, _ := From(empty).Order().Results()
-		So(len(res), ShouldResemble, len(empty))
-	})
 	Convey("Sort ints", t, func() {
-		res, _ := From(intArr).Order().Results()
-		So(res, ShouldResemble, []interface{}{-1, 0, 1, 2, 4, 6})
+		arr := []interface{}{6, 1, 4, 0, -1, 2}
+		arrSorted := []interface{}{-1, 0, 1, 2, 4, 6}
+		unsupportedArr := []interface{}{6, 1, 4, 0, -1, 2, ""}
+
+		Convey("Previous error is reflected on result", func() {
+			_, err := From(arr).Where(erroneusBinaryFunc).OrderInts().Results()
+			So(err, ShouldNotEqual, nil)
+		})
+
+		Convey("Sort order is correct", func() {
+			res, _ := From(arr).OrderInts().Results()
+			So(res, ShouldResemble, arrSorted)
+		})
+
+		Convey("Sequence contain unsupported types", func() {
+			_, err := From(unsupportedArr).OrderInts().Results()
+			So(err, ShouldEqual, ErrUnsupportedType)
+		})
 	})
+
 	Convey("Sort float64s", t, func() {
-		in := []interface{}{1.000000001, 1.0000000001, 0.1, 0.01, 0.00001, 0.0000000000001}
-		res, _ := From(in).Order().Results()
-		So(res, ShouldResemble, []interface{}{0.0000000000001, 0.00001, 0.01, 0.1, 1.0000000001, 1.000000001})
+		arr := []interface{}{1.000000001, 1.0000000001, 0.1, 0.01, 0.00001, 0.0000000000001}
+		arrSorted := []interface{}{0.0000000000001, 0.00001, 0.01, 0.1, 1.0000000001, 1.000000001}
+		unsupportedArr := []interface{}{1.000000001, "", 1.0000000001, 0.1, nil}
+
+		Convey("Previous error is reflected on result", func() {
+			_, err := From(arr).Where(erroneusBinaryFunc).OrderFloat64s().Results()
+			So(err, ShouldNotEqual, nil)
+		})
+
+		Convey("Sort order is correct", func() {
+			res, _ := From(arr).OrderFloat64s().Results()
+			So(res, ShouldResemble, arrSorted)
+		})
+
+		Convey("Sequence contain unsupported types", func() {
+			_, err := From(unsupportedArr).OrderFloat64s().Results()
+			So(err, ShouldEqual, ErrUnsupportedType)
+		})
 	})
+
 	Convey("Sort strings", t, func() {
-		in := []interface{}{"c", "a", "", "aa", "b"}
-		res, _ := From(in).Order().Results()
-		So(res, ShouldResemble, []interface{}{"", "a", "aa", "b", "c"})
+		arr := []interface{}{"c", "a", "", "aa", "b"}
+		arrSorted := []interface{}{"", "a", "aa", "b", "c"}
+
+		unsupportedArr := []interface{}{"", "aa", "ccc", nil}
+
+		Convey("Previous error is reflected on result", func() {
+			_, err := From(arr).Where(erroneusBinaryFunc).OrderStrings().Results()
+			So(err, ShouldNotEqual, nil)
+		})
+
+		Convey("Sort order is correct", func() {
+			res, _ := From(arr).OrderStrings().Results()
+			So(res, ShouldResemble, arrSorted)
+		})
+
+		Convey("Sequence contain unsupported types", func() {
+			_, err := From(unsupportedArr).OrderStrings().Results()
+			So(err, ShouldEqual, ErrUnsupportedType)
+		})
 	})
-	Convey("Attempt with unsupported types", t, func() {
-		in := []interface{}{true, false, true, nil, byte(10)}
-		_, err := From(in).Order().Results()
-		So(err, ShouldEqual, ErrUnsupportedType)
-	})
+
 }
 
 func TestOrderBy(t *testing.T) {

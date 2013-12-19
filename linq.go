@@ -586,31 +586,50 @@ func (q queryable) findWhileTerminationIndex(f func(interface{}) (bool, error)) 
 	return
 }
 
-//TODO document: only sorts int, string, float64
-func (q queryable) Order() (r queryable) {
+func (q queryable) OrderInts() (r queryable) {
 	if q.err != nil {
 		r.err = q.err
 		return
 	}
 
-	if len(q.values) > 0 {
-		f := q.values[0]
-		if _, ints := f.(int); ints {
-			vals := toInts(q.values)
-			sort.Ints(vals)
-			r.values = intsToInterface(vals)
-		} else if _, strings := f.(string); strings {
-			vals := toStrings(q.values)
-			sort.Strings(vals)
-			r.values = stringsToInterface(vals)
-		} else if _, float64s := f.(float64); float64s {
-			vals := toFloat64s(q.values)
-			sort.Float64s(vals)
-			r.values = float64sToInterface(vals)
-		} else {
-			r.err = ErrUnsupportedType
-		}
+	vals, _, _, err := toInts(q.values)
+	if err != nil {
+		r.err = err
+		return
 	}
+	sort.Ints(vals)
+	r.values = intsToInterface(vals)
+
+	return
+}
+
+func (q queryable) OrderStrings() (r queryable) {
+	if q.err != nil {
+		r.err = q.err
+		return
+	}
+	vals, _, _, err := toStrings(q.values)
+	if err != nil {
+		r.err = err
+		return
+	}
+	sort.Strings(vals)
+	r.values = stringsToInterface(vals)
+	return
+}
+
+func (q queryable) OrderFloat64s() (r queryable) {
+	if q.err != nil {
+		r.err = q.err
+		return
+	}
+	vals, _, _, err := toFloat64s(q.values)
+	if err != nil {
+		r.err = err
+		return
+	}
+	sort.Float64s(vals)
+	r.values = float64sToInterface(vals)
 	return
 }
 
