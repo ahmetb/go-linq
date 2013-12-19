@@ -1083,3 +1083,72 @@ func TestRange(t *testing.T) {
 		So(res, ShouldResemble, []interface{}{1, 2, 3, 4, 5, 6, 7, 8, 9, 10})
 	})
 }
+
+var (
+	intArr            = []interface{}{-1, -2, -3, -4, -5, -6, -7, -8, -9, -10}
+	intArrSumExpected = -55
+	intArrAvgExpected = float64(intArrSumExpected) / float64(len(intArr))
+	mixedArr          = []interface{}{
+		0, int(1), int8(2), int16(3), int32(4), int64(5),
+		uint(6), uint8(7), uint16(8), uint32(9), uint64(10),
+		float32(11.11), float64(12.12)}
+	mixedArrSumExpected           = float64(78.23)
+	mixedArrAvgExpected           = float64(mixedArrSumExpected) / float64(len(mixedArr))
+	mixedArrContainingNil         = []interface{}{1, 2, nil, float64(3), uint(4)}
+	mixedArrContainingUnsupported = []interface{}{1, 2, foo{"", 0}}
+)
+
+func TestSum(t *testing.T) {
+	Convey("Previous errors are reflected on result", t, func() {
+		_, err := From(arr0).Where(erroneusBinaryFunc).Sum()
+		So(err, ShouldNotEqual, nil)
+	})
+	Convey("Empty slice", t, func() {
+		res, err := From(empty).Sum()
+		So(err, ShouldEqual, nil)
+		So(res, ShouldEqual, 0.0)
+	})
+	Convey("Slice of ints", t, func() {
+		res, _ := From(intArr).Sum()
+		So(res, ShouldEqual, intArrSumExpected)
+	})
+	Convey("Slice of mixed numeric types", t, func() {
+		res, _ := From(mixedArr).Sum()
+		So(res, ShouldAlmostEqual, mixedArrSumExpected, 0.000001) // float32 requires less tolerance than goconvey default
+	})
+	Convey("Slice with numeric types and nils", t, func() {
+		_, err := From(mixedArrContainingNil).Sum()
+		So(err, ShouldEqual, ErrNan)
+	})
+	Convey("Slice contains unsupported type", t, func() {
+		_, err := From(mixedArrContainingUnsupported).Sum()
+		So(err, ShouldNotEqual, nil)
+	})
+}
+
+func TestAverage(t *testing.T) {
+	Convey("Previous errors are reflected on result", t, func() {
+		_, err := From(arr0).Where(erroneusBinaryFunc).Average()
+		So(err, ShouldNotEqual, nil)
+	})
+	Convey("Empty slice", t, func() {
+		_, err := From(empty).Average()
+		So(err, ShouldEqual, ErrEmptySequence)
+	})
+	Convey("Slice of ints", t, func() {
+		res, _ := From(intArr).Average()
+		So(res, ShouldEqual, intArrAvgExpected)
+	})
+	Convey("Slice of mixed numeric types", t, func() {
+		res, _ := From(mixedArr).Average()
+		So(res, ShouldAlmostEqual, mixedArrAvgExpected, 0.000001) // float32 requires less tolerance than goconvey default
+	})
+	Convey("Slice with numeric types and nils", t, func() {
+		_, err := From(mixedArrContainingNil).Average()
+		So(err, ShouldEqual, ErrNan)
+	})
+	Convey("Slice contains unsupported type", t, func() {
+		_, err := From(mixedArrContainingUnsupported).Average()
+		So(err, ShouldNotEqual, nil)
+	})
+}

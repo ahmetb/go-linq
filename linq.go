@@ -17,10 +17,12 @@ func (q queryable) Less(i, j int) bool { return q.less(q.values[i], q.values[j])
 
 var (
 	ErrNilFunc         = errors.New("linq: passed evaluation function is nil")
-	ErrNilInput        = errors.New("linq: nil input passed to From")
+	ErrNilInput        = errors.New("linq: nil sequence passed as input to function")
 	ErrNoElement       = errors.New("linq: element satisfying the conditions does not exist")
+	ErrEmptySequence   = errors.New("linq: empty sequence, operation requires non-empty results sequence")
 	ErrNegativeParam   = errors.New("linq: parameter cannot be negative")
 	ErrUnsupportedType = errors.New("linq: sorting this type with Order is not supported, use OrderBy")
+	ErrNan             = errors.New("linq: sequence contains an element of non-numeric types")
 )
 
 func From(input []interface{}) queryable {
@@ -725,5 +727,72 @@ func Range(start, count int) (q queryable) {
 	for i := 0; i < count; i++ {
 		q.values[i] = start + i
 	}
+	return
+}
+
+//TODO document about performance faults
+func (q queryable) Sum() (sum float64, err error) {
+	if q.err != nil {
+		err = q.err
+		return
+	}
+	sum, err = sum_(q.values)
+	return
+}
+
+func sum_(in []interface{}) (sum float64, err error) {
+	// here we do a poor performance operation
+	// we use type assertion to convert every numeric value type
+	// into float64 for each element in values list
+	for i := 0; i < len(in); i++ {
+		v := in[i]
+		// current optimizations:
+		// 1. start from more commonly used types so it terminates early
+		if f, ok := v.(int); ok {
+			sum += float64(f)
+		} else if f, ok := v.(uint); ok {
+			sum += float64(f)
+		} else if f, ok := v.(float64); ok {
+			sum += float64(f)
+		} else if f, ok := v.(int32); ok {
+			sum += float64(f)
+		} else if f, ok := v.(int64); ok {
+			sum += float64(f)
+		} else if f, ok := v.(float32); ok {
+			sum += float64(f)
+		} else if f, ok := v.(int8); ok {
+			sum += float64(f)
+		} else if f, ok := v.(int16); ok {
+			sum += float64(f)
+		} else if f, ok := v.(uint64); ok {
+			sum += float64(f)
+		} else if f, ok := v.(uint32); ok {
+			sum += float64(f)
+		} else if f, ok := v.(uint16); ok {
+			sum += float64(f)
+		} else if f, ok := v.(uint8); ok {
+			sum += float64(f)
+		} else {
+			err = ErrNan
+			return
+		}
+	}
+	return
+}
+
+//TODO document about performance faults
+func (q queryable) Average() (avg float64, err error) {
+	if q.err != nil {
+		err = q.err
+		return
+	}
+	if len(q.values) == 0 {
+		return 0, ErrEmptySequence
+	}
+	sum, err := sum_(q.values)
+	if err != nil {
+		return
+	}
+	avg = sum / float64(len(q.values))
 	return
 }
