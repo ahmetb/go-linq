@@ -154,7 +154,6 @@ func TestSelect(t *testing.T) {
 			_, err = From(arr0).Select(asIs).Select(erroneusFunc).Results()
 			So(err, ShouldNotEqual, nil)
 		})
-
 		Convey("Erroneus function is in chain but not called", func() {
 			val, err = From(arr0).Where(alwaysFalse).Select(erroneusFunc).Results()
 			So(err, ShouldEqual, nil)
@@ -212,13 +211,11 @@ func TestDistinct(t *testing.T) {
 				So(res, ShouldResemble, []interface{}{allNil[0]})
 			})
 		})
-
 		Convey("Distinct on structs and nils", func() {
 			arr := []interface{}{foo{"A", 0xffff}, nil, foo{"B", 0x7fff}, nil, foo{"A", 0xffff}}
 			res, _ := From(arr).Distinct().Results()
 			So(len(res), ShouldEqual, 3)
 		})
-
 		Convey("Randomly generated integers with duplicates or more", func() {
 			var arr = make([]interface{}, 10000)
 			var dict = make(map[int]bool, len(arr))
@@ -251,17 +248,14 @@ func TestDistinct(t *testing.T) {
 			_, err := From(allSameStruct).Where(erroneusBinaryFunc).DistinctBy(fooComparer).Results()
 			So(err, ShouldNotEqual, nil)
 		})
-
 		Convey("Provided func is nil", func() {
 			_, err := From(allSameStruct).DistinctBy(nil).Results()
 			So(err, ShouldEqual, ErrNilFunc)
 		})
-
 		Convey("Comparer returns error", func() {
 			_, err := From(arr0).DistinctBy(erroneusComparer).Results()
 			So(err, ShouldNotEqual, nil)
 		})
-
 		Convey("All elements are the same", func() {
 			res, _ := From(allSameStruct).DistinctBy(fooComparer).Results()
 			So(res, ShouldResemble, []interface{}{allSameStruct[0]})
@@ -276,7 +270,6 @@ func TestDistinct(t *testing.T) {
 			}).Results()
 			So(res, ShouldResemble, arr)
 		})
-
 		Convey("Ensure leftmost appearance is returned in multiple occurrence cases", func() {
 			arr := []interface{}{&foo{"A", 0}, &foo{"B", 0}, &foo{"A", 0}, &foo{"C", 0},
 				&foo{"A", 0}, &foo{"B", 0}}
@@ -286,7 +279,6 @@ func TestDistinct(t *testing.T) {
 			So(res[1], ShouldEqual, arr[1]) // B
 			So(res[2], ShouldEqual, arr[3]) // C
 		})
-
 		Convey("Randomly generated integers with likely collisions", func() {
 			var arr = make([]interface{}, 10000)
 			var dict = make(map[int]bool, len(arr))
@@ -776,7 +768,6 @@ func TestTake(t *testing.T) {
 		in := []interface{}{1, 2, 3, 4, 5}
 		res, _ := From(in).Take(3).Results()
 		So(res, ShouldResemble, []interface{}{1, 2, 3})
-
 		Convey("Take n ≥ len(arr)", func() {
 			res, _ := From(in).Take(len(in)).Results()
 			So(res, ShouldResemble, res)
@@ -844,7 +835,6 @@ func TestSkip(t *testing.T) {
 		in := []interface{}{1, 2, 3, 4, 5}
 		res, _ := From(in).Skip(3).Results()
 		So(res, ShouldResemble, []interface{}{4, 5})
-
 		Convey("Skip n ≥ len(arr)", func() {
 			res, _ := From(in).Skip(len(in)).Results()
 			So(res, ShouldResemble, empty)
@@ -1010,18 +1000,15 @@ func TestJoins(t *testing.T) {
 				dummyKeySelector, dummyResultSelector).Results()
 			So(err, ShouldNotEqual, nil)
 		})
-
 		Convey("Nil funcs passed", func() {
 			_, err := From(people).Join(pets, nil, nil, nil).Results()
 			So(err, ShouldEqual, ErrNilFunc)
 		})
-
 		Convey("Nil input passed", func() {
 			_, err := From(people).Join(nil, dummyKeySelector, dummyKeySelector,
 				dummyResultSelector).Results()
 			So(err, ShouldEqual, ErrNilInput)
 		})
-
 		Convey("Pets & owners example join (also checks preserving the order)", func() {
 
 			res, err := From(people).Join(pets,
@@ -1041,18 +1028,15 @@ func TestJoins(t *testing.T) {
 				dummyKeySelector, dummyGroupResultSelector).Results()
 			So(err, ShouldNotEqual, nil)
 		})
-
 		Convey("Nil funcs passed", func() {
 			_, err := From(people).GroupJoin(pets, nil, nil, nil).Results()
 			So(err, ShouldEqual, ErrNilFunc)
 		})
-
 		Convey("Nil input passed", func() {
 			_, err := From(people).GroupJoin(nil, dummyKeySelector, dummyKeySelector,
 				dummyGroupResultSelector).Results()
 			So(err, ShouldEqual, ErrNilInput)
 		})
-
 		Convey("Pets & owners example join (also checks preserving the order)", func() {
 
 			res, err := From(people).GroupJoin(pets,
