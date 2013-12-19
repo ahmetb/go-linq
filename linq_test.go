@@ -912,7 +912,7 @@ func TestOrder(t *testing.T) {
 
 		Convey("Sequence contain unsupported types", func() {
 			_, err := From(unsupportedArr).OrderInts().Results()
-			So(err, ShouldEqual, ErrUnsupportedType)
+			So(err, ShouldEqual, ErrTypeMismatch)
 		})
 	})
 
@@ -933,7 +933,7 @@ func TestOrder(t *testing.T) {
 
 		Convey("Sequence contain unsupported types", func() {
 			_, err := From(unsupportedArr).OrderFloat64s().Results()
-			So(err, ShouldEqual, ErrUnsupportedType)
+			So(err, ShouldEqual, ErrTypeMismatch)
 		})
 	})
 
@@ -955,7 +955,7 @@ func TestOrder(t *testing.T) {
 
 		Convey("Sequence contain unsupported types", func() {
 			_, err := From(unsupportedArr).OrderStrings().Results()
-			So(err, ShouldEqual, ErrUnsupportedType)
+			So(err, ShouldEqual, ErrTypeMismatch)
 		})
 	})
 
@@ -1170,5 +1170,104 @@ func TestAverage(t *testing.T) {
 	Convey("Slice contains unsupported type", t, func() {
 		_, err := From(mixedArrContainingUnsupported).Average()
 		So(err, ShouldNotEqual, nil)
+	})
+}
+
+func TestMinMax(t *testing.T) {
+	Convey("MinInt/MaxInt", t, func() {
+		var (
+			arr            = []interface{}{-1, -9, 0, 9, 1}
+			arrUnsupported = []interface{}{-1, -9, 0, 9, 1, nil}
+			expectedMin    = -9
+			expectedMax    = 9
+		)
+		Convey("Previous error is reflected on result", func() {
+			_, err := From(arr0).Where(erroneusBinaryFunc).MinInt()
+			So(err, ShouldNotEqual, nil)
+			_, err = From(arr0).Where(erroneusBinaryFunc).MaxInt()
+			So(err, ShouldNotEqual, nil)
+		})
+		Convey("Empty slice", func() {
+			_, err := From(empty).MinInt()
+			So(err, ShouldEqual, ErrEmptySequence)
+			_, err = From(empty).MaxInt()
+			So(err, ShouldEqual, ErrEmptySequence)
+		})
+		Convey("Sequence contains unsupported types", func() {
+			_, err := From(arrUnsupported).MinInt()
+			So(err, ShouldEqual, ErrTypeMismatch)
+			_, err = From(arrUnsupported).MaxInt()
+			So(err, ShouldEqual, ErrTypeMismatch)
+		})
+		Convey("Verify min/max result", func() {
+			res, _ := From(arr).MinInt()
+			So(res, ShouldEqual, expectedMin)
+			res, _ = From(arr).MaxInt()
+			So(res, ShouldEqual, expectedMax)
+		})
+	})
+	Convey("MinUint/MaxUint", t, func() {
+		var (
+			arr            = []interface{}{uint(1), uint(9), uint(100), uint(99), uint(0)}
+			arrUnsupported = []interface{}{uint(1), uint(9), uint(100), uint(99), uint(0), 0}
+			expectedMin    = uint(0)
+			expectedMax    = uint(100)
+		)
+		Convey("Previous error is reflected on result", func() {
+			_, err := From(arr0).Where(erroneusBinaryFunc).MinUint()
+			So(err, ShouldNotEqual, nil)
+			_, err = From(arr0).Where(erroneusBinaryFunc).MaxUint()
+			So(err, ShouldNotEqual, nil)
+		})
+		Convey("Empty slice", func() {
+			_, err := From(empty).MinUint()
+			So(err, ShouldEqual, ErrEmptySequence)
+			_, err = From(empty).MaxUint()
+			So(err, ShouldEqual, ErrEmptySequence)
+		})
+		Convey("Sequence contains unsupported types", func() {
+			_, err := From(arrUnsupported).MinUint()
+			So(err, ShouldEqual, ErrTypeMismatch)
+			_, err = From(arrUnsupported).MaxUint()
+			So(err, ShouldEqual, ErrTypeMismatch)
+		})
+		Convey("Verify min/max result", func() {
+			res, _ := From(arr).MinUint()
+			So(res, ShouldEqual, expectedMin)
+			res, _ = From(arr).MaxUint()
+			So(res, ShouldEqual, expectedMax)
+		})
+	})
+	Convey("MinFloat64/MaxFloat64", t, func() {
+		var (
+			arr            = []interface{}{float64(-9), float64(-9.9), float64(0), float64(99), float64(99.9)}
+			arrUnsupported = []interface{}{float64(-9), float64(-9.9), float64(0), float64(99), float64(99.9), uint(0)}
+			expectedMin    = float64(-9.9)
+			expectedMax    = float64(99.9)
+		)
+		Convey("Previous error is reflected on result", func() {
+			_, err := From(arr0).Where(erroneusBinaryFunc).MinFloat64()
+			So(err, ShouldNotEqual, nil)
+			_, err = From(arr0).Where(erroneusBinaryFunc).MaxFloat64()
+			So(err, ShouldNotEqual, nil)
+		})
+		Convey("Empty slice", func() {
+			_, err := From(empty).MinFloat64()
+			So(err, ShouldEqual, ErrEmptySequence)
+			_, err = From(empty).MaxFloat64()
+			So(err, ShouldEqual, ErrEmptySequence)
+		})
+		Convey("Sequence contains unsupported types", func() {
+			_, err := From(arrUnsupported).MinFloat64()
+			So(err, ShouldEqual, ErrTypeMismatch)
+			_, err = From(arrUnsupported).MaxFloat64()
+			So(err, ShouldEqual, ErrTypeMismatch)
+		})
+		Convey("Verify min/max result", func() {
+			res, _ := From(arr).MinFloat64()
+			So(res, ShouldEqual, expectedMin)
+			res, _ = From(arr).MaxFloat64()
+			So(res, ShouldEqual, expectedMax)
+		})
 	})
 }

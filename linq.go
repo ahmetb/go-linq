@@ -16,13 +16,13 @@ func (q queryable) Swap(i, j int)      { q.values[i], q.values[j] = q.values[j],
 func (q queryable) Less(i, j int) bool { return q.less(q.values[i], q.values[j]) }
 
 var (
-	ErrNilFunc         = errors.New("linq: passed evaluation function is nil")
-	ErrNilInput        = errors.New("linq: nil sequence passed as input to function")
-	ErrNoElement       = errors.New("linq: element satisfying the conditions does not exist")
-	ErrEmptySequence   = errors.New("linq: empty sequence, operation requires non-empty results sequence")
-	ErrNegativeParam   = errors.New("linq: parameter cannot be negative")
-	ErrUnsupportedType = errors.New("linq: sorting this type with Order is not supported, use OrderBy")
-	ErrNan             = errors.New("linq: sequence contains an element of non-numeric types")
+	ErrNilFunc       = errors.New("linq: passed evaluation function is nil")
+	ErrNilInput      = errors.New("linq: nil sequence passed as input to function")
+	ErrNoElement     = errors.New("linq: element satisfying the conditions does not exist")
+	ErrEmptySequence = errors.New("linq: empty sequence, operation requires non-empty results sequence")
+	ErrNegativeParam = errors.New("linq: parameter cannot be negative")
+	ErrNan           = errors.New("linq: sequence contains an element of non-numeric types")
+	ErrTypeMismatch  = errors.New("linq: sequence contains element(s) with type different than requested type or nil")
 )
 
 func From(input []interface{}) queryable {
@@ -592,7 +592,7 @@ func (q queryable) OrderInts() (r queryable) {
 		return
 	}
 
-	vals, _, _, err := toInts(q.values)
+	vals, err := toInts(q.values)
 	if err != nil {
 		r.err = err
 		return
@@ -608,7 +608,7 @@ func (q queryable) OrderStrings() (r queryable) {
 		r.err = q.err
 		return
 	}
-	vals, _, _, err := toStrings(q.values)
+	vals, err := toStrings(q.values)
 	if err != nil {
 		r.err = err
 		return
@@ -623,7 +623,7 @@ func (q queryable) OrderFloat64s() (r queryable) {
 		r.err = q.err
 		return
 	}
-	vals, _, _, err := toFloat64s(q.values)
+	vals, err := toFloat64s(q.values)
 	if err != nil {
 		r.err = err
 		return
@@ -814,4 +814,94 @@ func (q queryable) Average() (avg float64, err error) {
 	}
 	avg = sum / float64(len(q.values))
 	return
+}
+
+func (q queryable) MinInt() (min int, err error) {
+	if q.err != nil {
+		err = q.err
+		return
+	}
+	if len(q.values) == 0 {
+		return 0, ErrEmptySequence
+	}
+	minIndex, _, err := minMaxInts(q.values)
+	if err != nil {
+		return
+	}
+	return q.values[minIndex].(int), nil
+}
+
+func (q queryable) MinUint() (min uint, err error) {
+	if q.err != nil {
+		err = q.err
+		return
+	}
+	if len(q.values) == 0 {
+		return 0, ErrEmptySequence
+	}
+	minIndex, _, err := minMaxUints(q.values)
+	if err != nil {
+		return
+	}
+	return q.values[minIndex].(uint), nil
+}
+
+func (q queryable) MinFloat64() (min float64, err error) {
+	if q.err != nil {
+		err = q.err
+		return
+	}
+	if len(q.values) == 0 {
+		return 0, ErrEmptySequence
+	}
+	minIndex, _, err := minMaxFloat64s(q.values)
+	if err != nil {
+		return
+	}
+	return q.values[minIndex].(float64), nil
+}
+
+func (q queryable) MaxInt() (min int, err error) {
+	if q.err != nil {
+		err = q.err
+		return
+	}
+	if len(q.values) == 0 {
+		return 0, ErrEmptySequence
+	}
+	_, maxIndex, err := minMaxInts(q.values)
+	if err != nil {
+		return
+	}
+	return q.values[maxIndex].(int), nil
+}
+
+func (q queryable) MaxUint() (min uint, err error) {
+	if q.err != nil {
+		err = q.err
+		return
+	}
+	if len(q.values) == 0 {
+		return 0, ErrEmptySequence
+	}
+	_, maxIndex, err := minMaxUints(q.values)
+	if err != nil {
+		return
+	}
+	return q.values[maxIndex].(uint), nil
+}
+
+func (q queryable) MaxFloat64() (min float64, err error) {
+	if q.err != nil {
+		err = q.err
+		return
+	}
+	if len(q.values) == 0 {
+		return 0, ErrEmptySequence
+	}
+	_, maxIndex, err := minMaxFloat64s(q.values)
+	if err != nil {
+		return
+	}
+	return q.values[maxIndex].(float64), nil
 }
