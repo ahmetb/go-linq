@@ -1,0 +1,5 @@
+language: go
+go: tip
+install:
+  - export PATH=$PATH:$HOME/gopath/bin
+  - go get -v github.com/smartystreets/goconvey
