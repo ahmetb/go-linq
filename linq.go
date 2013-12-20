@@ -29,14 +29,14 @@ func (q sortableQueryable) Swap(i, j int)      { q.values[i], q.values[j] = q.va
 func (q sortableQueryable) Less(i, j int) bool { return q.less(q.values[i], q.values[j]) }
 
 var (
-	ErrNilFunc       = errors.New("linq: passed evaluation function is nil")
-	ErrNilInput      = errors.New("linq: nil sequence passed as input to function")
-	ErrNoElement     = errors.New("linq: element satisfying the conditions does not exist")
-	ErrEmptySequence = errors.New("linq: empty sequence, operation requires non-empty results sequence")
-	ErrNegativeParam = errors.New("linq: parameter cannot be negative")
-	ErrNan           = errors.New("linq: sequence contains an element of non-numeric types")
-	ErrTypeMismatch  = errors.New("linq: sequence contains element(s) with type different than requested type or nil")
-	ErrNotSingle     = errors.New("linq: sequence contains more than one element matching the given predicate fund")
+	ErrNilFunc       = errors.New("linq: passed evaluation function is nil")                                           // a predicate, selector or comparer is nil
+	ErrNilInput      = errors.New("linq: nil sequence passed as input to function")                                    // nil value of []T is passed
+	ErrNoElement     = errors.New("linq: element satisfying the conditions does not exist")                            // strictly element requesting methods are called and element is not found
+	ErrEmptySequence = errors.New("linq: empty sequence, operation requires non-empty results sequence")               // requested operation is invalid on empty sequences
+	ErrNegativeParam = errors.New("linq: parameter cannot be negative")                                                // negative value passed to an index parameter
+	ErrNan           = errors.New("linq: sequence contains an element of non-numeric types")                           // sequence has invalid elements that method cannot assert into one of builtin numeric types
+	ErrTypeMismatch  = errors.New("linq: sequence contains element(s) with type different than requested type or nil") // sequence elements or nil of different type than function can work with
+	ErrNotSingle     = errors.New("linq: sequence contains more than one element matching the given predicate found")  // sequence contains more than one elements satisfy given predicate func
 )
 
 // From initializes a linq query with passed slice as the source.
