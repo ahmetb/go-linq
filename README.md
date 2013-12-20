@@ -1,4 +1,4 @@
-# go-linq [![travis-ci status](https://api.travis-ci.org/ahmetalpbalkan/go-linq.png)](https://travis-ci.org/ahmetalpbalkan/go-linq) 
+# go-linq [![travis-ci status](https://api.travis-ci.org/ahmetalpbalkan/go-linq.png)](https://travis-ci.org/ahmetalpbalkan/go-linq)  [![Codebot](https://codebot.io/badge/github.com/ahmetalpbalkan/go-linq.png)](http://codebot.io/doc/pkg/github.com/ahmetalpbalkan/go-linq "Codebot") [![GoDoc](https://godoc.org/github.com/ahmetalpbalkan/go-linq?status.png)](https://godoc.org/github.com/ahmetalpbalkan/go-linq) 
 
 A powerful language integrated query library for Go. Querying and manipulation
 operations made easy, don't repeat yourself. Inspired by Microsoft's
@@ -29,16 +29,35 @@ var over18Names, err = From(students)
 	.Select(func (s T) (T,error){
 		return s.(*Student).name, nil
 	}).Results()
-
-
-
 ```
 
 ## Documentation
 
-## FAQ
+* [GoDoc at codebot.io](http://codebot.io/doc/pkg/github.com/ahmetalpbalkan/go-linq)
+* [GoDoc at godoc.org](http://godoc.org/github.com/ahmetalpbalkan/go-linq)
+
+Here is wiki:
+
+1. [Quickstart](https://github.com/ahmetalpbalkan/go-linq/wiki/Quickstart)
+2. [Tutorials](https://github.com/ahmetalpbalkan/go-linq/wiki/Tutorials)
+3. [FAQ](https://github.com/ahmetalpbalkan/go-linq/wiki/FAQ)
 
 ## License
 
-## Contributors
+This software is distributed under Apache 2.0 License (see [LICENSE](LICENSE)
+for more).
 
+## Used By
+
+Please edit [this](#) wiki page if you are using this library.
+
+## Release Notes
+
+~~~
+v0.9-rc1
+* many linq methods are implemented
+* methods have error handling support
+* type assertion limitations are unresolved
+* travis-ci.org build integrated
+* open sourced on github, master & dev branches
+~~~
