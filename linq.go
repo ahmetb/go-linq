@@ -7,16 +7,21 @@ import (
 	"sort"
 )
 
-// Queryable is the type returned from query functions. To get the results
-// and errors of the query, use Results().
+// T is an alias for interface{} to make things shorter. Whatever you pass
+// to linq functions (e.g. From, Union, Intersect, Except) should be a struct
+// of this type, []T.
+type T interface{}
+
+// Queryable is the type returned from query functions. To evaluante
+// get the results of the query, use Results().
 type Queryable struct {
-	values []interface{}
+	values []T
 	err    error
 }
 
 type sortableQueryable struct {
-	values []interface{}
-	less   func(this, that interface{}) bool
+	values []T
+	less   func(this, that T) bool
 }
 
 func (q sortableQueryable) Len() int           { return len(q.values) }
@@ -35,8 +40,8 @@ var (
 )
 
 // From initializes a linq query with passed slice as the source.
-// The slice has to be of type []interface{}. This is a language limitation.
-func From(input []interface{}) Queryable {
+// The slice has to be of type []T. This is a language limitation.
+func From(input []T) Queryable {
 	var _err error
 	if input == nil {
 		_err = ErrNilInput
@@ -46,9 +51,9 @@ func From(input []interface{}) Queryable {
 		err:    _err}
 }
 
-// Results evaluates the query and returns the results as interface{} slice.
+// Results evaluates the query and returns the results as T slice.
 // An error occurred in during evaluation of the query will be returned.
-func (q Queryable) Results() ([]interface{}, error) {
+func (q Queryable) Results() ([]T, error) {
 	return q.values, q.err
 }
 
@@ -56,7 +61,7 @@ func (q Queryable) Results() ([]interface{}, error) {
 // function will take elements of the source (or results of previous query)
 // as interface[] so it should make type assertion to work on the types.
 // Returns a query with elements satisfy the condition.
-func (q Queryable) Where(f func(interface{}) (bool, error)) (r Queryable) {
+func (q Queryable) Where(f func(T) (bool, error)) (r Queryable) {
 	if q.err != nil {
 		r.err = q.err
 		return r
@@ -82,7 +87,7 @@ func (q Queryable) Where(f func(interface{}) (bool, error)) (r Queryable) {
 // Select projects each element of a sequence into a new form.
 // Returns a query with the result of invoking the transform function
 // on each element of original source.
-func (q Queryable) Select(f func(interface{}) (interface{}, error)) (r Queryable) {
+func (q Queryable) Select(f func(T) (T, error)) (r Queryable) {
 	if q.err != nil {
 		r.err = q.err
 		return r
@@ -114,7 +119,7 @@ func (q Queryable) Distinct() (r Queryable) {
 // provided equality comparer. This is a set operation and returns an unordered
 // sequence. Number of calls to f will be at most N^2 (all elements are
 // distinct) and at best N (all elements are the same).
-func (q Queryable) DistinctBy(f func(interface{}, interface{}) (bool, error)) (r Queryable) {
+func (q Queryable) DistinctBy(f func(T, T) (bool, error)) (r Queryable) {
 	if f == nil {
 		r.err = ErrNilFunc
 		return
@@ -125,7 +130,7 @@ func (q Queryable) DistinctBy(f func(interface{}, interface{}) (bool, error)) (r
 // distinct returns distinct elements from the provided source using default
 // equality comparer (==) or a custom equality comparer function. Complexity
 // is O(N).
-func (q Queryable) distinct(f func(interface{}, interface{}) (bool, error)) (r Queryable) {
+func (q Queryable) distinct(f func(T, T) (bool, error)) (r Queryable) {
 	if q.err != nil {
 		r.err = q.err
 		return r
@@ -133,13 +138,13 @@ func (q Queryable) distinct(f func(interface{}, interface{}) (bool, error)) (r Q
 
 	if f == nil {
 		// basic equality comparison using dict
-		dict := make(map[interface{}]bool)
+		dict := make(map[T]bool)
 		for _, v := range q.values {
 			if _, ok := dict[v]; !ok {
 				dict[v] = true
 			}
 		}
-		res := make([]interface{}, len(dict))
+		res := make([]T, len(dict))
 		i := 0
 		for key, _ := range dict {
 			res[i] = key
@@ -153,7 +158,7 @@ func (q Queryable) distinct(f func(interface{}, interface{}) (bool, error)) (r Q
 		// is O(N) where all elements are the same
 		// pick lefthand side value of the comparison in the result
 		l := len(q.values)
-		results := make([]interface{}, 0)
+		results := make([]T, 0)
 		included := make([]bool, l)
 		for i := 0; i < l; i++ {
 			if included[i] {
@@ -179,7 +184,7 @@ func (q Queryable) distinct(f func(interface{}, interface{}) (bool, error)) (r Q
 // Union returns set union of the source sequence and the provided
 // input slice using default equality comparer. This is a set operation and
 // returns an unordered sequence.
-func (q Queryable) Union(in []interface{}) (r Queryable) {
+func (q Queryable) Union(in []T) (r Queryable) {
 	if q.err != nil {
 		r.err = q.err
 		return
@@ -188,7 +193,7 @@ func (q Queryable) Union(in []interface{}) (r Queryable) {
 		r.err = ErrNilInput
 		return
 	}
-	var set map[interface{}]bool = make(map[interface{}]bool)
+	var set map[T]bool = make(map[T]bool)
 
 	for _, v := range q.values {
 		if _, ok := set[v]; !ok {
@@ -200,7 +205,7 @@ func (q Queryable) Union(in []interface{}) (r Queryable) {
 			set[v] = true
 		}
 	}
-	r.values = make([]interface{}, len(set))
+	r.values = make([]T, len(set))
 	i := 0
 	for k, _ := range set {
 		r.values[i] = k
@@ -212,7 +217,7 @@ func (q Queryable) Union(in []interface{}) (r Queryable) {
 // Intersect returns set intersection of the source sequence and the
 // provided input slice using default equality comparer. This is a set
 // operation and may return an unordered sequence.
-func (q Queryable) Intersect(in []interface{}) (r Queryable) {
+func (q Queryable) Intersect(in []T) (r Queryable) {
 	if q.err != nil {
 		r.err = q.err
 		return
@@ -221,8 +226,8 @@ func (q Queryable) Intersect(in []interface{}) (r Queryable) {
 		r.err = ErrNilInput
 		return
 	}
-	var set map[interface{}]bool = make(map[interface{}]bool)
-	var intersection map[interface{}]bool = make(map[interface{}]bool)
+	var set map[T]bool = make(map[T]bool)
+	var intersection map[T]bool = make(map[T]bool)
 
 	for _, v := range q.values {
 		if _, ok := set[v]; !ok {
@@ -237,7 +242,7 @@ func (q Queryable) Intersect(in []interface{}) (r Queryable) {
 			}
 		}
 	}
-	r.values = make([]interface{}, len(intersection))
+	r.values = make([]T, len(intersection))
 	i := 0
 	for k, _ := range intersection {
 		r.values[i] = k
@@ -249,7 +254,7 @@ func (q Queryable) Intersect(in []interface{}) (r Queryable) {
 // Except returns set difference of the source sequence and the
 // provided input slice using default equality comparer. This is a set
 // operation and returns an unordered sequence.
-func (q Queryable) Except(in []interface{}) (r Queryable) {
+func (q Queryable) Except(in []T) (r Queryable) {
 	if q.err != nil {
 		r.err = q.err
 		return
@@ -258,7 +263,7 @@ func (q Queryable) Except(in []interface{}) (r Queryable) {
 		r.err = ErrNilInput
 		return
 	}
-	var set map[interface{}]bool = make(map[interface{}]bool)
+	var set map[T]bool = make(map[T]bool)
 
 	for _, v := range q.values {
 		if _, ok := set[v]; !ok {
@@ -268,7 +273,7 @@ func (q Queryable) Except(in []interface{}) (r Queryable) {
 	for _, v := range in {
 		delete(set, v)
 	}
-	r.values = make([]interface{}, len(set))
+	r.values = make([]T, len(set))
 	i := 0
 	for k, _ := range set {
 		r.values[i] = k
@@ -284,7 +289,7 @@ func (q Queryable) Count() (count int, err error) {
 
 // CountBy returns number of elements satisfying the provided predicate
 // function.
-func (q Queryable) CountBy(f func(interface{}) (bool, error)) (c int, err error) {
+func (q Queryable) CountBy(f func(T) (bool, error)) (c int, err error) {
 	if q.err != nil {
 		err = q.err
 		return
@@ -314,7 +319,7 @@ func (q Queryable) Any() (exists bool, err error) {
 
 // AnyWith determines whether the query source contains any elements satisfying
 // the provided predicate function.
-func (q Queryable) AnyWith(f func(interface{}) (bool, error)) (exists bool, err error) {
+func (q Queryable) AnyWith(f func(T) (bool, error)) (exists bool, err error) {
 	if q.err != nil {
 		err = q.err
 		return
@@ -340,7 +345,7 @@ func (q Queryable) AnyWith(f func(interface{}) (bool, error)) (exists bool, err 
 
 // All determines whether all elements of the query source satisfy the provided
 // predicate function.
-func (q Queryable) All(f func(interface{}) (bool, error)) (all bool, err error) {
+func (q Queryable) All(f func(T) (bool, error)) (all bool, err error) {
 	if q.err != nil {
 		err = q.err
 		return
@@ -364,7 +369,7 @@ func (q Queryable) All(f func(interface{}) (bool, error)) (all bool, err error) 
 
 // Single returns the only one element of the original sequence satisfies the
 // provided predicate function if exists, otherwise returns ErrNotSinggle.
-func (q Queryable) Single(f func(interface{}) (bool, error)) (single interface{}, err error) {
+func (q Queryable) Single(f func(T) (bool, error)) (single T, err error) {
 	if q.err != nil {
 		err = q.err
 		return
@@ -398,7 +403,7 @@ func (q Queryable) Single(f func(interface{}) (bool, error)) (single interface{}
 // ElementAt returns the element at the specified index i. If i is a negative
 // number ErrNegativeParam, if no element exists at i-th index, ErrNoElement
 // is returned.
-func (q Queryable) ElementAt(i int) (elem interface{}, err error) {
+func (q Queryable) ElementAt(i int) (elem T, err error) {
 	if q.err != nil {
 		err = q.err
 		return
@@ -418,7 +423,7 @@ func (q Queryable) ElementAt(i int) (elem interface{}, err error) {
 // ElementAtOrNil returns the element at the specified index i if exists,
 // otherwise returns nil. If i is a negative number, ErrNegativeParam is
 // returned.
-func (q Queryable) ElementAtOrNil(i int) (elem interface{}, err error) {
+func (q Queryable) ElementAtOrNil(i int) (elem T, err error) {
 	if q.err != nil {
 		err = q.err
 		return
@@ -435,7 +440,7 @@ func (q Queryable) ElementAtOrNil(i int) (elem interface{}, err error) {
 
 // First returns the element at first position of the query source if exists.
 // If source is empty, ErrNoElement is returned.
-func (q Queryable) First() (elem interface{}, err error) {
+func (q Queryable) First() (elem T, err error) {
 	if q.err != nil {
 		err = q.err
 		return
@@ -450,7 +455,7 @@ func (q Queryable) First() (elem interface{}, err error) {
 
 // FirstOrNil returns the element at first position of the query source, if
 // exists. Otherwise returns nil.
-func (q Queryable) FirstOrNil() (elem interface{}, err error) {
+func (q Queryable) FirstOrNil() (elem T, err error) {
 	if q.err != nil {
 		err = q.err
 		return
@@ -461,7 +466,7 @@ func (q Queryable) FirstOrNil() (elem interface{}, err error) {
 	return
 }
 
-func (q Queryable) firstBy(f func(interface{}) (bool, error)) (elem interface{}, found bool, err error) {
+func (q Queryable) firstBy(f func(T) (bool, error)) (elem T, found bool, err error) {
 	if q.err != nil {
 		err = q.err
 		return
@@ -487,7 +492,7 @@ func (q Queryable) firstBy(f func(interface{}) (bool, error)) (elem interface{},
 
 // FirstBy returns the first element in the query source that satisfies the
 // provided predicate. If source is empty, ErrNoElement is returned.
-func (q Queryable) FirstBy(f func(interface{}) (bool, error)) (elem interface{}, err error) {
+func (q Queryable) FirstBy(f func(T) (bool, error)) (elem T, err error) {
 	var found bool
 	elem, found, err = q.firstBy(f)
 
@@ -499,7 +504,7 @@ func (q Queryable) FirstBy(f func(interface{}) (bool, error)) (elem interface{},
 
 // FirstOrNilBy returns the first element in the query source that satisfies
 // the provided predicate, if exists, otherwise nil.
-func (q Queryable) FirstOrNilBy(f func(interface{}) (bool, error)) (elem interface{}, err error) {
+func (q Queryable) FirstOrNilBy(f func(T) (bool, error)) (elem T, err error) {
 	elem, found, err := q.firstBy(f)
 	if !found {
 		elem = nil
@@ -509,7 +514,7 @@ func (q Queryable) FirstOrNilBy(f func(interface{}) (bool, error)) (elem interfa
 
 // Last returns the element at last position of the query source if exists.
 // If source is empty, ErrNoElement is returned.
-func (q Queryable) Last() (elem interface{}, err error) {
+func (q Queryable) Last() (elem T, err error) {
 	if q.err != nil {
 		err = q.err
 		return
@@ -524,7 +529,7 @@ func (q Queryable) Last() (elem interface{}, err error) {
 
 // LastOrNil returns the element at last index of the query source, if exists.
 // Otherwise returns nil.
-func (q Queryable) LastOrNil() (elem interface{}, err error) {
+func (q Queryable) LastOrNil() (elem T, err error) {
 	if q.err != nil {
 		err = q.err
 		return
@@ -535,7 +540,7 @@ func (q Queryable) LastOrNil() (elem interface{}, err error) {
 	return
 }
 
-func (q Queryable) lastBy(f func(interface{}) (bool, error)) (elem interface{}, found bool, err error) {
+func (q Queryable) lastBy(f func(T) (bool, error)) (elem T, found bool, err error) {
 	if q.err != nil {
 		err = q.err
 		return
@@ -562,7 +567,7 @@ func (q Queryable) lastBy(f func(interface{}) (bool, error)) (elem interface{}, 
 
 // LastBy returns the last element in the query source that satisfies the
 // provided predicate. If source is empty, ErrNoElement is returned.
-func (q Queryable) LastBy(f func(interface{}) (bool, error)) (elem interface{}, err error) {
+func (q Queryable) LastBy(f func(T) (bool, error)) (elem T, err error) {
 	var found bool
 	elem, found, err = q.lastBy(f)
 
@@ -574,7 +579,7 @@ func (q Queryable) LastBy(f func(interface{}) (bool, error)) (elem interface{}, 
 
 // LastOrNilBy returns the last element in the query source that satisfies
 // the provided predicate, if exists, otherwise nil.
-func (q Queryable) LastOrNilBy(f func(interface{}) (bool, error)) (elem interface{}, err error) {
+func (q Queryable) LastOrNilBy(f func(T) (bool, error)) (elem T, err error) {
 	elem, found, err := q.lastBy(f)
 	if !found {
 		elem = nil
@@ -590,7 +595,7 @@ func (q Queryable) Reverse() (r Queryable) {
 	}
 	c := len(q.values)
 	j := 0
-	r.values = make([]interface{}, c)
+	r.values = make([]T, c)
 	for i := c - 1; i >= 0; i-- {
 		r.values[j] = q.values[i]
 		j++
@@ -618,7 +623,7 @@ func (q Queryable) Take(n int) (r Queryable) {
 // TakeWhile returns a new query with elements from the original sequence
 // by testing them with provided predicate f and stops taking them first time
 // predicate returns false.
-func (q Queryable) TakeWhile(f func(interface{}) (bool, error)) (r Queryable) {
+func (q Queryable) TakeWhile(f func(T) (bool, error)) (r Queryable) {
 	n, err := q.findWhileTerminationIndex(f)
 	if err != nil {
 		r.err = err
@@ -647,7 +652,7 @@ func (q Queryable) Skip(n int) (r Queryable) {
 // SkipWhile returns a new query with original sequence bypassed
 // as long as a provided predicate is true and then takes the
 // remaining elements.
-func (q Queryable) SkipWhile(f func(interface{}) (bool, error)) (r Queryable) {
+func (q Queryable) SkipWhile(f func(T) (bool, error)) (r Queryable) {
 	n, err := q.findWhileTerminationIndex(f)
 	if err != nil {
 		r.err = err
@@ -656,7 +661,7 @@ func (q Queryable) SkipWhile(f func(interface{}) (bool, error)) (r Queryable) {
 	return q.Skip(n)
 }
 
-func (q Queryable) findWhileTerminationIndex(f func(interface{}) (bool, error)) (n int, err error) {
+func (q Queryable) findWhileTerminationIndex(f func(T) (bool, error)) (n int, err error) {
 	if q.err != nil {
 		err = q.err
 		return
@@ -741,7 +746,7 @@ func (q Queryable) OrderFloat64s() (r Queryable) {
 // in ascending order.
 // The comparer function should return true if the parameter "this" is less
 // than "that".
-func (q Queryable) OrderBy(less func(this interface{}, that interface{}) bool) (r Queryable) {
+func (q Queryable) OrderBy(less func(this T, that T) bool) (r Queryable) {
 	if q.err != nil {
 		r.err = q.err
 		return
@@ -753,7 +758,7 @@ func (q Queryable) OrderBy(less func(this interface{}, that interface{}) bool) (
 
 	sortQ := sortableQueryable{}
 	sortQ.less = less
-	sortQ.values = make([]interface{}, len(q.values))
+	sortQ.values = make([]T, len(q.values))
 	_ = copy(sortQ.values, q.values)
 	sort.Sort(sortQ)
 	r.values = sortQ.values
@@ -769,12 +774,12 @@ func (q Queryable) OrderBy(less func(this interface{}, that interface{}) bool) (
 // innerKeySelector extracts a key from outer element for comparison.
 // resultSelector takes key of inner element and key of outer element as input
 // and returns a value and these values are returned as a new query.
-func (q Queryable) Join(innerCollection []interface{},
-	outerKeySelector func(interface{}) interface{},
-	innerKeySelector func(interface{}) interface{},
+func (q Queryable) Join(innerCollection []T,
+	outerKeySelector func(T) T,
+	innerKeySelector func(T) T,
 	resultSelector func(
-		outer interface{},
-		inner interface{}) interface{}) (r Queryable) {
+		outer T,
+		inner T) T) (r Queryable) {
 	if q.err != nil {
 		r.err = q.err
 		return
@@ -788,7 +793,7 @@ func (q Queryable) Join(innerCollection []interface{},
 		return
 	}
 	var outerCollection = q.values
-	innerKeyLookup := make(map[interface{}]interface{})
+	innerKeyLookup := make(map[T]T)
 
 	for _, outer := range outerCollection {
 		outerKey := outerKeySelector(outer)
@@ -818,12 +823,12 @@ func (q Queryable) Join(innerCollection []interface{},
 // innerKeySelector extracts a key from outer element for comparison.
 // resultSelector takes key of inner element and key of outer element as input
 // and returns a value and these values are returned as a new query.
-func (q Queryable) GroupJoin(innerCollection []interface{},
-	outerKeySelector func(interface{}) interface{},
-	innerKeySelector func(interface{}) interface{},
+func (q Queryable) GroupJoin(innerCollection []T,
+	outerKeySelector func(T) T,
+	innerKeySelector func(T) T,
 	resultSelector func(
-		outer interface{},
-		inners []interface{}) interface{}) (r Queryable) {
+		outer T,
+		inners []T) T) (r Queryable) {
 	if q.err != nil {
 		r.err = q.err
 		return
@@ -837,12 +842,12 @@ func (q Queryable) GroupJoin(innerCollection []interface{},
 		return
 	}
 	var outerCollection = q.values
-	innerKeyLookup := make(map[interface{}]interface{})
+	innerKeyLookup := make(map[T]T)
 
-	var results = make(map[interface{}][]interface{}) // outer --> inner...
+	var results = make(map[T][]T) // outer --> inner...
 	for _, outer := range outerCollection {
 		outerKey := outerKeySelector(outer)
-		bucket := make([]interface{}, 0)
+		bucket := make([]T, 0)
 		results[outer] = bucket
 		for _, inner := range innerCollection {
 			innerKey, ok := innerKeyLookup[inner]
@@ -856,7 +861,7 @@ func (q Queryable) GroupJoin(innerCollection []interface{},
 		}
 	}
 
-	r.values = make([]interface{}, len(results))
+	r.values = make([]T, len(results))
 	i := 0
 	for k, v := range results {
 		outer := k
@@ -874,7 +879,7 @@ func Range(start, count int) (q Queryable) {
 		q.err = ErrNegativeParam
 		return
 	}
-	q.values = make([]interface{}, count)
+	q.values = make([]T, count)
 	for i := 0; i < count; i++ {
 		q.values[i] = start + i
 	}
@@ -897,7 +902,7 @@ func (q Queryable) Sum() (sum float64, err error) {
 	return
 }
 
-func sum_(in []interface{}) (sum float64, err error) {
+func sum_(in []T) (sum float64, err error) {
 	// here we do a poor performance operation
 	// we use type assertion to convert every numeric value type
 	// into float64 for each element in values list

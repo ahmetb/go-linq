@@ -14,23 +14,23 @@ type foo struct {
 }
 
 var (
-	empty = []interface{}{}
-	arr0  = []interface{}{1, 2, 3, 1, 2}
-	arr1  = []interface{}{"foo", "bar", "baz"}
-	arr2  = []interface{}{nil, "foo", 3.14, true, false}
-	arr3  = []interface{}{foo{"A", 0}, foo{"B", 1}, foo{"C", -1}}
-	arr4  = []interface{}{&foo{"C", 0xffff}, nil, &foo{"D", 0x7fff}, byte(12), nil}
+	empty = []T{}
+	arr0  = []T{1, 2, 3, 1, 2}
+	arr1  = []T{"foo", "bar", "baz"}
+	arr2  = []T{nil, "foo", 3.14, true, false}
+	arr3  = []T{foo{"A", 0}, foo{"B", 1}, foo{"C", -1}}
+	arr4  = []T{&foo{"C", 0xffff}, nil, &foo{"D", 0x7fff}, byte(12), nil}
 )
 
 var (
 	genericError = errors.New("")
-	alwaysTrue   = func(i interface{}) (bool, error) {
+	alwaysTrue   = func(i T) (bool, error) {
 		return true, nil
 	}
-	alwaysFalse = func(i interface{}) (bool, error) {
+	alwaysFalse = func(i T) (bool, error) {
 		return false, nil
 	}
-	erroneusBinaryFunc = func(i interface{}) (bool, error) {
+	erroneusBinaryFunc = func(i T) (bool, error) {
 		return true, genericError
 	}
 )
@@ -115,10 +115,10 @@ func TestWhere(t *testing.T) {
 
 	Convey("Basic filtering (x mod 2)==0", t, func() {
 		n := 100
-		divisibleBy2 := func(i interface{}) (bool, error) {
+		divisibleBy2 := func(i T) (bool, error) {
 			return i.(int)%2 == 0, nil
 		}
-		arr := make([]interface{}, n)
+		arr := make([]T, n)
 		for i := 0; i < n; i++ {
 			arr[i] = i
 		}
@@ -129,10 +129,10 @@ func TestWhere(t *testing.T) {
 }
 
 func TestSelect(t *testing.T) {
-	asIs := func(i interface{}) (interface{}, error) {
+	asIs := func(i T) (T, error) {
 		return i, nil
 	}
-	erroneusFunc := func(i interface{}) (interface{}, error) {
+	erroneusFunc := func(i T) (T, error) {
 		return nil, genericError
 	}
 
@@ -169,7 +169,7 @@ func TestSelect(t *testing.T) {
 	})
 
 	Convey("Pow(x,2) for i in []int", t, func() {
-		pow := func(i interface{}) (interface{}, error) {
+		pow := func(i T) (T, error) {
 			return i.(int) * i.(int), nil
 		}
 		val, err := From(arr0).Select(pow).Results()
@@ -193,9 +193,9 @@ func TestDistinct(t *testing.T) {
 		So(res, ShouldResemble, empty)
 	})
 
-	allSameInt := []interface{}{1, 1, 1, 1, 1, 1, 1, 1, 1}
-	allSameStruct := []interface{}{foo{"A", -1}, foo{"A", -1}, foo{"A", -1}}
-	allNil := []interface{}{nil, nil, nil, nil, nil, nil, nil, nil, nil}
+	allSameInt := []T{1, 1, 1, 1, 1, 1, 1, 1, 1}
+	allSameStruct := []T{foo{"A", -1}, foo{"A", -1}, foo{"A", -1}}
+	allNil := []T{nil, nil, nil, nil, nil, nil, nil, nil, nil}
 
 	Convey("With default equality comparer ==", t, func() {
 		Convey("Previous error is reflected on result", func() {
@@ -204,20 +204,20 @@ func TestDistinct(t *testing.T) {
 		})
 		Convey("All elements are the same", func() {
 			res, _ := From(allSameInt).Distinct().Results()
-			So(res, ShouldResemble, []interface{}{allSameInt[0]})
+			So(res, ShouldResemble, []T{allSameInt[0]})
 
 			Convey("All elements are nil", func() {
 				res, _ = From(allNil).Distinct().Results()
-				So(res, ShouldResemble, []interface{}{allNil[0]})
+				So(res, ShouldResemble, []T{allNil[0]})
 			})
 		})
 		Convey("Distinct on structs and nils", func() {
-			arr := []interface{}{foo{"A", 0xffff}, nil, foo{"B", 0x7fff}, nil, foo{"A", 0xffff}}
+			arr := []T{foo{"A", 0xffff}, nil, foo{"B", 0x7fff}, nil, foo{"A", 0xffff}}
 			res, _ := From(arr).Distinct().Results()
 			So(len(res), ShouldEqual, 3)
 		})
 		Convey("Randomly generated integers with duplicates or more", func() {
-			var arr = make([]interface{}, 10000)
+			var arr = make([]T, 10000)
 			var dict = make(map[int]bool, len(arr))
 
 			rand.Seed(time.Now().UnixNano())
@@ -232,15 +232,15 @@ func TestDistinct(t *testing.T) {
 	})
 
 	Convey("With provided equality comparer", t, func() {
-		fooComparer := func(i interface{}, j interface{}) (bool, error) {
+		fooComparer := func(i T, j T) (bool, error) {
 			return i.(foo).str == j.(foo).str && i.(foo).num == j.(foo).num, nil
 		}
-		fooPtrComparer := func(i interface{}, j interface{}) (bool, error) {
+		fooPtrComparer := func(i T, j T) (bool, error) {
 			return i.(*foo).str == j.(*foo).str && i.(*foo).num == j.(*foo).num, nil
 		}
 		_ = fooPtrComparer
 
-		erroneusComparer := func(i interface{}, j interface{}) (bool, error) {
+		erroneusComparer := func(i T, j T) (bool, error) {
 			return false, genericError
 		}
 
@@ -258,20 +258,20 @@ func TestDistinct(t *testing.T) {
 		})
 		Convey("All elements are the same", func() {
 			res, _ := From(allSameStruct).DistinctBy(fooComparer).Results()
-			So(res, ShouldResemble, []interface{}{allSameStruct[0]})
+			So(res, ShouldResemble, []T{allSameStruct[0]})
 		})
 		Convey("All elements are distinct", func() {
-			var arr = make([]interface{}, 100)
+			var arr = make([]T, 100)
 			for i := 0; i < len(arr); i++ {
 				arr[i] = i
 			}
-			res, _ := From(arr).DistinctBy(func(this interface{}, that interface{}) (bool, error) {
+			res, _ := From(arr).DistinctBy(func(this T, that T) (bool, error) {
 				return this.(int) == that.(int), nil
 			}).Results()
 			So(res, ShouldResemble, arr)
 		})
 		Convey("Ensure leftmost appearance is returned in multiple occurrence cases", func() {
-			arr := []interface{}{&foo{"A", 0}, &foo{"B", 0}, &foo{"A", 0}, &foo{"C", 0},
+			arr := []T{&foo{"A", 0}, &foo{"B", 0}, &foo{"A", 0}, &foo{"C", 0},
 				&foo{"A", 0}, &foo{"B", 0}}
 			res, _ := From(arr).DistinctBy(fooPtrComparer).Results()
 			So(len(res), ShouldResemble, 3)
@@ -280,7 +280,7 @@ func TestDistinct(t *testing.T) {
 			So(res[2], ShouldEqual, arr[3]) // C
 		})
 		Convey("Randomly generated integers with likely collisions", func() {
-			var arr = make([]interface{}, 10000)
+			var arr = make([]T, 10000)
 			var dict = make(map[int]bool, len(arr))
 			rand.Seed(time.Now().UnixNano())
 			for i := 0; i < len(arr); i++ {
@@ -288,7 +288,7 @@ func TestDistinct(t *testing.T) {
 				arr[i] = r
 				dict[r] = true
 			}
-			res, _ := From(arr).DistinctBy(func(this interface{}, that interface{}) (bool, error) {
+			res, _ := From(arr).DistinctBy(func(this T, that T) (bool, error) {
 				return this.(int) == that.(int), nil
 			}).Results()
 			So(len(res), ShouldEqual, len(dict))
@@ -297,11 +297,11 @@ func TestDistinct(t *testing.T) {
 }
 
 func TestUnion(t *testing.T) {
-	uniqueArr0 := []interface{}{1, 2, 3, 4, 5}
-	uniqueArr1 := []interface{}{"a", "b", "c"}
-	allSameArr := []interface{}{1, 1, 1, 1}
-	sameStruct0 := []interface{}{foo{"A", 0}, foo{"B", 0}}
-	sameStruct1 := []interface{}{foo{"B", 0}, foo{"A", 0}}
+	uniqueArr0 := []T{1, 2, 3, 4, 5}
+	uniqueArr1 := []T{"a", "b", "c"}
+	allSameArr := []T{1, 1, 1, 1}
+	sameStruct0 := []T{foo{"A", 0}, foo{"B", 0}}
+	sameStruct1 := []T{foo{"B", 0}, foo{"A", 0}}
 	Convey("Previous error is reflected on result", t, func() {
 		_, err := From(uniqueArr0).Where(erroneusBinaryFunc).Union(uniqueArr0).Results()
 		So(err, ShouldNotEqual, nil)
@@ -341,8 +341,8 @@ func TestUnion(t *testing.T) {
 }
 
 func TestIntersect(t *testing.T) {
-	uniqueArr := []interface{}{1, 2, 3, 4, 5}
-	allSameArr := []interface{}{1, 1, 1, 1}
+	uniqueArr := []T{1, 2, 3, 4, 5}
+	allSameArr := []T{1, 1, 1, 1}
 	Convey("Previous error is reflected on result", t, func() {
 		_, err := From(uniqueArr).Where(erroneusBinaryFunc).Intersect(uniqueArr).Results()
 		So(err, ShouldNotEqual, nil)
@@ -372,14 +372,14 @@ func TestIntersect(t *testing.T) {
 		So(len(res), ShouldEqual, 1)
 	})
 	Convey("There is some intersection", t, func() {
-		res, _ := From([]interface{}{1, 2, 3, 4, 5}).Intersect([]interface{}{3, 4, 5, 6, 7}).Results()
-		So(res, ShouldResemble, []interface{}{3, 4, 5})
+		res, _ := From([]T{1, 2, 3, 4, 5}).Intersect([]T{3, 4, 5, 6, 7}).Results()
+		So(res, ShouldResemble, []T{3, 4, 5})
 	})
 }
 
 func TestExcept(t *testing.T) {
-	uniqueArr := []interface{}{1, 2, 3, 4, 5}
-	allSameArr := []interface{}{1, 1, 1, 1}
+	uniqueArr := []T{1, 2, 3, 4, 5}
+	allSameArr := []T{1, 1, 1, 1}
 	Convey("Previous error is reflected on result", t, func() {
 		_, err := From(uniqueArr).Where(erroneusBinaryFunc).Except(uniqueArr).Results()
 		So(err, ShouldNotEqual, nil)
@@ -409,8 +409,8 @@ func TestExcept(t *testing.T) {
 		So(len(res), ShouldEqual, 0)
 	})
 	Convey("There is some intersection", t, func() {
-		res, _ := From([]interface{}{1, 2, 3, 4, 5}).Except([]interface{}{3, 4, 5, 6, 7}).Results()
-		So(res, ShouldResemble, []interface{}{1, 2})
+		res, _ := From([]T{1, 2, 3, 4, 5}).Except([]T{3, 4, 5, 6, 7}).Results()
+		So(res, ShouldResemble, []T{1, 2})
 	})
 }
 
@@ -498,12 +498,12 @@ func TestSingle(t *testing.T) {
 	})
 	Convey("Only one match", t, func() {
 		match := 0
-		var match0 = func(i interface{}) (bool, error) {
+		var match0 = func(i T) (bool, error) {
 			return i.(int) == match, nil
 		}
-		r, _ := From([]interface{}{-1, -1, 0, 1, 1}).Single(match0)
+		r, _ := From([]T{-1, -1, 0, 1, 1}).Single(match0)
 		So(r, ShouldEqual, match)
-		_, err := From([]interface{}{0, 1, 2, 2, 0}).Single(match0)
+		_, err := From([]T{0, 1, 2, 2, 0}).Single(match0)
 		So(err, ShouldEqual, ErrNotSingle)
 	})
 }
@@ -536,16 +536,16 @@ func TestAll(t *testing.T) {
 		So(r, ShouldEqual, true)
 	})
 	Convey("Multiple matches", t, func() {
-		match0 := func(i interface{}) (bool, error) {
+		match0 := func(i T) (bool, error) {
 			return i.(int) == 0, nil
 		}
-		r, _ := From([]interface{}{0, 1, 2, 2, 0}).All(match0)
+		r, _ := From([]T{0, 1, 2, 2, 0}).All(match0)
 		So(r, ShouldEqual, false)
 	})
 }
 
 func TestElementAt_ElementAtOrNil(t *testing.T) {
-	intArr := []interface{}{1, 2, 3, 4, 5}
+	intArr := []T{1, 2, 3, 4, 5}
 	Convey("empty.ElementAt is ErrNoElement", t, func() {
 		_, err := From(empty).ElementAt(1)
 		So(err, ShouldEqual, ErrNoElement)
@@ -730,14 +730,14 @@ func TestReverse(t *testing.T) {
 		So(res, ShouldResemble, empty)
 	})
 	Convey("Actual reverse", t, func() {
-		arr := []interface{}{1, 2, 3, 4, 5}
-		rev := []interface{}{5, 4, 3, 2, 1}
+		arr := []T{1, 2, 3, 4, 5}
+		rev := []T{5, 4, 3, 2, 1}
 		res, _ := From(arr).Reverse().Results()
 		So(res, ShouldResemble, rev)
 
 		Convey("Slice containing nils", func() {
-			arr := []interface{}{1, nil, nil, 2, nil, 3, nil}
-			rev := []interface{}{nil, 3, nil, 2, nil, nil, 1}
+			arr := []T{1, nil, nil, 2, nil, 3, nil}
+			rev := []T{nil, 3, nil, 2, nil, nil, 1}
 			res, _ := From(arr).Reverse().Results()
 			So(res, ShouldResemble, rev)
 		})
@@ -767,9 +767,9 @@ func TestTake(t *testing.T) {
 	})
 
 	Convey("Take n > 0", t, func() {
-		in := []interface{}{1, 2, 3, 4, 5}
+		in := []T{1, 2, 3, 4, 5}
 		res, _ := From(in).Take(3).Results()
-		So(res, ShouldResemble, []interface{}{1, 2, 3})
+		So(res, ShouldResemble, []T{1, 2, 3})
 		Convey("Take n ≥ len(arr)", func() {
 			res, _ := From(in).Take(len(in)).Results()
 			So(res, ShouldResemble, res)
@@ -804,8 +804,8 @@ func TestTakeWhile(t *testing.T) {
 	})
 
 	Convey("Take only first", t, func() {
-		in := []interface{}{1, 2, 3, 4, 5}
-		res, err := From(in).TakeWhile(func(i interface{}) (bool, error) { return i.(int) < 2, nil }).Results()
+		in := []T{1, 2, 3, 4, 5}
+		res, err := From(in).TakeWhile(func(i T) (bool, error) { return i.(int) < 2, nil }).Results()
 		So(err, ShouldEqual, nil)
 		So(res, ShouldResemble, in[:1])
 	})
@@ -834,9 +834,9 @@ func TestSkip(t *testing.T) {
 	})
 
 	Convey("Skip n > 0", t, func() {
-		in := []interface{}{1, 2, 3, 4, 5}
+		in := []T{1, 2, 3, 4, 5}
 		res, _ := From(in).Skip(3).Results()
-		So(res, ShouldResemble, []interface{}{4, 5})
+		So(res, ShouldResemble, []T{4, 5})
 		Convey("Skip n ≥ len(arr)", func() {
 			res, _ := From(in).Skip(len(in)).Results()
 			So(res, ShouldResemble, empty)
@@ -846,9 +846,9 @@ func TestSkip(t *testing.T) {
 	})
 
 	Convey("Skip & take & skip", t, func() {
-		in := []interface{}{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+		in := []T{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
 		res, _ := From(in).Skip(0).Skip(-1000).Skip(1).Take(1000).Take(5).Results()
-		So(res, ShouldResemble, []interface{}{1, 2, 3, 4, 5})
+		So(res, ShouldResemble, []T{1, 2, 3, 4, 5})
 	})
 }
 
@@ -882,25 +882,25 @@ func TestSkipWhile(t *testing.T) {
 	})
 
 	Convey("Skip only first", t, func() {
-		in := []interface{}{1, 2, 3, 4, 5}
-		res, _ := From(in).SkipWhile(func(i interface{}) (bool, error) { return i.(int) < 2, nil }).Results()
+		in := []T{1, 2, 3, 4, 5}
+		res, _ := From(in).SkipWhile(func(i T) (bool, error) { return i.(int) < 2, nil }).Results()
 		So(res, ShouldResemble, in[1:])
 	})
 
 	Convey("SkipWhile & TakeWhile & SkipWhile", t, func() {
-		in := []interface{}{1, 2, 3, 4, 5, 6, 7, 8, 9}
-		lessThanTwo := func(i interface{}) (bool, error) { return i.(int) < 2, nil }
-		lessThanSix := func(i interface{}) (bool, error) { return i.(int) < 6, nil }
+		in := []T{1, 2, 3, 4, 5, 6, 7, 8, 9}
+		lessThanTwo := func(i T) (bool, error) { return i.(int) < 2, nil }
+		lessThanSix := func(i T) (bool, error) { return i.(int) < 6, nil }
 		res, _ := From(in).SkipWhile(alwaysFalse).SkipWhile(lessThanTwo).TakeWhile(lessThanSix).Results()
-		So(res, ShouldResemble, []interface{}{2, 3, 4, 5})
+		So(res, ShouldResemble, []T{2, 3, 4, 5})
 	})
 }
 
 func TestOrder(t *testing.T) {
 	Convey("Sort ints", t, func() {
-		arr := []interface{}{6, 1, 4, 0, -1, 2}
-		arrSorted := []interface{}{-1, 0, 1, 2, 4, 6}
-		unsupportedArr := []interface{}{6, 1, 4, 0, -1, 2, ""}
+		arr := []T{6, 1, 4, 0, -1, 2}
+		arrSorted := []T{-1, 0, 1, 2, 4, 6}
+		unsupportedArr := []T{6, 1, 4, 0, -1, 2, ""}
 
 		Convey("Previous error is reflected on result", func() {
 			_, err := From(arr).Where(erroneusBinaryFunc).OrderInts().Results()
@@ -919,9 +919,9 @@ func TestOrder(t *testing.T) {
 	})
 
 	Convey("Sort float64s", t, func() {
-		arr := []interface{}{1.000000001, 1.0000000001, 0.1, 0.01, 0.00001, 0.0000000000001}
-		arrSorted := []interface{}{0.0000000000001, 0.00001, 0.01, 0.1, 1.0000000001, 1.000000001}
-		unsupportedArr := []interface{}{1.000000001, "", 1.0000000001, 0.1, nil}
+		arr := []T{1.000000001, 1.0000000001, 0.1, 0.01, 0.00001, 0.0000000000001}
+		arrSorted := []T{0.0000000000001, 0.00001, 0.01, 0.1, 1.0000000001, 1.000000001}
+		unsupportedArr := []T{1.000000001, "", 1.0000000001, 0.1, nil}
 
 		Convey("Previous error is reflected on result", func() {
 			_, err := From(arr).Where(erroneusBinaryFunc).OrderFloat64s().Results()
@@ -940,10 +940,10 @@ func TestOrder(t *testing.T) {
 	})
 
 	Convey("Sort strings", t, func() {
-		arr := []interface{}{"c", "a", "", "aa", "b"}
-		arrSorted := []interface{}{"", "a", "aa", "b", "c"}
+		arr := []T{"c", "a", "", "aa", "b"}
+		arrSorted := []T{"", "a", "aa", "b", "c"}
 
-		unsupportedArr := []interface{}{"", "aa", "ccc", nil}
+		unsupportedArr := []T{"", "aa", "ccc", nil}
 
 		Convey("Previous error is reflected on result", func() {
 			_, err := From(arr).Where(erroneusBinaryFunc).OrderStrings().Results()
@@ -964,9 +964,9 @@ func TestOrder(t *testing.T) {
 }
 
 func TestOrderBy(t *testing.T) {
-	unsorted := []interface{}{&foo{"A", 5}, &foo{"B", 1}, &foo{"C", 3}}
-	sorted := []interface{}{&foo{"B", 1}, &foo{"C", 3}, &foo{"A", 5}}
-	sortByNum := func(this interface{}, that interface{}) bool {
+	unsorted := []T{&foo{"A", 5}, &foo{"B", 1}, &foo{"C", 3}}
+	sorted := []T{&foo{"B", 1}, &foo{"C", 3}, &foo{"A", 5}}
+	sortByNum := func(this T, that T) bool {
 		_this := this.(*foo)
 		_that := that.(*foo)
 		return _this.num <= _that.num
@@ -999,7 +999,7 @@ func TestJoins(t *testing.T) {
 	type ResultPair struct{ OwnerName, PetName string }
 	type ResultGroup struct {
 		OwnerName string
-		Pets      []interface{}
+		Pets      []T
 	}
 	magnus := Person{Name: "Hedlund, Magnus"}
 	terry := Person{Name: "Adams, Terry"}
@@ -1013,24 +1013,24 @@ func TestJoins(t *testing.T) {
 	daisy := Pet{Name: "Daisy", Owner: magnus}
 	sasha := Pet{Name: "Sasha", Owner: bob}
 
-	people := []interface{}{magnus, terry, charlotte, ahmet}
-	pets := []interface{}{barley, boots, whiskers, daisy, sasha}
+	people := []T{magnus, terry, charlotte, ahmet}
+	pets := []T{barley, boots, whiskers, daisy, sasha}
 
-	var dummyKeySelector = func(i interface{}) interface{} { return i }
-	var dummyResultSelector = func(i, j interface{}) interface{} { return nil }
-	var dummyGroupResultSelector = func(outer interface{}, inner []interface{}) interface{} { return nil }
+	var dummyKeySelector = func(i T) T { return i }
+	var dummyResultSelector = func(i, j T) T { return nil }
+	var dummyGroupResultSelector = func(outer T, inner []T) T { return nil }
 
-	equiJoinExpected := []interface{}{
+	equiJoinExpected := []T{
 		ResultPair{magnus.Name, daisy.Name},
 		ResultPair{terry.Name, barley.Name},
 		ResultPair{terry.Name, boots.Name},
 		ResultPair{charlotte.Name, whiskers.Name}}
 
-	groupJoinExpected := []interface{}{
-		ResultGroup{magnus.Name, []interface{}{daisy}},
-		ResultGroup{terry.Name, []interface{}{barley, boots}},
-		ResultGroup{charlotte.Name, []interface{}{whiskers}},
-		ResultGroup{ahmet.Name, []interface{}{}}}
+	groupJoinExpected := []T{
+		ResultGroup{magnus.Name, []T{daisy}},
+		ResultGroup{terry.Name, []T{barley, boots}},
+		ResultGroup{charlotte.Name, []T{whiskers}},
+		ResultGroup{ahmet.Name, []T{}}}
 
 	Convey("Equi-join", t, func() {
 		Convey("Errors from the previous of the chain are carried on", func() {
@@ -1050,9 +1050,9 @@ func TestJoins(t *testing.T) {
 		Convey("Pets & owners example join (also checks preserving the order)", func() {
 
 			res, err := From(people).Join(pets,
-				func(person interface{}) interface{} { return person.(Person).Name },
-				func(pet interface{}) interface{} { return pet.(Pet).Owner.Name },
-				func(outer interface{}, inner interface{}) interface{} {
+				func(person T) T { return person.(Person).Name },
+				func(pet T) T { return pet.(Pet).Owner.Name },
+				func(outer T, inner T) T {
 					return ResultPair{outer.(Person).Name, inner.(Pet).Name}
 				}).Results()
 			So(err, ShouldEqual, nil)
@@ -1078,9 +1078,9 @@ func TestJoins(t *testing.T) {
 		Convey("Pets & owners example join (also checks preserving the order)", func() {
 
 			res, err := From(people).GroupJoin(pets,
-				func(person interface{}) interface{} { return person.(Person).Name },
-				func(pet interface{}) interface{} { return pet.(Pet).Owner.Name },
-				func(outer interface{}, inners []interface{}) interface{} {
+				func(person T) T { return person.(Person).Name },
+				func(pet T) T { return pet.(Pet).Owner.Name },
+				func(outer T, inners []T) T {
 					return ResultGroup{outer.(Person).Name, inners}
 				}).Results()
 			So(err, ShouldEqual, nil)
@@ -1102,22 +1102,22 @@ func TestRange(t *testing.T) {
 	Convey("range(1,10)", t, func() {
 		res, err := Range(1, 10).Results()
 		So(err, ShouldEqual, nil)
-		So(res, ShouldResemble, []interface{}{1, 2, 3, 4, 5, 6, 7, 8, 9, 10})
+		So(res, ShouldResemble, []T{1, 2, 3, 4, 5, 6, 7, 8, 9, 10})
 	})
 }
 
 var (
-	intArr            = []interface{}{-1, -2, -3, -4, -5, -6, -7, -8, -9, -10}
+	intArr            = []T{-1, -2, -3, -4, -5, -6, -7, -8, -9, -10}
 	intArrSumExpected = -55
 	intArrAvgExpected = float64(intArrSumExpected) / float64(len(intArr))
-	mixedArr          = []interface{}{
+	mixedArr          = []T{
 		0, int(1), int8(2), int16(3), int32(4), int64(5),
 		uint(6), uint8(7), uint16(8), uint32(9), uint64(10),
 		float32(11.11), float64(12.12)}
 	mixedArrSumExpected           = float64(78.23)
 	mixedArrAvgExpected           = float64(mixedArrSumExpected) / float64(len(mixedArr))
-	mixedArrContainingNil         = []interface{}{1, 2, nil, float64(3), uint(4)}
-	mixedArrContainingUnsupported = []interface{}{1, 2, foo{"", 0}}
+	mixedArrContainingNil         = []T{1, 2, nil, float64(3), uint(4)}
+	mixedArrContainingUnsupported = []T{1, 2, foo{"", 0}}
 )
 
 func TestSum(t *testing.T) {
@@ -1178,8 +1178,8 @@ func TestAverage(t *testing.T) {
 func TestMinMax(t *testing.T) {
 	Convey("MinInt/MaxInt", t, func() {
 		var (
-			arr            = []interface{}{-1, -9, 0, 9, 1}
-			arrUnsupported = []interface{}{-1, -9, 0, 9, 1, nil}
+			arr            = []T{-1, -9, 0, 9, 1}
+			arrUnsupported = []T{-1, -9, 0, 9, 1, nil}
 			expectedMin    = -9
 			expectedMax    = 9
 		)
@@ -1210,8 +1210,8 @@ func TestMinMax(t *testing.T) {
 	})
 	Convey("MinUint/MaxUint", t, func() {
 		var (
-			arr            = []interface{}{uint(1), uint(9), uint(100), uint(99), uint(0)}
-			arrUnsupported = []interface{}{uint(1), uint(9), uint(100), uint(99), uint(0), 0}
+			arr            = []T{uint(1), uint(9), uint(100), uint(99), uint(0)}
+			arrUnsupported = []T{uint(1), uint(9), uint(100), uint(99), uint(0), 0}
 			expectedMin    = uint(0)
 			expectedMax    = uint(100)
 		)
@@ -1242,8 +1242,8 @@ func TestMinMax(t *testing.T) {
 	})
 	Convey("MinFloat64/MaxFloat64", t, func() {
 		var (
-			arr            = []interface{}{float64(-9), float64(-9.9), float64(0), float64(99), float64(99.9)}
-			arrUnsupported = []interface{}{float64(-9), float64(-9.9), float64(0), float64(99), float64(99.9), uint(0)}
+			arr            = []T{float64(-9), float64(-9.9), float64(0), float64(99), float64(99.9)}
+			arrUnsupported = []T{float64(-9), float64(-9.9), float64(0), float64(99), float64(99.9), uint(0)}
 			expectedMin    = float64(-9.9)
 			expectedMax    = float64(99.9)
 		)

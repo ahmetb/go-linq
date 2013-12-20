@@ -1,6 +1,6 @@
 package linq
 
-func toInts(in []interface{}) ([]int, error) {
+func toInts(in []T) ([]int, error) {
 	dst := make([]int, len(in))
 	var ok bool
 	for i, v := range in {
@@ -13,7 +13,7 @@ func toInts(in []interface{}) ([]int, error) {
 	return dst, nil
 }
 
-func toStrings(in []interface{}) ([]string, error) {
+func toStrings(in []T) ([]string, error) {
 	dst := make([]string, len(in))
 	var ok bool
 	for i, v := range in {
@@ -26,7 +26,7 @@ func toStrings(in []interface{}) ([]string, error) {
 	return dst, nil
 }
 
-func toFloat64s(in []interface{}) ([]float64, error) {
+func toFloat64s(in []T) ([]float64, error) {
 	dst := make([]float64, len(in))
 	var ok bool
 	for i, v := range in {
@@ -39,31 +39,31 @@ func toFloat64s(in []interface{}) ([]float64, error) {
 	return dst, nil
 }
 
-func intsToInterface(in []int) []interface{} {
-	dst := make([]interface{}, len(in))
+func intsToInterface(in []int) []T {
+	dst := make([]T, len(in))
 	for i := 0; i < len(in); i++ {
 		dst[i] = in[i]
 	}
 	return dst
 }
 
-func float64sToInterface(in []float64) []interface{} {
-	dst := make([]interface{}, len(in))
+func float64sToInterface(in []float64) []T {
+	dst := make([]T, len(in))
 	for i := 0; i < len(in); i++ {
 		dst[i] = in[i]
 	}
 	return dst
 }
 
-func stringsToInterface(in []string) []interface{} {
-	dst := make([]interface{}, len(in))
+func stringsToInterface(in []string) []T {
+	dst := make([]T, len(in))
 	for i := 0; i < len(in); i++ {
 		dst[i] = in[i]
 	}
 	return dst
 }
 
-func minMaxInts(in []interface{}) (int, int, error) {
+func minMaxInts(in []T) (int, int, error) {
 	var ok bool
 	var minVal, maxVal int
 	var min, max int
@@ -87,7 +87,7 @@ func minMaxInts(in []interface{}) (int, int, error) {
 	return min, max, nil
 }
 
-func minMaxUints(in []interface{}) (int, int, error) {
+func minMaxUints(in []T) (int, int, error) {
 	var ok bool
 	var minVal, maxVal uint
 	var min, max int
@@ -111,7 +111,7 @@ func minMaxUints(in []interface{}) (int, int, error) {
 	return min, max, nil
 }
 
-func minMaxFloat64s(in []interface{}) (int, int, error) {
+func minMaxFloat64s(in []T) (int, int, error) {
 	var ok bool
 	var minVal, maxVal float64
 	var min, max int
