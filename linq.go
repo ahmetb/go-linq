@@ -7,6 +7,8 @@ import (
 	"sort"
 )
 
+// Queryable is the type returned from query functions. To get the results
+// and errors of the query, use Results().
 type Queryable struct {
 	values []interface{}
 	err    error
