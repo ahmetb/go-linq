@@ -49,7 +49,8 @@ for more).
 
 ## Used By
 
-Please edit [this](#) wiki page if you are using this library.
+Please edit [this](https://github.com/ahmetalpbalkan/go-linq/wiki/List-of-Users)
+wiki page if you are using this library.
 
 ## Release Notes
 
