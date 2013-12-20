@@ -67,7 +67,7 @@ func TestFrom(t *testing.T) {
 func TestResults(t *testing.T) {
 	Convey("If error exists in given queryable, error is returned", t, func() {
 		errMsg := "dummy error"
-		q := queryable{
+		q := Queryable{
 			values: nil,
 			err:    errors.New(errMsg)}
 		_, err := q.Results()
@@ -75,7 +75,7 @@ func TestResults(t *testing.T) {
 		So(err.Error(), ShouldEqual, errMsg)
 	})
 	Convey("Given no errors exist, non-nil results are returned", t, func() {
-		q := queryable{values: arr0, err: nil}
+		q := Queryable{values: arr0, err: nil}
 		val, err := q.Results()
 		So(err, ShouldEqual, nil)
 		So(val, ShouldResemble, arr0)
@@ -484,25 +484,27 @@ func TestSingle(t *testing.T) {
 	Convey("An error returned from f is reflected on Result", t, func() {
 		_, err := From(arr0).Where(alwaysTrue).Single(erroneusBinaryFunc)
 		So(err, ShouldNotEqual, nil)
+		So(err, ShouldNotEqual, ErrNotSingle)
 		_, err = From(arr0).Where(alwaysFalse).Single(erroneusBinaryFunc)
-		So(err, ShouldEqual, nil)
+		So(err, ShouldEqual, ErrNotSingle)
 	})
 	Convey("No matches", t, func() {
-		r, _ := From(arr0).Single(alwaysFalse)
-		So(r, ShouldEqual, false)
+		_, err := From(arr0).Single(alwaysFalse)
+		So(err, ShouldEqual, ErrNotSingle)
 	})
 	Convey("All matches", t, func() {
-		r, _ := From(arr0).Single(alwaysTrue)
-		So(r, ShouldEqual, false)
+		_, err := From(arr0).Single(alwaysTrue)
+		So(err, ShouldEqual, ErrNotSingle)
 	})
 	Convey("Only one match", t, func() {
+		match := 0
 		var match0 = func(i interface{}) (bool, error) {
-			return i.(int) == 0, nil
+			return i.(int) == match, nil
 		}
 		r, _ := From([]interface{}{-1, -1, 0, 1, 1}).Single(match0)
-		So(r, ShouldEqual, true)
-		r, _ = From([]interface{}{0, 1, 2, 2, 0}).Single(match0)
-		So(r, ShouldEqual, false)
+		So(r, ShouldEqual, match)
+		_, err := From([]interface{}{0, 1, 2, 2, 0}).Single(match0)
+		So(err, ShouldEqual, ErrNotSingle)
 	})
 }
 

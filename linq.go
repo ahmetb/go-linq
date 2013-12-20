@@ -1,3 +1,5 @@
+// Package linq provides methods for querying and manipulating slices and
+// collections.
 package linq
 
 import (
@@ -5,15 +7,19 @@ import (
 	"sort"
 )
 
-type queryable struct {
+type Queryable struct {
 	values []interface{}
 	err    error
+}
+
+type sortableQueryable struct {
+	values []interface{}
 	less   func(this, that interface{}) bool
 }
 
-func (q queryable) Len() int           { return len(q.values) }
-func (q queryable) Swap(i, j int)      { q.values[i], q.values[j] = q.values[j], q.values[i] }
-func (q queryable) Less(i, j int) bool { return q.less(q.values[i], q.values[j]) }
+func (q sortableQueryable) Len() int           { return len(q.values) }
+func (q sortableQueryable) Swap(i, j int)      { q.values[i], q.values[j] = q.values[j], q.values[i] }
+func (q sortableQueryable) Less(i, j int) bool { return q.less(q.values[i], q.values[j]) }
 
 var (
 	ErrNilFunc       = errors.New("linq: passed evaluation function is nil")
@@ -23,23 +29,32 @@ var (
 	ErrNegativeParam = errors.New("linq: parameter cannot be negative")
 	ErrNan           = errors.New("linq: sequence contains an element of non-numeric types")
 	ErrTypeMismatch  = errors.New("linq: sequence contains element(s) with type different than requested type or nil")
+	ErrNotSingle     = errors.New("linq: sequence contains more than one element matching the given predicate fund")
 )
 
-func From(input []interface{}) queryable {
+// From initializes a linq query with passed slice as the source.
+// The slice has to be of type []interface{}. This is a language limitation.
+func From(input []interface{}) Queryable {
 	var _err error
 	if input == nil {
 		_err = ErrNilInput
 	}
-	return queryable{
+	return Queryable{
 		values: input,
 		err:    _err}
 }
 
-func (q queryable) Results() ([]interface{}, error) {
+// Results evaluates the query and returns the results as interface{} slice.
+// An error occurred in during evaluation of the query will be returned.
+func (q Queryable) Results() ([]interface{}, error) {
 	return q.values, q.err
 }
 
-func (q queryable) Where(f func(interface{}) (bool, error)) (r queryable) {
+// Where filters a sequence of values based on a predicate function. This
+// function will take elements of the source (or results of previous query)
+// as interface[] so it should make type assertion to work on the types.
+// Returns a query with elements satisfy the condition.
+func (q Queryable) Where(f func(interface{}) (bool, error)) (r Queryable) {
 	if q.err != nil {
 		r.err = q.err
 		return r
@@ -62,7 +77,10 @@ func (q queryable) Where(f func(interface{}) (bool, error)) (r queryable) {
 	return r
 }
 
-func (q queryable) Select(f func(interface{}) (interface{}, error)) (r queryable) {
+// Select projects each element of a sequence into a new form.
+// Returns a query whose source the result of invoking the transform function
+// on each element of original source.
+func (q Queryable) Select(f func(interface{}) (interface{}, error)) (r Queryable) {
 	if q.err != nil {
 		r.err = q.err
 		return r
@@ -83,11 +101,18 @@ func (q queryable) Select(f func(interface{}) (interface{}, error)) (r queryable
 	return
 }
 
-func (q queryable) Distinct() (r queryable) {
+// Distinct returns distinct elements from the provided source using default
+// equality comparer, ==. This is a set operation and returns an unordered
+// sequence.
+func (q Queryable) Distinct() (r Queryable) {
 	return q.distinct(nil)
 }
 
-func (q queryable) DistinctBy(f func(interface{}, interface{}) (bool, error)) (r queryable) {
+// DistinctBy returns distinct elements from the provided source using the
+// provided equality comparer. This is a set operation and returns an unordered
+// sequence. Number of calls to f will be at most N^2 (all elements are
+// distinct) and at best N (all elements are the same).
+func (q Queryable) DistinctBy(f func(interface{}, interface{}) (bool, error)) (r Queryable) {
 	if f == nil {
 		r.err = ErrNilFunc
 		return
@@ -95,7 +120,10 @@ func (q queryable) DistinctBy(f func(interface{}, interface{}) (bool, error)) (r
 	return q.distinct(f)
 }
 
-func (q queryable) distinct(f func(interface{}, interface{}) (bool, error)) (r queryable) {
+// distinct returns distinct elements from the provided source using default
+// equality comparer (==) or a custom equality comparer function. Complexity
+// is O(N).
+func (q Queryable) distinct(f func(interface{}, interface{}) (bool, error)) (r Queryable) {
 	if q.err != nil {
 		r.err = q.err
 		return r
@@ -146,7 +174,9 @@ func (q queryable) distinct(f func(interface{}, interface{}) (bool, error)) (r q
 	return
 }
 
-func (q queryable) Union(in []interface{}) (r queryable) {
+// Union returns set union of the source set on the query and the provided
+// input slice using default equality comparer.
+func (q Queryable) Union(in []interface{}) (r Queryable) {
 	if q.err != nil {
 		r.err = q.err
 		return
@@ -176,7 +206,9 @@ func (q queryable) Union(in []interface{}) (r queryable) {
 	return
 }
 
-func (q queryable) Intersect(in []interface{}) (r queryable) {
+// Intersect returns set intersection of the source set on the query and the
+// provided input slice using default equality comparer.
+func (q Queryable) Intersect(in []interface{}) (r Queryable) {
 	if q.err != nil {
 		r.err = q.err
 		return
@@ -210,7 +242,9 @@ func (q queryable) Intersect(in []interface{}) (r queryable) {
 	return
 }
 
-func (q queryable) Except(in []interface{}) (r queryable) {
+// Except returns set intersection of the source set on the query and the
+// provided input slice using default equality comparer.
+func (q Queryable) Except(in []interface{}) (r Queryable) {
 	if q.err != nil {
 		r.err = q.err
 		return
@@ -238,11 +272,14 @@ func (q queryable) Except(in []interface{}) (r queryable) {
 	return
 }
 
-func (q queryable) Count() (count int, err error) {
+// Count returns number of elements.
+func (q Queryable) Count() (count int, err error) {
 	return len(q.values), q.err
 }
 
-func (q queryable) CountBy(f func(interface{}) (bool, error)) (c int, err error) {
+// CountBy returns number of elements satisfying the provided predicate
+// function.
+func (q Queryable) CountBy(f func(interface{}) (bool, error)) (c int, err error) {
 	if q.err != nil {
 		err = q.err
 		return
@@ -265,11 +302,14 @@ func (q queryable) CountBy(f func(interface{}) (bool, error)) (c int, err error)
 	return
 }
 
-func (q queryable) Any() (exists bool, err error) {
+// Any determines whether the query source contains any elements.
+func (q Queryable) Any() (exists bool, err error) {
 	return len(q.values) > 0, q.err
 }
 
-func (q queryable) AnyWith(f func(interface{}) (bool, error)) (exists bool, err error) {
+// AnyWith determines whether the query source contains any elements satisfying
+// the provided predicate function.
+func (q Queryable) AnyWith(f func(interface{}) (bool, error)) (exists bool, err error) {
 	if q.err != nil {
 		err = q.err
 		return
@@ -293,7 +333,9 @@ func (q queryable) AnyWith(f func(interface{}) (bool, error)) (exists bool, err 
 	return
 }
 
-func (q queryable) All(f func(interface{}) (bool, error)) (all bool, err error) {
+// All determines whether all elements of the query source satisfy the provided
+// predicate function.
+func (q Queryable) All(f func(interface{}) (bool, error)) (all bool, err error) {
 	if q.err != nil {
 		err = q.err
 		return
@@ -315,7 +357,9 @@ func (q queryable) All(f func(interface{}) (bool, error)) (all bool, err error) 
 	return
 }
 
-func (q queryable) Single(f func(interface{}) (bool, error)) (single bool, err error) {
+// Single returns the only one element of the original sequence satisfies the
+// provided predicate function if exists, otherwise returns ErrNotSinggle.
+func (q Queryable) Single(f func(interface{}) (bool, error)) (single interface{}, err error) {
 	if q.err != nil {
 		err = q.err
 		return
@@ -324,16 +368,32 @@ func (q queryable) Single(f func(interface{}) (bool, error)) (single bool, err e
 		err = ErrNilFunc
 		return
 	}
-	count, e := q.CountBy(f)
-	if e != nil {
-		err = e
-		return
+	for _, v := range q.values {
+		ok, e := f(v)
+		if e != nil {
+			err = e
+			return
+		}
+		if ok {
+			if single != nil {
+				err = ErrNotSingle
+				return
+			}
+			single = v
+		}
 	}
-	single = count == 1
+
+	if single == nil {
+		err = ErrNotSingle
+	}
+
 	return
 }
 
-func (q queryable) ElementAt(i int) (elem interface{}, err error) {
+// ElementAt returns the element at the specified index i. If i is a negative
+// number ErrNegativeParam, if no element exists at i-th index, ErrNoElement
+// is returned.
+func (q Queryable) ElementAt(i int) (elem interface{}, err error) {
 	if q.err != nil {
 		err = q.err
 		return
@@ -350,7 +410,10 @@ func (q queryable) ElementAt(i int) (elem interface{}, err error) {
 	return
 }
 
-func (q queryable) ElementAtOrNil(i int) (elem interface{}, err error) {
+// ElementAtOrNil returns the element at the specified index i if exists,
+// otherwise returns nil. If i is a negative number, ErrNegativeParam is
+// returned.
+func (q Queryable) ElementAtOrNil(i int) (elem interface{}, err error) {
 	if q.err != nil {
 		err = q.err
 		return
@@ -365,7 +428,9 @@ func (q queryable) ElementAtOrNil(i int) (elem interface{}, err error) {
 	return
 }
 
-func (q queryable) First() (elem interface{}, err error) {
+// First returns the element at first position of the query source if exists.
+// If source is empty, ErrNoElement is returned.
+func (q Queryable) First() (elem interface{}, err error) {
 	if q.err != nil {
 		err = q.err
 		return
@@ -378,7 +443,9 @@ func (q queryable) First() (elem interface{}, err error) {
 	return
 }
 
-func (q queryable) FirstOrNil() (elem interface{}, err error) {
+// FirstOrNil returns the element at first position of the query source, if
+// exists. Otherwise returns nil.
+func (q Queryable) FirstOrNil() (elem interface{}, err error) {
 	if q.err != nil {
 		err = q.err
 		return
@@ -389,7 +456,7 @@ func (q queryable) FirstOrNil() (elem interface{}, err error) {
 	return
 }
 
-func (q queryable) firstBy(f func(interface{}) (bool, error)) (elem interface{}, found bool, err error) {
+func (q Queryable) firstBy(f func(interface{}) (bool, error)) (elem interface{}, found bool, err error) {
 	if q.err != nil {
 		err = q.err
 		return
@@ -413,7 +480,9 @@ func (q queryable) firstBy(f func(interface{}) (bool, error)) (elem interface{},
 	return
 }
 
-func (q queryable) FirstBy(f func(interface{}) (bool, error)) (elem interface{}, err error) {
+// FirstBy returns the first element in the query source that satisfies the
+// provided predicate. If source is empty, ErrNoElement is returned.
+func (q Queryable) FirstBy(f func(interface{}) (bool, error)) (elem interface{}, err error) {
 	var found bool
 	elem, found, err = q.firstBy(f)
 
@@ -423,7 +492,9 @@ func (q queryable) FirstBy(f func(interface{}) (bool, error)) (elem interface{},
 	return
 }
 
-func (q queryable) FirstOrNilBy(f func(interface{}) (bool, error)) (elem interface{}, err error) {
+// FirstOrNilBy returns the first element in the query source that satisfies
+// the provided predicate, if exists, otherwise nil.
+func (q Queryable) FirstOrNilBy(f func(interface{}) (bool, error)) (elem interface{}, err error) {
 	elem, found, err := q.firstBy(f)
 	if !found {
 		elem = nil
@@ -431,7 +502,9 @@ func (q queryable) FirstOrNilBy(f func(interface{}) (bool, error)) (elem interfa
 	return
 }
 
-func (q queryable) Last() (elem interface{}, err error) {
+// Last returns the element at last position of the query source if exists.
+// If source is empty, ErrNoElement is returned.
+func (q Queryable) Last() (elem interface{}, err error) {
 	if q.err != nil {
 		err = q.err
 		return
@@ -444,7 +517,9 @@ func (q queryable) Last() (elem interface{}, err error) {
 	return
 }
 
-func (q queryable) LastOrNil() (elem interface{}, err error) {
+// LastOrNil returns the element at last index of the query source, if exists.
+// Otherwise returns nil.
+func (q Queryable) LastOrNil() (elem interface{}, err error) {
 	if q.err != nil {
 		err = q.err
 		return
@@ -455,7 +530,7 @@ func (q queryable) LastOrNil() (elem interface{}, err error) {
 	return
 }
 
-func (q queryable) lastBy(f func(interface{}) (bool, error)) (elem interface{}, found bool, err error) {
+func (q Queryable) lastBy(f func(interface{}) (bool, error)) (elem interface{}, found bool, err error) {
 	if q.err != nil {
 		err = q.err
 		return
@@ -480,7 +555,9 @@ func (q queryable) lastBy(f func(interface{}) (bool, error)) (elem interface{}, 
 	return
 }
 
-func (q queryable) LastBy(f func(interface{}) (bool, error)) (elem interface{}, err error) {
+// LastBy returns the last element in the query source that satisfies the
+// provided predicate. If source is empty, ErrNoElement is returned.
+func (q Queryable) LastBy(f func(interface{}) (bool, error)) (elem interface{}, err error) {
 	var found bool
 	elem, found, err = q.lastBy(f)
 
@@ -490,7 +567,9 @@ func (q queryable) LastBy(f func(interface{}) (bool, error)) (elem interface{}, 
 	return
 }
 
-func (q queryable) LastOrNilBy(f func(interface{}) (bool, error)) (elem interface{}, err error) {
+// LastOrNilBy returns the last element in the query source that satisfies
+// the provided predicate, if exists, otherwise nil.
+func (q Queryable) LastOrNilBy(f func(interface{}) (bool, error)) (elem interface{}, err error) {
 	elem, found, err := q.lastBy(f)
 	if !found {
 		elem = nil
@@ -498,7 +577,9 @@ func (q queryable) LastOrNilBy(f func(interface{}) (bool, error)) (elem interfac
 	return
 }
 
-func (q queryable) Reverse() (r queryable) {
+// Reverse returns a query whose source is a sequence with inverted order of
+// the original source.
+func (q Queryable) Reverse() (r Queryable) {
 	if q.err != nil {
 		r.err = q.err
 		return
@@ -513,7 +594,9 @@ func (q queryable) Reverse() (r queryable) {
 	return
 }
 
-func (q queryable) Take(n int) (r queryable) {
+// Take returns a new query with n first elements are taken from the original
+// sequence.
+func (q Queryable) Take(n int) (r Queryable) {
 	if q.err != nil {
 		r.err = q.err
 		return
@@ -528,7 +611,10 @@ func (q queryable) Take(n int) (r queryable) {
 	return
 }
 
-func (q queryable) TakeWhile(f func(interface{}) (bool, error)) (r queryable) {
+// TakeWhile returns a new query with elements from the original sequence
+// by testing them with provided predicate f and stops taking them first time
+// predicate returns false.
+func (q Queryable) TakeWhile(f func(interface{}) (bool, error)) (r Queryable) {
 	n, err := q.findWhileTerminationIndex(f)
 	if err != nil {
 		r.err = err
@@ -537,7 +623,9 @@ func (q queryable) TakeWhile(f func(interface{}) (bool, error)) (r queryable) {
 	return q.Take(n)
 }
 
-func (q queryable) Skip(n int) (r queryable) {
+// Skip returns a new query whose source is bypassed n elements
+// from the original sequence and takes rest of the elements.
+func (q Queryable) Skip(n int) (r Queryable) {
 	if q.err != nil {
 		r.err = q.err
 		return
@@ -552,7 +640,10 @@ func (q queryable) Skip(n int) (r queryable) {
 	return
 }
 
-func (q queryable) SkipWhile(f func(interface{}) (bool, error)) (r queryable) {
+// SkipWhile returns a new query whose source is elements in the original bypassed
+// as long as a provided predicate is true and then takes the
+// remaining elements.
+func (q Queryable) SkipWhile(f func(interface{}) (bool, error)) (r Queryable) {
 	n, err := q.findWhileTerminationIndex(f)
 	if err != nil {
 		r.err = err
@@ -561,7 +652,7 @@ func (q queryable) SkipWhile(f func(interface{}) (bool, error)) (r queryable) {
 	return q.Skip(n)
 }
 
-func (q queryable) findWhileTerminationIndex(f func(interface{}) (bool, error)) (n int, err error) {
+func (q Queryable) findWhileTerminationIndex(f func(interface{}) (bool, error)) (n int, err error) {
 	if q.err != nil {
 		err = q.err
 		return
@@ -586,7 +677,10 @@ func (q queryable) findWhileTerminationIndex(f func(interface{}) (bool, error)) 
 	return
 }
 
-func (q queryable) OrderInts() (r queryable) {
+// OrderInts returns a new query by sorting integers in the original
+// sequence in ascending order. Elements of the original sequence should only be
+// int. Otherwise, ErrTypeMismatch will be returned.
+func (q Queryable) OrderInts() (r Queryable) {
 	if q.err != nil {
 		r.err = q.err
 		return
@@ -603,7 +697,10 @@ func (q queryable) OrderInts() (r queryable) {
 	return
 }
 
-func (q queryable) OrderStrings() (r queryable) {
+// OrderStrings returns a new query by sorting integers in the original
+// sequence in ascending order. Elements of the original sequence should only be
+// string. Otherwise, ErrTypeMismatch will be returned.
+func (q Queryable) OrderStrings() (r Queryable) {
 	if q.err != nil {
 		r.err = q.err
 		return
@@ -618,7 +715,10 @@ func (q queryable) OrderStrings() (r queryable) {
 	return
 }
 
-func (q queryable) OrderFloat64s() (r queryable) {
+// OrderFloat64s returns a new query by sorting integers in the original
+// sequence in ascending order. Elements of the original sequence should only be
+// float64. Otherwise, ErrTypeMismatch will be returned.
+func (q Queryable) OrderFloat64s() (r Queryable) {
 	if q.err != nil {
 		r.err = q.err
 		return
@@ -633,7 +733,11 @@ func (q queryable) OrderFloat64s() (r queryable) {
 	return
 }
 
-func (q queryable) OrderBy(less func(this interface{}, that interface{}) bool) (r queryable) {
+// OrderBy returns a new query by sorting elements with provided less function
+// in ascending order.
+// The comparer function should return true if the parameter "this" is less
+// than "that".
+func (q Queryable) OrderBy(less func(this interface{}, that interface{}) bool) (r Queryable) {
 	if q.err != nil {
 		r.err = q.err
 		return
@@ -642,19 +746,31 @@ func (q queryable) OrderBy(less func(this interface{}, that interface{}) bool) (
 		r.err = ErrNilFunc
 		return
 	}
-	r.less = less
-	r.values = make([]interface{}, len(q.values))
-	_ = copy(r.values, q.values)
-	sort.Sort(r)
+
+	sortQ := sortableQueryable{}
+	sortQ.less = less
+	sortQ.values = make([]interface{}, len(q.values))
+	_ = copy(sortQ.values, q.values)
+	sort.Sort(sortQ)
+	r.values = sortQ.values
 	return
 }
 
-func (q queryable) Join(innerCollection []interface{},
+// Join correlates the elements of two sequences based on the equality of keys.
+// Inner and outer keys are matched using default equality comparer, ==.
+//
+// Outer sequence is the original sequence.
+// Inner sequence is the one provided as input.
+// outerKeySelector extracts a key from outer element for comparison.
+// innerKeySelector extracts a key from outer element for comparison.
+// resultSelector takes key of inner element and key of outer element as input
+// and returns a value and these values are source of the returned query.
+func (q Queryable) Join(innerCollection []interface{},
 	outerKeySelector func(interface{}) interface{},
 	innerKeySelector func(interface{}) interface{},
 	resultSelector func(
 		outer interface{},
-		inner interface{}) interface{}) (r queryable) {
+		inner interface{}) interface{}) (r Queryable) {
 	if q.err != nil {
 		r.err = q.err
 		return
@@ -687,12 +803,23 @@ func (q queryable) Join(innerCollection []interface{},
 	return
 }
 
-func (q queryable) GroupJoin(innerCollection []interface{},
+// GroupJoin correlates the elements of two sequences based on equality of keys
+// and groups the results. The default equality comparer is used to compare
+// keys.
+//
+// Inner and outer keys are matched using default equality comparer, ==.
+// Outer sequence is the original sequence.
+// Inner sequence is the one provided as input.
+// outerKeySelector extracts a key from outer element for comparison.
+// innerKeySelector extracts a key from outer element for comparison.
+// resultSelector takes key of inner element and key of outer element as input
+// and returns a value and these values are source of the returned query.
+func (q Queryable) GroupJoin(innerCollection []interface{},
 	outerKeySelector func(interface{}) interface{},
 	innerKeySelector func(interface{}) interface{},
 	resultSelector func(
 		outer interface{},
-		inners []interface{}) interface{}) (r queryable) {
+		inners []interface{}) interface{}) (r Queryable) {
 	if q.err != nil {
 		r.err = q.err
 		return
@@ -736,8 +863,9 @@ func (q queryable) GroupJoin(innerCollection []interface{},
 	return
 }
 
-//TODO document integer oveflows are not handled
-func Range(start, count int) (q queryable) {
+// Range returns a query whose source is sequence of integral numbers within
+// the specified range. int overflows are not handled.
+func Range(start, count int) (q Queryable) {
 	if count < 0 {
 		q.err = ErrNegativeParam
 		return
@@ -749,8 +877,14 @@ func Range(start, count int) (q queryable) {
 	return
 }
 
-//TODO document about performance faults
-func (q queryable) Sum() (sum float64, err error) {
+// Sum computes sum of numeric values in the original sequence.
+// See golang spec for numeric types. If sequence has non-numeric types or nil,
+// ErrNan is returned.
+//
+// This method has a poor performance due to language limitations.
+// On every element, type assertion is made to find the correct type of the
+// element.
+func (q Queryable) Sum() (sum float64, err error) {
 	if q.err != nil {
 		err = q.err
 		return
@@ -799,8 +933,15 @@ func sum_(in []interface{}) (sum float64, err error) {
 	return
 }
 
-//TODO document about performance faults
-func (q queryable) Average() (avg float64, err error) {
+// Average computes average of numeric values in the original sequence.
+// See golang spec for numeric types. If sequence has non-numeric types or nil,
+// ErrNan is returned. If original sequence is empty, ErrEmptySequence is
+// returned.
+//
+// This method has a poor performance due to language limitations.
+// On every element, type assertion is made to find the correct type of the
+// elemen.
+func (q Queryable) Average() (avg float64, err error) {
 	if q.err != nil {
 		err = q.err
 		return
@@ -816,7 +957,11 @@ func (q queryable) Average() (avg float64, err error) {
 	return
 }
 
-func (q queryable) MinInt() (min int, err error) {
+// MinInt returns the element with smallest value in the leftmost of the
+// sequence. Elements of the original sequence should only be int or
+// ErrTypeMismatch is returned. If the sequence is empty ErrEmptySequence is
+// returned.
+func (q Queryable) MinInt() (min int, err error) {
 	if q.err != nil {
 		err = q.err
 		return
@@ -831,7 +976,11 @@ func (q queryable) MinInt() (min int, err error) {
 	return q.values[minIndex].(int), nil
 }
 
-func (q queryable) MinUint() (min uint, err error) {
+// MinUint returns the element with smallest value in the leftmost of the
+// sequence. Elements of the original sequence should only be uint or
+// ErrTypeMismatch is returned. If the sequence is empty ErrEmptySequence is
+// returned.
+func (q Queryable) MinUint() (min uint, err error) {
 	if q.err != nil {
 		err = q.err
 		return
@@ -846,7 +995,11 @@ func (q queryable) MinUint() (min uint, err error) {
 	return q.values[minIndex].(uint), nil
 }
 
-func (q queryable) MinFloat64() (min float64, err error) {
+// MinFloat64 returns the element with smallest value in the leftmost of the
+// sequence. Elements of the original sequence should only be float64 or
+// ErrTypeMismatch is returned. If the sequence is empty ErrEmptySequence is
+// returned.
+func (q Queryable) MinFloat64() (min float64, err error) {
 	if q.err != nil {
 		err = q.err
 		return
@@ -861,7 +1014,11 @@ func (q queryable) MinFloat64() (min float64, err error) {
 	return q.values[minIndex].(float64), nil
 }
 
-func (q queryable) MaxInt() (min int, err error) {
+// MaxInt returns the element with biggest value in the leftmost of the
+// sequence. Elements of the original sequence should only be int or
+// ErrTypeMismatch is returned. If the sequence is empty ErrEmptySequence is
+// returned.
+func (q Queryable) MaxInt() (min int, err error) {
 	if q.err != nil {
 		err = q.err
 		return
@@ -876,7 +1033,11 @@ func (q queryable) MaxInt() (min int, err error) {
 	return q.values[maxIndex].(int), nil
 }
 
-func (q queryable) MaxUint() (min uint, err error) {
+// MaxUint returns the element with biggest value in the leftmost of the
+// sequence. Elements of the original sequence should only be uint or
+// ErrTypeMismatch is returned. If the sequence is empty ErrEmptySequence is
+// returned.
+func (q Queryable) MaxUint() (min uint, err error) {
 	if q.err != nil {
 		err = q.err
 		return
@@ -891,7 +1052,11 @@ func (q queryable) MaxUint() (min uint, err error) {
 	return q.values[maxIndex].(uint), nil
 }
 
-func (q queryable) MaxFloat64() (min float64, err error) {
+// MaxFloat64 returns the element with biggest value in the leftmost of the
+// sequence. Elements of the original sequence should only be float64 or
+// ErrTypeMismatch is returned. If the sequence is empty ErrEmptySequence is
+// returned.
+func (q Queryable) MaxFloat64() (min float64, err error) {
 	if q.err != nil {
 		err = q.err
 		return
