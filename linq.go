@@ -78,7 +78,7 @@ func (q Queryable) Where(f func(interface{}) (bool, error)) (r Queryable) {
 }
 
 // Select projects each element of a sequence into a new form.
-// Returns a query whose source the result of invoking the transform function
+// Returns a query with the result of invoking the transform function
 // on each element of original source.
 func (q Queryable) Select(f func(interface{}) (interface{}, error)) (r Queryable) {
 	if q.err != nil {
@@ -174,8 +174,9 @@ func (q Queryable) distinct(f func(interface{}, interface{}) (bool, error)) (r Q
 	return
 }
 
-// Union returns set union of the source set on the query and the provided
-// input slice using default equality comparer.
+// Union returns set union of the source sequence and the provided
+// input slice using default equality comparer. This is a set operation and
+// returns an unordered sequence.
 func (q Queryable) Union(in []interface{}) (r Queryable) {
 	if q.err != nil {
 		r.err = q.err
@@ -206,8 +207,9 @@ func (q Queryable) Union(in []interface{}) (r Queryable) {
 	return
 }
 
-// Intersect returns set intersection of the source set on the query and the
-// provided input slice using default equality comparer.
+// Intersect returns set intersection of the source sequence and the
+// provided input slice using default equality comparer. This is a set
+// operation and may return an unordered sequence.
 func (q Queryable) Intersect(in []interface{}) (r Queryable) {
 	if q.err != nil {
 		r.err = q.err
@@ -242,8 +244,9 @@ func (q Queryable) Intersect(in []interface{}) (r Queryable) {
 	return
 }
 
-// Except returns set intersection of the source set on the query and the
-// provided input slice using default equality comparer.
+// Except returns set difference of the source sequence and the
+// provided input slice using default equality comparer. This is a set
+// operation and returns an unordered sequence.
 func (q Queryable) Except(in []interface{}) (r Queryable) {
 	if q.err != nil {
 		r.err = q.err
@@ -577,8 +580,7 @@ func (q Queryable) LastOrNilBy(f func(interface{}) (bool, error)) (elem interfac
 	return
 }
 
-// Reverse returns a query whose source is a sequence with inverted order of
-// the original source.
+// Reverse returns a query with a inverted order of the original source
 func (q Queryable) Reverse() (r Queryable) {
 	if q.err != nil {
 		r.err = q.err
@@ -623,7 +625,7 @@ func (q Queryable) TakeWhile(f func(interface{}) (bool, error)) (r Queryable) {
 	return q.Take(n)
 }
 
-// Skip returns a new query whose source is bypassed n elements
+// Skip returns a new query with nbypassed
 // from the original sequence and takes rest of the elements.
 func (q Queryable) Skip(n int) (r Queryable) {
 	if q.err != nil {
@@ -640,7 +642,7 @@ func (q Queryable) Skip(n int) (r Queryable) {
 	return
 }
 
-// SkipWhile returns a new query whose source is elements in the original bypassed
+// SkipWhile returns a new query with original sequence bypassed
 // as long as a provided predicate is true and then takes the
 // remaining elements.
 func (q Queryable) SkipWhile(f func(interface{}) (bool, error)) (r Queryable) {
@@ -764,7 +766,7 @@ func (q Queryable) OrderBy(less func(this interface{}, that interface{}) bool) (
 // outerKeySelector extracts a key from outer element for comparison.
 // innerKeySelector extracts a key from outer element for comparison.
 // resultSelector takes key of inner element and key of outer element as input
-// and returns a value and these values are source of the returned query.
+// and returns a value and these values are returned as a new query.
 func (q Queryable) Join(innerCollection []interface{},
 	outerKeySelector func(interface{}) interface{},
 	innerKeySelector func(interface{}) interface{},
@@ -813,7 +815,7 @@ func (q Queryable) Join(innerCollection []interface{},
 // outerKeySelector extracts a key from outer element for comparison.
 // innerKeySelector extracts a key from outer element for comparison.
 // resultSelector takes key of inner element and key of outer element as input
-// and returns a value and these values are source of the returned query.
+// and returns a value and these values are returned as a new query.
 func (q Queryable) GroupJoin(innerCollection []interface{},
 	outerKeySelector func(interface{}) interface{},
 	innerKeySelector func(interface{}) interface{},
@@ -863,7 +865,7 @@ func (q Queryable) GroupJoin(innerCollection []interface{},
 	return
 }
 
-// Range returns a query whose source is sequence of integral numbers within
+// Range returns a query with sequence of integral numbers within
 // the specified range. int overflows are not handled.
 func Range(start, count int) (q Queryable) {
 	if count < 0 {
@@ -940,7 +942,7 @@ func sum_(in []interface{}) (sum float64, err error) {
 //
 // This method has a poor performance due to language limitations.
 // On every element, type assertion is made to find the correct type of the
-// elemen.
+// element.
 func (q Queryable) Average() (avg float64, err error) {
 	if q.err != nil {
 		err = q.err
