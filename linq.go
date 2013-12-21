@@ -31,9 +31,9 @@ type parallelBinaryResult struct {
 }
 
 type parallelValueResult struct {
-	result interface{}
-	err    error
-	index  int
+	val   interface{}
+	err   error
+	index int
 }
 
 func (q sortableQueryable) Len() int           { return len(q.values) }
@@ -96,7 +96,7 @@ func (q Queryable) Where(f func(T) (bool, error)) (r Queryable) {
 	return
 }
 
-// WhereParallel filters a sequence of values by running given predicate function.
+// WhereParallel filters a sequence of values by running given predicate function
 // in parallel for each element.
 //
 // This function will take elements of the source (or results of previous query)
@@ -186,6 +186,46 @@ func (q Queryable) Select(f func(T) (T, error)) (r Queryable) {
 			return r
 		}
 		r.values = append(r.values, val)
+	}
+	return
+}
+
+// Select projects each element of a sequence into a new form by running
+// the given transform function in parallel for each element.
+// Returns a query with the return values of invoking the transform function
+// on each element of original source.
+func (q Queryable) SelectParallel(f func(T) (T, error)) (r Queryable) {
+	if q.err != nil {
+		r.err = q.err
+		return r
+	}
+	if f == nil {
+		r.err = ErrNilFunc
+		return
+	}
+
+	ch := make(chan *parallelValueResult)
+	r.values = make([]T, len(q.values))
+	for i, v := range q.values {
+		go func(ind int, f func(T) (T, error), in T) {
+			out := parallelValueResult{index: ind}
+			val, err := f(in)
+			if err != nil {
+				out.err = err
+			} else {
+				out.val = val
+			}
+			ch <- &out
+		}(i, f, v)
+	}
+
+	for i := 0; i < len(q.values); i++ {
+		out := <-ch
+		if out.err != nil {
+			r.err = out.err
+			return
+		}
+		r.values[out.index] = out.val
 	}
 	return
 }

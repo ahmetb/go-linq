@@ -253,6 +253,67 @@ func TestSelect(t *testing.T) {
 	})
 }
 
+func TestSelectParallel(t *testing.T) {
+	asIs := func(i T) (T, error) {
+		return i, nil
+	}
+	erroneusFunc := func(i T) (T, error) {
+		return nil, genericError
+	}
+
+	Convey("Previous error is reflected on result", t, func() {
+		_, err := From(arr0).Where(erroneusBinaryFunc).SelectParallel(asIs).Results()
+		So(err, ShouldNotEqual, nil)
+	})
+
+	Convey("Nil func returns error", t, func() {
+		_, err := From(arr0).SelectParallel(nil).Results()
+		So(err, ShouldEqual, ErrNilFunc)
+	})
+
+	Convey("Error returned from provided func", t, func() {
+		val, err := From(arr0).SelectParallel(erroneusFunc).Results()
+		So(err, ShouldNotEqual, nil)
+
+		Convey("Erroneus function is in chain with as-is select", func() {
+			_, err = From(arr0).SelectParallel(asIs).SelectParallel(erroneusFunc).Results()
+			So(err, ShouldNotEqual, nil)
+		})
+		Convey("Erroneus function is in chain but not called", func() {
+			val, err = From(arr0).Where(alwaysFalse).SelectParallel(erroneusFunc).Results()
+			So(err, ShouldEqual, nil)
+			So(len(val), ShouldEqual, 0)
+		})
+
+	})
+
+	Convey("Select all elements as is", t, func() {
+		val, err := From(arr0).SelectParallel(asIs).Results()
+		So(err, ShouldEqual, nil)
+		So(val, ShouldResemble, arr0)
+	})
+
+	Convey("Pow(x,2) for i in []int", t, func() {
+		n := 10
+		arr := make([]T, n)
+		expected := make([]T, n)
+		for i := 0; i < n; i++ {
+			r := rand.Intn(999)
+			arr[i] = r * r
+		}
+		for j, i := range arr {
+			expected[j] = i.(int) * i.(int)
+		}
+
+		slowPow := func(i T) (T, error) {
+			time.Sleep(time.Duration(1) * time.Second)
+			return i.(int) * i.(int), nil
+		}
+		val, _ := From(arr).SelectParallel(slowPow).Results()
+		So(val, ShouldResemble, expected)
+	})
+}
+
 func TestDistinct(t *testing.T) {
 	Convey("Empty slice", t, func() {
 		res, err := From(empty).Distinct().Results()
