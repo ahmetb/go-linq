@@ -24,6 +24,18 @@ type sortableQueryable struct {
 	less   func(this, that T) bool
 }
 
+type parallelBinaryResult struct {
+	ok    bool
+	err   error
+	index int
+}
+
+type parallelValueResult struct {
+	result interface{}
+	err    error
+	index  int
+}
+
 func (q sortableQueryable) Len() int           { return len(q.values) }
 func (q sortableQueryable) Swap(i, j int)      { q.values[i], q.values[j] = q.values[j], q.values[i] }
 func (q sortableQueryable) Less(i, j int) bool { return q.less(q.values[i], q.values[j]) }
@@ -81,7 +93,77 @@ func (q Queryable) Where(f func(T) (bool, error)) (r Queryable) {
 			r.values = append(r.values, i)
 		}
 	}
-	return r
+	return
+}
+
+// WhereParallel filters a sequence of values by running given predicate function.
+// in parallel for each element.
+//
+// This function will take elements of the source (or results of previous query)
+// as interface[] so it should make type assertion to work on the types.
+// Returns a query with elements satisfy the condition.
+//
+// If you would like to preserve order from the original sequence, pass preserveOrder
+// as true, but this can be computationally expensive. For the cases order does
+// not matter, use false.
+//
+// If any of the parallel executions return with an error, this function
+// immediately returns with the error.
+func (q Queryable) WhereParallel(f func(T) (bool, error), preserveOrder bool) (r Queryable) {
+	if q.err != nil {
+		r.err = q.err
+		return r
+	}
+	if f == nil {
+		r.err = ErrNilFunc
+		return
+	}
+
+	count := len(q.values)
+	ch := make(chan *parallelBinaryResult)
+	for i := 0; i < count; i++ {
+		go func(ind int, f func(T) (bool, error), in T) {
+			out := parallelBinaryResult{index: ind}
+			ok, err := f(in)
+			if err != nil {
+				out.err = err
+			} else {
+				out.ok = ok
+			}
+			ch <- &out
+		}(i, f, q.values[i])
+	}
+
+	tmp := make([]T, count)
+	take := make([]bool, count)
+
+	for j := 0; j < count; j++ {
+		out := <-ch
+		if out.err != nil {
+			r.err = out.err
+			return
+		}
+		if out.ok {
+			origI := out.index
+			val := q.values[origI]
+			if preserveOrder {
+				tmp[origI] = val
+				take[origI] = true
+			} else {
+				r.values = append(r.values, val)
+			}
+		}
+	}
+
+	if preserveOrder {
+		// iterate over the flag slice to take marked elements
+		for i, v := range tmp {
+			if take[i] {
+				r.values = append(r.values, v)
+			}
+		}
+	}
+	return
 }
 
 // Select projects each element of a sequence into a new form.
