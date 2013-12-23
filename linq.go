@@ -359,6 +359,8 @@ func (q Query) AnyWith(f func(T) (bool, error)) (exists bool, err error) {
 
 // All determines whether all elements of the query source satisfy the provided
 // predicate function.
+//
+// Returns early if one element does not meet the conditions provided.
 func (q Query) All(f func(T) (bool, error)) (all bool, err error) {
 	if q.err != nil {
 		err = q.err
@@ -376,7 +378,7 @@ func (q Query) All(f func(T) (bool, error)) (all bool, err error) {
 			return
 		}
 		if !ok {
-			return false
+			return false, nil
 		}
 	}
 	return true, nil

@@ -165,3 +165,39 @@ func TestAnyWithParallel(t *testing.T) {
 		So(r, ShouldEqual, true)
 	})
 }
+
+func TestAllParallel(t *testing.T) {
+	Convey("Previous error is reflected on result", t, func() {
+		_, err := From(arr0).Where(erroneusBinaryFunc).AsParallel().All(nil)
+		So(err, ShouldNotEqual, nil)
+	})
+	Convey("Given a nil function, ErrNilFunc is returned", t, func() {
+		_, err := From(arr0).Where(alwaysTrue).AsParallel().All(nil)
+		So(err, ShouldNotEqual, nil)
+	})
+	Convey("An error returned from f is reflected on Result", t, func() {
+		_, err := From(arr0).Where(alwaysTrue).AsParallel().All(erroneusBinaryFunc)
+		So(err, ShouldNotEqual, nil)
+		_, err = From(arr0).Where(alwaysFalse).AsParallel().All(erroneusBinaryFunc)
+		So(err, ShouldEqual, nil)
+	})
+	Convey("Empty slice", t, func() {
+		r, _ := From(empty).AsParallel().All(alwaysTrueDelayed)
+		So(r, ShouldEqual, true)
+	})
+	Convey("No matches", t, func() {
+		r, _ := From(arr0).AsParallel().All(alwaysFalseDelayed)
+		So(r, ShouldEqual, false)
+	})
+	Convey("All matches", t, func() {
+		r, _ := From(arr0).AsParallel().All(alwaysTrueDelayed)
+		So(r, ShouldEqual, true)
+	})
+	Convey("Multiple matches", t, func() {
+		match0 := func(i T) (bool, error) {
+			return i.(int) == 0, nil
+		}
+		r, _ := From([]T{0, 1, 2, 2, 0}).AsParallel().All(match0)
+		So(r, ShouldEqual, false)
+	})
+}

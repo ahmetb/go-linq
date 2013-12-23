@@ -179,3 +179,38 @@ func (q ParallelQuery) AnyWith(f func(T) (bool, error)) (exists bool, err error)
 	}
 	return
 }
+
+// All determines whether all elements of the query source satisfy the provided
+// predicate function by executing the function for each element in parallel.
+//
+// Returns early if one element does not meet the conditions provided.
+func (q ParallelQuery) All(f func(T) (bool, error)) (all bool, err error) {
+	if q.err != nil {
+		err = q.err
+		return
+	}
+	if f == nil {
+		err = ErrNilFunc
+		return
+	}
+
+	ch := make(chan parallelBinaryResult)
+	for v := range q.values {
+		go func(f func(T) (bool, error), value T) {
+			ok, e := f(value)
+			ch <- parallelBinaryResult{ok: ok, err: e}
+		}(f, v)
+	}
+
+	for i := 0; i < len(q.values); i++ {
+		out := <-ch
+		if out.err != nil {
+			err = out.err
+			return
+		}
+		if !out.ok {
+			return false, nil
+		}
+	}
+	return true, nil
+}
