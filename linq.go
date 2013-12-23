@@ -465,6 +465,43 @@ func (q Queryable) AnyWith(f func(T) (bool, error)) (exists bool, err error) {
 	return
 }
 
+// AnyWith determines whether the query source contains any elements satisfying
+// the provided predicate function.
+func (q Queryable) AnyWithParallel(f func(T) (bool, error)) (exists bool, err error) {
+	if q.err != nil {
+		err = q.err
+		return
+	}
+	if f == nil {
+		err = ErrNilFunc
+		return
+	}
+
+	ch := make(chan parallelBinaryResult)
+	for _, v := range q.values {
+		go func(f func(T) (bool, error), value interface{}) {
+			out := parallelBinaryResult{}
+			ok, e := f(value)
+			out.ok = ok
+			out.err = e
+			ch <- out
+		}(f, v)
+	}
+
+	for i := 0; i < len(q.values); i++ {
+		out := <-ch
+		if out.err != nil {
+			err = out.err
+			return
+		}
+		if out.ok {
+			exists = true
+			return
+		}
+	}
+	return
+}
+
 // All determines whether all elements of the query source satisfy the provided
 // predicate function.
 func (q Queryable) All(f func(T) (bool, error)) (all bool, err error) {

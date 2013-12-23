@@ -23,11 +23,20 @@ var (
 )
 
 var (
-	genericError = errors.New("")
-	alwaysTrue   = func(i T) (bool, error) {
+	maxRandDelayMs = 100
+	genericError   = errors.New("")
+	alwaysTrue     = func(i T) (bool, error) {
 		return true, nil
 	}
 	alwaysFalse = func(i T) (bool, error) {
+		return false, nil
+	}
+	alwaysTrueDelayed = func(i T) (bool, error) {
+		time.Sleep(time.Duration(rand.Intn(maxRandDelayMs)) * time.Millisecond)
+		return true, nil
+	}
+	alwaysFalseDelayed = func(i T) (bool, error) {
+		time.Sleep(time.Duration(rand.Intn(maxRandDelayMs)) * time.Millisecond)
 		return false, nil
 	}
 	erroneusBinaryFunc = func(i T) (bool, error) {
@@ -151,15 +160,10 @@ func TestWhereParallel(t *testing.T) {
 	for i := 0; i < n; i++ {
 		arr[i] = i
 	}
-	alwaysTrueDelayed := func(i T) (bool, error) {
-		time.Sleep(time.Duration(rand.Intn(100)) * time.Millisecond)
-		return true, nil
-	}
 	divisibleBy2Delayed := func(i T) (bool, error) {
-		time.Sleep(time.Duration(rand.Intn(100)) * time.Millisecond)
+		time.Sleep(time.Duration(rand.Intn(maxRandDelayMs)) * time.Millisecond)
 		return i.(int)%2 == 0, nil
 	}
-
 	Convey("Do not preserve order", t, func() {
 		Convey("Chose all elements, as is", func() {
 			q := From(arr).WhereParallel(alwaysTrueDelayed, false)
@@ -306,7 +310,7 @@ func TestSelectParallel(t *testing.T) {
 		}
 
 		slowPow := func(i T) (T, error) {
-			time.Sleep(time.Duration(1) * time.Second)
+			time.Sleep(time.Duration(maxRandDelayMs) * time.Millisecond)
 			return i.(int) * i.(int), nil
 		}
 		val, _ := From(arr).SelectParallel(slowPow).Results()
@@ -596,6 +600,31 @@ func TestAny(t *testing.T) {
 		r, _ := From(arr0).AnyWith(alwaysTrue)
 		So(r, ShouldEqual, true)
 		r, _ = From(arr0).Where(alwaysTrue).Any()
+		So(r, ShouldEqual, true)
+	})
+}
+
+func TestAnyWithParallel(t *testing.T) {
+	Convey("Previous error is reflected on result", t, func() {
+		_, err := From(arr0).Where(erroneusBinaryFunc).AnyWithParallel(alwaysTrueDelayed)
+		So(err, ShouldNotEqual, nil)
+	})
+	Convey("Given a nil function, ErrNilFunc is returned", t, func() {
+		_, err := From(arr0).Where(alwaysTrueDelayed).AnyWithParallel(nil)
+		So(err, ShouldNotEqual, nil)
+	})
+	Convey("An error returned from f is reflected on Result", t, func() {
+		_, err := From(arr0).Where(alwaysTrueDelayed).AnyWithParallel(erroneusBinaryFunc)
+		So(err, ShouldNotEqual, nil)
+		_, err = From(arr0).Where(alwaysFalse).AnyWithParallel(erroneusBinaryFunc)
+		So(err, ShouldEqual, nil)
+	})
+	Convey("No matches", t, func() {
+		r, _ := From(arr0).AnyWithParallel(alwaysFalseDelayed)
+		So(r, ShouldEqual, false)
+	})
+	Convey("All matches", t, func() {
+		r, _ := From(arr0).AnyWithParallel(alwaysTrueDelayed)
 		So(r, ShouldEqual, true)
 	})
 }
