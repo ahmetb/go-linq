@@ -12,33 +12,25 @@ import (
 // of this type, []T.
 type T interface{}
 
-// Queryable is the type returned from query functions. To evaluante
+// Query is the type returned from query functions. To evaluate
 // get the results of the query, use Results().
-type Queryable struct {
+type Query struct {
 	values []T
 	err    error
 }
 
-type sortableQueryable struct {
+type queryable interface {
+	Results() (T, error)
+}
+
+type sortableQuery struct {
 	values []T
 	less   func(this, that T) bool
 }
 
-type parallelBinaryResult struct {
-	ok    bool
-	err   error
-	index int
-}
-
-type parallelValueResult struct {
-	val   interface{}
-	err   error
-	index int
-}
-
-func (q sortableQueryable) Len() int           { return len(q.values) }
-func (q sortableQueryable) Swap(i, j int)      { q.values[i], q.values[j] = q.values[j], q.values[i] }
-func (q sortableQueryable) Less(i, j int) bool { return q.less(q.values[i], q.values[j]) }
+func (q sortableQuery) Len() int           { return len(q.values) }
+func (q sortableQuery) Swap(i, j int)      { q.values[i], q.values[j] = q.values[j], q.values[i] }
+func (q sortableQuery) Less(i, j int) bool { return q.less(q.values[i], q.values[j]) }
 
 var (
 	ErrNilFunc       = errors.New("linq: passed evaluation function is nil")                                           // a predicate, selector or comparer is nil
@@ -53,27 +45,37 @@ var (
 
 // From initializes a linq query with passed slice as the source.
 // The slice has to be of type []T. This is a language limitation.
-func From(input []T) Queryable {
+func From(input []T) Query {
 	var _err error
 	if input == nil {
 		_err = ErrNilInput
 	}
-	return Queryable{
+	return Query{
 		values: input,
 		err:    _err}
 }
 
 // Results evaluates the query and returns the results as T slice.
 // An error occurred in during evaluation of the query will be returned.
-func (q Queryable) Results() ([]T, error) {
+func (q Query) Results() ([]T, error) {
 	return q.values, q.err
+}
+
+// AsParallel returns a ParallelQuery from the same source where the query functions
+//  can be executed in parallel for each element of the source with goroutines.
+//
+// This is an abstraction to not to break user code. If the query method you are
+// looking for is not available on ParallelQuery, you can go back to serialized
+// Query using AsSequential() method.
+func (q Query) AsParallel() ParallelQuery {
+	return ParallelQuery{values: q.values, err: q.err}
 }
 
 // Where filters a sequence of values based on a predicate function. This
 // function will take elements of the source (or results of previous query)
 // as interface[] so it should make type assertion to work on the types.
 // Returns a query with elements satisfy the condition.
-func (q Queryable) Where(f func(T) (bool, error)) (r Queryable) {
+func (q Query) Where(f func(T) (bool, error)) (r Query) {
 	if q.err != nil {
 		r.err = q.err
 		return r
@@ -96,80 +98,10 @@ func (q Queryable) Where(f func(T) (bool, error)) (r Queryable) {
 	return
 }
 
-// WhereParallel filters a sequence of values by running given predicate function
-// in parallel for each element.
-//
-// This function will take elements of the source (or results of previous query)
-// as interface[] so it should make type assertion to work on the types.
-// Returns a query with elements satisfy the condition.
-//
-// If you would like to preserve order from the original sequence, pass preserveOrder
-// as true, but this can be computationally expensive. For the cases order does
-// not matter, use false.
-//
-// If any of the parallel executions return with an error, this function
-// immediately returns with the error.
-func (q Queryable) WhereParallel(f func(T) (bool, error), preserveOrder bool) (r Queryable) {
-	if q.err != nil {
-		r.err = q.err
-		return r
-	}
-	if f == nil {
-		r.err = ErrNilFunc
-		return
-	}
-
-	count := len(q.values)
-	ch := make(chan *parallelBinaryResult)
-	for i := 0; i < count; i++ {
-		go func(ind int, f func(T) (bool, error), in T) {
-			out := parallelBinaryResult{index: ind}
-			ok, err := f(in)
-			if err != nil {
-				out.err = err
-			} else {
-				out.ok = ok
-			}
-			ch <- &out
-		}(i, f, q.values[i])
-	}
-
-	tmp := make([]T, count)
-	take := make([]bool, count)
-
-	for j := 0; j < count; j++ {
-		out := <-ch
-		if out.err != nil {
-			r.err = out.err
-			return
-		}
-		if out.ok {
-			origI := out.index
-			val := q.values[origI]
-			if preserveOrder {
-				tmp[origI] = val
-				take[origI] = true
-			} else {
-				r.values = append(r.values, val)
-			}
-		}
-	}
-
-	if preserveOrder {
-		// iterate over the flag slice to take marked elements
-		for i, v := range tmp {
-			if take[i] {
-				r.values = append(r.values, v)
-			}
-		}
-	}
-	return
-}
-
 // Select projects each element of a sequence into a new form.
 // Returns a query with the result of invoking the transform function
 // on each element of original source.
-func (q Queryable) Select(f func(T) (T, error)) (r Queryable) {
+func (q Query) Select(f func(T) (T, error)) (r Query) {
 	if q.err != nil {
 		r.err = q.err
 		return r
@@ -190,50 +122,10 @@ func (q Queryable) Select(f func(T) (T, error)) (r Queryable) {
 	return
 }
 
-// Select projects each element of a sequence into a new form by running
-// the given transform function in parallel for each element.
-// Returns a query with the return values of invoking the transform function
-// on each element of original source.
-func (q Queryable) SelectParallel(f func(T) (T, error)) (r Queryable) {
-	if q.err != nil {
-		r.err = q.err
-		return r
-	}
-	if f == nil {
-		r.err = ErrNilFunc
-		return
-	}
-
-	ch := make(chan *parallelValueResult)
-	r.values = make([]T, len(q.values))
-	for i, v := range q.values {
-		go func(ind int, f func(T) (T, error), in T) {
-			out := parallelValueResult{index: ind}
-			val, err := f(in)
-			if err != nil {
-				out.err = err
-			} else {
-				out.val = val
-			}
-			ch <- &out
-		}(i, f, v)
-	}
-
-	for i := 0; i < len(q.values); i++ {
-		out := <-ch
-		if out.err != nil {
-			r.err = out.err
-			return
-		}
-		r.values[out.index] = out.val
-	}
-	return
-}
-
 // Distinct returns distinct elements from the provided source using default
 // equality comparer, ==. This is a set operation and returns an unordered
 // sequence.
-func (q Queryable) Distinct() (r Queryable) {
+func (q Query) Distinct() (r Query) {
 	return q.distinct(nil)
 }
 
@@ -241,7 +133,7 @@ func (q Queryable) Distinct() (r Queryable) {
 // provided equality comparer. This is a set operation and returns an unordered
 // sequence. Number of calls to f will be at most N^2 (all elements are
 // distinct) and at best N (all elements are the same).
-func (q Queryable) DistinctBy(f func(T, T) (bool, error)) (r Queryable) {
+func (q Query) DistinctBy(f func(T, T) (bool, error)) (r Query) {
 	if f == nil {
 		r.err = ErrNilFunc
 		return
@@ -252,7 +144,7 @@ func (q Queryable) DistinctBy(f func(T, T) (bool, error)) (r Queryable) {
 // distinct returns distinct elements from the provided source using default
 // equality comparer (==) or a custom equality comparer function. Complexity
 // is O(N).
-func (q Queryable) distinct(f func(T, T) (bool, error)) (r Queryable) {
+func (q Query) distinct(f func(T, T) (bool, error)) (r Query) {
 	if q.err != nil {
 		r.err = q.err
 		return r
@@ -306,7 +198,7 @@ func (q Queryable) distinct(f func(T, T) (bool, error)) (r Queryable) {
 // Union returns set union of the source sequence and the provided
 // input slice using default equality comparer. This is a set operation and
 // returns an unordered sequence.
-func (q Queryable) Union(in []T) (r Queryable) {
+func (q Query) Union(in []T) (r Query) {
 	if q.err != nil {
 		r.err = q.err
 		return
@@ -339,7 +231,7 @@ func (q Queryable) Union(in []T) (r Queryable) {
 // Intersect returns set intersection of the source sequence and the
 // provided input slice using default equality comparer. This is a set
 // operation and may return an unordered sequence.
-func (q Queryable) Intersect(in []T) (r Queryable) {
+func (q Query) Intersect(in []T) (r Query) {
 	if q.err != nil {
 		r.err = q.err
 		return
@@ -376,7 +268,7 @@ func (q Queryable) Intersect(in []T) (r Queryable) {
 // Except returns set difference of the source sequence and the
 // provided input slice using default equality comparer. This is a set
 // operation and returns an unordered sequence.
-func (q Queryable) Except(in []T) (r Queryable) {
+func (q Query) Except(in []T) (r Query) {
 	if q.err != nil {
 		r.err = q.err
 		return
@@ -405,13 +297,13 @@ func (q Queryable) Except(in []T) (r Queryable) {
 }
 
 // Count returns number of elements.
-func (q Queryable) Count() (count int, err error) {
+func (q Query) Count() (count int, err error) {
 	return len(q.values), q.err
 }
 
 // CountBy returns number of elements satisfying the provided predicate
 // function.
-func (q Queryable) CountBy(f func(T) (bool, error)) (c int, err error) {
+func (q Query) CountBy(f func(T) (bool, error)) (c int, err error) {
 	if q.err != nil {
 		err = q.err
 		return
@@ -435,13 +327,13 @@ func (q Queryable) CountBy(f func(T) (bool, error)) (c int, err error) {
 }
 
 // Any determines whether the query source contains any elements.
-func (q Queryable) Any() (exists bool, err error) {
+func (q Query) Any() (exists bool, err error) {
 	return len(q.values) > 0, q.err
 }
 
 // AnyWith determines whether the query source contains any elements satisfying
 // the provided predicate function.
-func (q Queryable) AnyWith(f func(T) (bool, error)) (exists bool, err error) {
+func (q Query) AnyWith(f func(T) (bool, error)) (exists bool, err error) {
 	if q.err != nil {
 		err = q.err
 		return
@@ -465,46 +357,9 @@ func (q Queryable) AnyWith(f func(T) (bool, error)) (exists bool, err error) {
 	return
 }
 
-// AnyWith determines whether the query source contains any elements satisfying
-// the provided predicate function.
-func (q Queryable) AnyWithParallel(f func(T) (bool, error)) (exists bool, err error) {
-	if q.err != nil {
-		err = q.err
-		return
-	}
-	if f == nil {
-		err = ErrNilFunc
-		return
-	}
-
-	ch := make(chan parallelBinaryResult)
-	for _, v := range q.values {
-		go func(f func(T) (bool, error), value interface{}) {
-			out := parallelBinaryResult{}
-			ok, e := f(value)
-			out.ok = ok
-			out.err = e
-			ch <- out
-		}(f, v)
-	}
-
-	for i := 0; i < len(q.values); i++ {
-		out := <-ch
-		if out.err != nil {
-			err = out.err
-			return
-		}
-		if out.ok {
-			exists = true
-			return
-		}
-	}
-	return
-}
-
 // All determines whether all elements of the query source satisfy the provided
 // predicate function.
-func (q Queryable) All(f func(T) (bool, error)) (all bool, err error) {
+func (q Query) All(f func(T) (bool, error)) (all bool, err error) {
 	if q.err != nil {
 		err = q.err
 		return
@@ -528,7 +383,7 @@ func (q Queryable) All(f func(T) (bool, error)) (all bool, err error) {
 
 // Single returns the only one element of the original sequence satisfies the
 // provided predicate function if exists, otherwise returns ErrNotSinggle.
-func (q Queryable) Single(f func(T) (bool, error)) (single T, err error) {
+func (q Query) Single(f func(T) (bool, error)) (single T, err error) {
 	if q.err != nil {
 		err = q.err
 		return
@@ -562,7 +417,7 @@ func (q Queryable) Single(f func(T) (bool, error)) (single T, err error) {
 // ElementAt returns the element at the specified index i. If i is a negative
 // number ErrNegativeParam, if no element exists at i-th index, ErrNoElement
 // is returned.
-func (q Queryable) ElementAt(i int) (elem T, err error) {
+func (q Query) ElementAt(i int) (elem T, err error) {
 	if q.err != nil {
 		err = q.err
 		return
@@ -582,7 +437,7 @@ func (q Queryable) ElementAt(i int) (elem T, err error) {
 // ElementAtOrNil returns the element at the specified index i if exists,
 // otherwise returns nil. If i is a negative number, ErrNegativeParam is
 // returned.
-func (q Queryable) ElementAtOrNil(i int) (elem T, err error) {
+func (q Query) ElementAtOrNil(i int) (elem T, err error) {
 	if q.err != nil {
 		err = q.err
 		return
@@ -599,7 +454,7 @@ func (q Queryable) ElementAtOrNil(i int) (elem T, err error) {
 
 // First returns the element at first position of the query source if exists.
 // If source is empty, ErrNoElement is returned.
-func (q Queryable) First() (elem T, err error) {
+func (q Query) First() (elem T, err error) {
 	if q.err != nil {
 		err = q.err
 		return
@@ -614,7 +469,7 @@ func (q Queryable) First() (elem T, err error) {
 
 // FirstOrNil returns the element at first position of the query source, if
 // exists. Otherwise returns nil.
-func (q Queryable) FirstOrNil() (elem T, err error) {
+func (q Query) FirstOrNil() (elem T, err error) {
 	if q.err != nil {
 		err = q.err
 		return
@@ -625,7 +480,7 @@ func (q Queryable) FirstOrNil() (elem T, err error) {
 	return
 }
 
-func (q Queryable) firstBy(f func(T) (bool, error)) (elem T, found bool, err error) {
+func (q Query) firstBy(f func(T) (bool, error)) (elem T, found bool, err error) {
 	if q.err != nil {
 		err = q.err
 		return
@@ -651,7 +506,7 @@ func (q Queryable) firstBy(f func(T) (bool, error)) (elem T, found bool, err err
 
 // FirstBy returns the first element in the query source that satisfies the
 // provided predicate. If source is empty, ErrNoElement is returned.
-func (q Queryable) FirstBy(f func(T) (bool, error)) (elem T, err error) {
+func (q Query) FirstBy(f func(T) (bool, error)) (elem T, err error) {
 	var found bool
 	elem, found, err = q.firstBy(f)
 
@@ -663,7 +518,7 @@ func (q Queryable) FirstBy(f func(T) (bool, error)) (elem T, err error) {
 
 // FirstOrNilBy returns the first element in the query source that satisfies
 // the provided predicate, if exists, otherwise nil.
-func (q Queryable) FirstOrNilBy(f func(T) (bool, error)) (elem T, err error) {
+func (q Query) FirstOrNilBy(f func(T) (bool, error)) (elem T, err error) {
 	elem, found, err := q.firstBy(f)
 	if !found {
 		elem = nil
@@ -673,7 +528,7 @@ func (q Queryable) FirstOrNilBy(f func(T) (bool, error)) (elem T, err error) {
 
 // Last returns the element at last position of the query source if exists.
 // If source is empty, ErrNoElement is returned.
-func (q Queryable) Last() (elem T, err error) {
+func (q Query) Last() (elem T, err error) {
 	if q.err != nil {
 		err = q.err
 		return
@@ -688,7 +543,7 @@ func (q Queryable) Last() (elem T, err error) {
 
 // LastOrNil returns the element at last index of the query source, if exists.
 // Otherwise returns nil.
-func (q Queryable) LastOrNil() (elem T, err error) {
+func (q Query) LastOrNil() (elem T, err error) {
 	if q.err != nil {
 		err = q.err
 		return
@@ -699,7 +554,7 @@ func (q Queryable) LastOrNil() (elem T, err error) {
 	return
 }
 
-func (q Queryable) lastBy(f func(T) (bool, error)) (elem T, found bool, err error) {
+func (q Query) lastBy(f func(T) (bool, error)) (elem T, found bool, err error) {
 	if q.err != nil {
 		err = q.err
 		return
@@ -726,7 +581,7 @@ func (q Queryable) lastBy(f func(T) (bool, error)) (elem T, found bool, err erro
 
 // LastBy returns the last element in the query source that satisfies the
 // provided predicate. If source is empty, ErrNoElement is returned.
-func (q Queryable) LastBy(f func(T) (bool, error)) (elem T, err error) {
+func (q Query) LastBy(f func(T) (bool, error)) (elem T, err error) {
 	var found bool
 	elem, found, err = q.lastBy(f)
 
@@ -738,7 +593,7 @@ func (q Queryable) LastBy(f func(T) (bool, error)) (elem T, err error) {
 
 // LastOrNilBy returns the last element in the query source that satisfies
 // the provided predicate, if exists, otherwise nil.
-func (q Queryable) LastOrNilBy(f func(T) (bool, error)) (elem T, err error) {
+func (q Query) LastOrNilBy(f func(T) (bool, error)) (elem T, err error) {
 	elem, found, err := q.lastBy(f)
 	if !found {
 		elem = nil
@@ -747,7 +602,7 @@ func (q Queryable) LastOrNilBy(f func(T) (bool, error)) (elem T, err error) {
 }
 
 // Reverse returns a query with a inverted order of the original source
-func (q Queryable) Reverse() (r Queryable) {
+func (q Query) Reverse() (r Query) {
 	if q.err != nil {
 		r.err = q.err
 		return
@@ -764,7 +619,7 @@ func (q Queryable) Reverse() (r Queryable) {
 
 // Take returns a new query with n first elements are taken from the original
 // sequence.
-func (q Queryable) Take(n int) (r Queryable) {
+func (q Query) Take(n int) (r Query) {
 	if q.err != nil {
 		r.err = q.err
 		return
@@ -780,9 +635,9 @@ func (q Queryable) Take(n int) (r Queryable) {
 }
 
 // TakeWhile returns a new query with elements from the original sequence
-// by testing them with provided predicate f and stops taking them first time
+// by testing them with provided predicate f and stops taking them first
 // predicate returns false.
-func (q Queryable) TakeWhile(f func(T) (bool, error)) (r Queryable) {
+func (q Query) TakeWhile(f func(T) (bool, error)) (r Query) {
 	n, err := q.findWhileTerminationIndex(f)
 	if err != nil {
 		r.err = err
@@ -793,7 +648,7 @@ func (q Queryable) TakeWhile(f func(T) (bool, error)) (r Queryable) {
 
 // Skip returns a new query with nbypassed
 // from the original sequence and takes rest of the elements.
-func (q Queryable) Skip(n int) (r Queryable) {
+func (q Query) Skip(n int) (r Query) {
 	if q.err != nil {
 		r.err = q.err
 		return
@@ -811,7 +666,7 @@ func (q Queryable) Skip(n int) (r Queryable) {
 // SkipWhile returns a new query with original sequence bypassed
 // as long as a provided predicate is true and then takes the
 // remaining elements.
-func (q Queryable) SkipWhile(f func(T) (bool, error)) (r Queryable) {
+func (q Query) SkipWhile(f func(T) (bool, error)) (r Query) {
 	n, err := q.findWhileTerminationIndex(f)
 	if err != nil {
 		r.err = err
@@ -820,7 +675,7 @@ func (q Queryable) SkipWhile(f func(T) (bool, error)) (r Queryable) {
 	return q.Skip(n)
 }
 
-func (q Queryable) findWhileTerminationIndex(f func(T) (bool, error)) (n int, err error) {
+func (q Query) findWhileTerminationIndex(f func(T) (bool, error)) (n int, err error) {
 	if q.err != nil {
 		err = q.err
 		return
@@ -848,7 +703,7 @@ func (q Queryable) findWhileTerminationIndex(f func(T) (bool, error)) (n int, er
 // OrderInts returns a new query by sorting integers in the original
 // sequence in ascending order. Elements of the original sequence should only be
 // int. Otherwise, ErrTypeMismatch will be returned.
-func (q Queryable) OrderInts() (r Queryable) {
+func (q Query) OrderInts() (r Query) {
 	if q.err != nil {
 		r.err = q.err
 		return
@@ -868,7 +723,7 @@ func (q Queryable) OrderInts() (r Queryable) {
 // OrderStrings returns a new query by sorting integers in the original
 // sequence in ascending order. Elements of the original sequence should only be
 // string. Otherwise, ErrTypeMismatch will be returned.
-func (q Queryable) OrderStrings() (r Queryable) {
+func (q Query) OrderStrings() (r Query) {
 	if q.err != nil {
 		r.err = q.err
 		return
@@ -886,7 +741,7 @@ func (q Queryable) OrderStrings() (r Queryable) {
 // OrderFloat64s returns a new query by sorting integers in the original
 // sequence in ascending order. Elements of the original sequence should only be
 // float64. Otherwise, ErrTypeMismatch will be returned.
-func (q Queryable) OrderFloat64s() (r Queryable) {
+func (q Query) OrderFloat64s() (r Query) {
 	if q.err != nil {
 		r.err = q.err
 		return
@@ -905,7 +760,7 @@ func (q Queryable) OrderFloat64s() (r Queryable) {
 // in ascending order.
 // The comparer function should return true if the parameter "this" is less
 // than "that".
-func (q Queryable) OrderBy(less func(this T, that T) bool) (r Queryable) {
+func (q Query) OrderBy(less func(this T, that T) bool) (r Query) {
 	if q.err != nil {
 		r.err = q.err
 		return
@@ -915,7 +770,7 @@ func (q Queryable) OrderBy(less func(this T, that T) bool) (r Queryable) {
 		return
 	}
 
-	sortQ := sortableQueryable{}
+	sortQ := sortableQuery{}
 	sortQ.less = less
 	sortQ.values = make([]T, len(q.values))
 	_ = copy(sortQ.values, q.values)
@@ -933,12 +788,12 @@ func (q Queryable) OrderBy(less func(this T, that T) bool) (r Queryable) {
 // innerKeySelector extracts a key from outer element for comparison.
 // resultSelector takes key of inner element and key of outer element as input
 // and returns a value and these values are returned as a new query.
-func (q Queryable) Join(innerCollection []T,
+func (q Query) Join(innerCollection []T,
 	outerKeySelector func(T) T,
 	innerKeySelector func(T) T,
 	resultSelector func(
 		outer T,
-		inner T) T) (r Queryable) {
+		inner T) T) (r Query) {
 	if q.err != nil {
 		r.err = q.err
 		return
@@ -982,12 +837,12 @@ func (q Queryable) Join(innerCollection []T,
 // innerKeySelector extracts a key from outer element for comparison.
 // resultSelector takes key of inner element and key of outer element as input
 // and returns a value and these values are returned as a new query.
-func (q Queryable) GroupJoin(innerCollection []T,
+func (q Query) GroupJoin(innerCollection []T,
 	outerKeySelector func(T) T,
 	innerKeySelector func(T) T,
 	resultSelector func(
 		outer T,
-		inners []T) T) (r Queryable) {
+		inners []T) T) (r Query) {
 	if q.err != nil {
 		r.err = q.err
 		return
@@ -1033,7 +888,7 @@ func (q Queryable) GroupJoin(innerCollection []T,
 
 // Range returns a query with sequence of integral numbers within
 // the specified range. int overflows are not handled.
-func Range(start, count int) (q Queryable) {
+func Range(start, count int) (q Query) {
 	if count < 0 {
 		q.err = ErrNegativeParam
 		return
@@ -1052,7 +907,7 @@ func Range(start, count int) (q Queryable) {
 // This method has a poor performance due to language limitations.
 // On every element, type assertion is made to find the correct type of the
 // element.
-func (q Queryable) Sum() (sum float64, err error) {
+func (q Query) Sum() (sum float64, err error) {
 	if q.err != nil {
 		err = q.err
 		return
@@ -1109,7 +964,7 @@ func sum_(in []T) (sum float64, err error) {
 // This method has a poor performance due to language limitations.
 // On every element, type assertion is made to find the correct type of the
 // element.
-func (q Queryable) Average() (avg float64, err error) {
+func (q Query) Average() (avg float64, err error) {
 	if q.err != nil {
 		err = q.err
 		return
@@ -1129,7 +984,7 @@ func (q Queryable) Average() (avg float64, err error) {
 // sequence. Elements of the original sequence should only be int or
 // ErrTypeMismatch is returned. If the sequence is empty ErrEmptySequence is
 // returned.
-func (q Queryable) MinInt() (min int, err error) {
+func (q Query) MinInt() (min int, err error) {
 	if q.err != nil {
 		err = q.err
 		return
@@ -1148,7 +1003,7 @@ func (q Queryable) MinInt() (min int, err error) {
 // sequence. Elements of the original sequence should only be uint or
 // ErrTypeMismatch is returned. If the sequence is empty ErrEmptySequence is
 // returned.
-func (q Queryable) MinUint() (min uint, err error) {
+func (q Query) MinUint() (min uint, err error) {
 	if q.err != nil {
 		err = q.err
 		return
@@ -1167,7 +1022,7 @@ func (q Queryable) MinUint() (min uint, err error) {
 // sequence. Elements of the original sequence should only be float64 or
 // ErrTypeMismatch is returned. If the sequence is empty ErrEmptySequence is
 // returned.
-func (q Queryable) MinFloat64() (min float64, err error) {
+func (q Query) MinFloat64() (min float64, err error) {
 	if q.err != nil {
 		err = q.err
 		return
@@ -1186,7 +1041,7 @@ func (q Queryable) MinFloat64() (min float64, err error) {
 // sequence. Elements of the original sequence should only be int or
 // ErrTypeMismatch is returned. If the sequence is empty ErrEmptySequence is
 // returned.
-func (q Queryable) MaxInt() (min int, err error) {
+func (q Query) MaxInt() (min int, err error) {
 	if q.err != nil {
 		err = q.err
 		return
@@ -1205,7 +1060,7 @@ func (q Queryable) MaxInt() (min int, err error) {
 // sequence. Elements of the original sequence should only be uint or
 // ErrTypeMismatch is returned. If the sequence is empty ErrEmptySequence is
 // returned.
-func (q Queryable) MaxUint() (min uint, err error) {
+func (q Query) MaxUint() (min uint, err error) {
 	if q.err != nil {
 		err = q.err
 		return
@@ -1224,7 +1079,7 @@ func (q Queryable) MaxUint() (min uint, err error) {
 // sequence. Elements of the original sequence should only be float64 or
 // ErrTypeMismatch is returned. If the sequence is empty ErrEmptySequence is
 // returned.
-func (q Queryable) MaxFloat64() (min float64, err error) {
+func (q Query) MaxFloat64() (min float64, err error) {
 	if q.err != nil {
 		err = q.err
 		return
