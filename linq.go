@@ -369,16 +369,17 @@ func (q Query) All(f func(T) (bool, error)) (all bool, err error) {
 		return
 	}
 
-	all = true // if no elements, result is true
 	for _, i := range q.values {
 		ok, e := f(i)
 		if e != nil {
 			err = e
 			return
 		}
-		all = all && ok
+		if !ok {
+			return false
+		}
 	}
-	return
+	return true, nil
 }
 
 // Single returns the only one element of the original sequence satisfies the
