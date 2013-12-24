@@ -339,6 +339,10 @@ func TestUnion(t *testing.T) {
 		_, err := From(uniqueArr0).Where(erroneusBinaryFunc).Union(uniqueArr0).Results()
 		So(err, ShouldNotEqual, nil)
 	})
+	Convey("Passed non-slice value, error returned", t, func() {
+		_, err := From(empty).Union("someString").Results()
+		So(err, ShouldEqual, ErrInvalidInput)
+	})
 	Convey("Empty ∪ nil", t, func() {
 		_, err := From(empty).Union(nil).Results()
 		So(err, ShouldEqual, ErrNilInput)
@@ -380,6 +384,10 @@ func TestIntersect(t *testing.T) {
 		_, err := From(uniqueArr).Where(erroneusBinaryFunc).Intersect(uniqueArr).Results()
 		So(err, ShouldNotEqual, nil)
 	})
+	Convey("Passed non-slice value, error returned", t, func() {
+		_, err := From(empty).Intersect("someString").Results()
+		So(err, ShouldEqual, ErrInvalidInput)
+	})
 	Convey("Empty ∩ nil", t, func() {
 		_, err := From(empty).Intersect(nil).Results()
 		So(err, ShouldEqual, ErrNilInput)
@@ -416,6 +424,10 @@ func TestExcept(t *testing.T) {
 	Convey("Previous error is reflected on result", t, func() {
 		_, err := From(uniqueArr).Where(erroneusBinaryFunc).Except(uniqueArr).Results()
 		So(err, ShouldNotEqual, nil)
+	})
+	Convey("Passed non-slice value, error returned", t, func() {
+		_, err := From(empty).Except("someString").Results()
+		So(err, ShouldEqual, ErrInvalidInput)
 	})
 	Convey("Empty ∖ nil", t, func() {
 		_, err := From(empty).Except(nil).Results()
@@ -1071,6 +1083,10 @@ func TestJoins(t *testing.T) {
 				dummyKeySelector, dummyResultSelector).Results()
 			So(err, ShouldNotEqual, nil)
 		})
+		Convey("Passed non-slice value, error returned", func() {
+			_, err := From(empty).Join("someString", nil, nil, nil).Results()
+			So(err, ShouldEqual, ErrInvalidInput)
+		})
 		Convey("Nil funcs passed", func() {
 			_, err := From(people).Join(pets, nil, nil, nil).Results()
 			So(err, ShouldEqual, ErrNilFunc)
@@ -1098,6 +1114,10 @@ func TestJoins(t *testing.T) {
 			_, err := From(people).Where(erroneusBinaryFunc).GroupJoin(pets, dummyKeySelector,
 				dummyKeySelector, dummyGroupResultSelector).Results()
 			So(err, ShouldNotEqual, nil)
+		})
+		Convey("Passed non-slice value, error returned", func() {
+			_, err := From(empty).GroupJoin("someString", nil, nil, nil).Results()
+			So(err, ShouldEqual, ErrInvalidInput)
 		})
 		Convey("Nil funcs passed", func() {
 			_, err := From(people).GroupJoin(pets, nil, nil, nil).Results()
