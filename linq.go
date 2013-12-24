@@ -1,5 +1,7 @@
 // Package linq provides methods for querying and manipulating slices and
 // collections.
+//
+// Author: Ahmet Alp Balkan
 package linq
 
 import (
@@ -385,7 +387,7 @@ func (q Query) All(f func(T) (bool, error)) (all bool, err error) {
 }
 
 // Single returns the only one element of the original sequence satisfies the
-// provided predicate function if exists, otherwise returns ErrNotSinggle.
+// provided predicate function if exists, otherwise returns ErrNotSingle.
 func (q Query) Single(f func(T) (bool, error)) (single T, err error) {
 	if q.err != nil {
 		err = q.err

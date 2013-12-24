@@ -252,3 +252,48 @@ func (q ParallelQuery) All(f func(T) (bool, error)) (all bool, err error) {
 	}
 	return true, nil
 }
+
+// Single returns the only one element of the original sequence satisfies the
+// provided predicate function if exists, otherwise returns ErrNotSingle.
+// Predicate function is executed in parallel for each element of the sequence.
+func (q ParallelQuery) Single(f func(T) (bool, error)) (single T, err error) {
+	if q.err != nil {
+		err = q.err
+		return
+	}
+	if f == nil {
+		err = ErrNilFunc
+		return
+	}
+
+	ch := make(chan parallelBinaryResult)
+	for i, v := range q.values {
+		go func(f func(T) (bool, error), value T, ind int) {
+			ok, e := f(value)
+			out := parallelBinaryResult{err: e, ok: ok, index: ind}
+			ch <- out
+		}(f, v, i)
+	}
+
+	for i := 0; i < len(q.values); i++ {
+		out := <-ch
+		if out.err != nil {
+			err = out.err
+			return
+		}
+
+		if out.ok {
+			if single != nil {
+				err = ErrNotSingle
+				return
+			}
+			single = q.values[out.index]
+		}
+	}
+
+	if single == nil {
+		err = ErrNotSingle
+	}
+
+	return
+}
