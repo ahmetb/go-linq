@@ -11,8 +11,6 @@ I also try to not to break any calls to API and design for backwards compatibili
 
     $ go get github.com/ahmetalpbalkan/go-linq
 
-then in your project 
-
 ## Quick Start
 
 Let find names of first 5 students over 18:
