@@ -181,6 +181,11 @@ func (q ParallelQuery) Select(f func(T) (T, error)) (r ParallelQuery) {
 	return
 }
 
+// Any determines whether the query source contains any elements.
+func (q ParallelQuery) Any() (exists bool, err error) {
+	return len(q.values) > 0, q.err
+}
+
 // AnyWith determines whether the query source contains any elements satisfying
 // the provided predicate function.
 func (q ParallelQuery) AnyWith(f func(T) (bool, error)) (exists bool, err error) {
@@ -295,5 +300,44 @@ func (q ParallelQuery) Single(f func(T) (bool, error)) (single T, err error) {
 		err = ErrNotSingle
 	}
 
+	return
+}
+
+// Count returns number of elements in the sequence.
+func (q ParallelQuery) Count() (count int, err error) {
+	return len(q.values), q.err
+}
+
+// CountBy returns number of elements satisfying the provided predicate
+// function by running the function for each element of the sequence
+// in parallel.
+func (q ParallelQuery) CountBy(f func(T) (bool, error)) (c int, err error) {
+	if q.err != nil {
+		err = q.err
+		return
+	}
+	if f == nil {
+		err = ErrNilFunc
+		return
+	}
+
+	ch := make(chan parallelBinaryResult)
+	for v := range q.values {
+		go func(f func(T) (bool, error), value T) {
+			ok, e := f(value)
+			ch <- parallelBinaryResult{ok: ok, err: e}
+		}(f, v)
+	}
+
+	for i := 0; i < len(q.values); i++ {
+		out := <-ch
+		if out.err != nil {
+			err = out.err
+			return
+		}
+		if out.ok {
+			c++
+		}
+	}
 	return
 }

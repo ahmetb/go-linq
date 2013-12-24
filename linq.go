@@ -298,7 +298,7 @@ func (q Query) Except(in []T) (r Query) {
 	return
 }
 
-// Count returns number of elements.
+// Count returns number of elements in the sequence.
 func (q Query) Count() (count int, err error) {
 	return len(q.values), q.err
 }

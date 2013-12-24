@@ -159,9 +159,13 @@ func TestAnyWithParallel(t *testing.T) {
 	Convey("No matches", t, func() {
 		r, _ := From(arr0).AsParallel().AnyWith(alwaysFalseDelayed)
 		So(r, ShouldEqual, false)
+		r, _ = From(arr0).AsParallel().Where(alwaysFalseDelayed).Any()
+		So(r, ShouldEqual, false)
 	})
 	Convey("All matches", t, func() {
 		r, _ := From(arr0).AsParallel().AnyWith(alwaysTrueDelayed)
+		So(r, ShouldEqual, true)
+		r, _ = From(arr0).AsParallel().Where(alwaysTrueDelayed).Any()
 		So(r, ShouldEqual, true)
 	})
 }
@@ -204,26 +208,26 @@ func TestAllParallel(t *testing.T) {
 
 func TestSingleParallel(t *testing.T) {
 	Convey("Previous error is reflected on result", t, func() {
-		_, err := From(arr0).Where(erroneusBinaryFunc).AsParallel().Single(nil)
+		_, err := From(arr0).AsParallel().Where(erroneusBinaryFunc).Single(nil)
 		So(err, ShouldNotEqual, nil)
 	})
 	Convey("Given a nil function, ErrNilFunc is returned", t, func() {
-		_, err := From(arr0).Where(alwaysTrue).AsParallel().Single(nil)
+		_, err := From(arr0).AsParallel().Where(alwaysTrueDelayed).Single(nil)
 		So(err, ShouldNotEqual, nil)
 	})
 	Convey("An error returned from f is reflected on Result", t, func() {
-		_, err := From(arr0).Where(alwaysTrue).AsParallel().Single(erroneusBinaryFunc)
+		_, err := From(arr0).AsParallel().Where(alwaysTrueDelayed).Single(erroneusBinaryFunc)
 		So(err, ShouldNotEqual, nil)
 		So(err, ShouldNotEqual, ErrNotSingle)
-		_, err = From(arr0).Where(alwaysFalse).AsParallel().Single(erroneusBinaryFunc)
+		_, err = From(arr0).AsParallel().Where(alwaysFalseDelayed).Single(erroneusBinaryFunc)
 		So(err, ShouldEqual, ErrNotSingle)
 	})
 	Convey("No matches", t, func() {
-		_, err := From(arr0).AsParallel().Single(alwaysFalse)
+		_, err := From(arr0).AsParallel().Single(alwaysFalseDelayed)
 		So(err, ShouldEqual, ErrNotSingle)
 	})
 	Convey("All matches", t, func() {
-		_, err := From(arr0).AsParallel().Single(alwaysTrue)
+		_, err := From(arr0).AsParallel().Single(alwaysTrueDelayed)
 		So(err, ShouldEqual, ErrNotSingle)
 	})
 	Convey("Only one match", t, func() {
@@ -235,5 +239,34 @@ func TestSingleParallel(t *testing.T) {
 		So(r, ShouldEqual, match)
 		_, err := From([]T{0, 1, 2, 2, 0}).AsParallel().Single(match0)
 		So(err, ShouldEqual, ErrNotSingle)
+	})
+}
+
+func TestCountParallel(t *testing.T) {
+	Convey("Previous error is reflected on result", t, func() {
+		_, err := From(arr0).AsParallel().Where(erroneusBinaryFunc).CountBy(erroneusBinaryFunc)
+		So(err, ShouldNotEqual, nil)
+	})
+	Convey("Given a nil function, ErrNilFunc is returned", t, func() {
+		_, err := From(arr0).AsParallel().Where(alwaysTrueDelayed).CountBy(nil)
+		So(err, ShouldNotEqual, nil)
+	})
+	Convey("An error returned from f is reflected on Result", t, func() {
+		_, err := From(arr0).AsParallel().Where(alwaysTrueDelayed).CountBy(erroneusBinaryFunc)
+		So(err, ShouldNotEqual, nil)
+		_, err = From(arr0).AsParallel().Where(alwaysFalseDelayed).CountBy(erroneusBinaryFunc)
+		So(err, ShouldEqual, nil)
+	})
+	Convey("No matches", t, func() {
+		c, _ := From(arr0).AsParallel().CountBy(alwaysFalseDelayed)
+		So(c, ShouldEqual, 0)
+		c, _ = From(arr0).AsParallel().Where(alwaysFalseDelayed).Count()
+		So(c, ShouldEqual, 0)
+	})
+	Convey("All matches", t, func() {
+		c, _ := From(arr0).AsParallel().CountBy(alwaysTrueDelayed)
+		So(c, ShouldEqual, len(arr0))
+		c, _ = From(arr0).AsParallel().Count()
+		So(c, ShouldEqual, len(arr0))
 	})
 }
