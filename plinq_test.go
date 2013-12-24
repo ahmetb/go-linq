@@ -20,19 +20,19 @@ var (
 
 func TestWhereParallel(t *testing.T) {
 	Convey("Chose none of the elements", t, func() {
-		val, _ := From(arr0).AsParallel().Where(alwaysFalse, false).Results()
+		val, _ := From(arr0).AsParallel().Where(alwaysFalse).Results()
 		So(val, ShouldEqual, nil)
 	})
 	Convey("A previous error is reflected on the result", t, func() {
-		_, err := From(arr0).Where(erroneusBinaryFunc).AsParallel().Where(alwaysTrue, false).Results()
+		_, err := From(arr0).Where(erroneusBinaryFunc).AsParallel().Where(alwaysTrue).Results()
 		So(err, ShouldNotEqual, nil)
 	})
 	Convey("An error returned from f is reflected on the result", t, func() {
-		_, err := From(arr0).AsParallel().Where(erroneusBinaryFunc, false).Results()
+		_, err := From(arr0).AsParallel().Where(erroneusBinaryFunc).Results()
 		So(err, ShouldNotEqual, nil)
 	})
 	Convey("Nil func passed", t, func() {
-		_, err := From(arr0).AsParallel().Where(nil, false).Results()
+		_, err := From(arr0).AsParallel().Where(nil).Results()
 		So(err, ShouldEqual, ErrNilFunc)
 	})
 
@@ -47,14 +47,14 @@ func TestWhereParallel(t *testing.T) {
 	}
 	Convey("Do not preserve order", t, func() {
 		Convey("Chose all elements, as is", func() {
-			q := From(arr).AsParallel().Where(alwaysTrueDelayed, false)
+			q := From(arr).AsParallel().AsUnordered().Where(alwaysTrueDelayed)
 			val, _ := q.Results()
 			sum, _ := q.AsSequential().Sum()
 			So(len(val), ShouldEqual, len(arr))
 			So(sum, ShouldEqual, 499500)
 		})
 		Convey("Basic filtering (x mod 2)==0", func() {
-			q := From(arr).AsParallel().Where(divisibleBy2Delayed, false)
+			q := From(arr).AsParallel().AsUnordered().Where(divisibleBy2Delayed)
 			val, err := q.Results()
 			So(len(val), ShouldEqual, n/2)
 			sum, _ := q.AsSequential().Sum()
@@ -65,11 +65,11 @@ func TestWhereParallel(t *testing.T) {
 
 	Convey("Preserve order", t, func() {
 		Convey("Chose all elements, as is", func() {
-			val, _ := From(arr).AsParallel().Where(alwaysTrueDelayed, true).Results()
+			val, _ := From(arr).AsParallel().AsOrdered().Where(alwaysTrueDelayed).Results()
 			So(val, ShouldResemble, arr)
 		})
 		Convey("Basic filtering (x mod 2)==0", func() {
-			q := From(arr).AsParallel().Where(divisibleBy2Delayed, true)
+			q := From(arr).AsParallel().AsOrdered().Where(divisibleBy2Delayed)
 			val, err := q.Results()
 			So(len(val), ShouldEqual, n/2)
 			sum, _ := q.AsSequential().Sum()

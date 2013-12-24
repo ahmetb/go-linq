@@ -4,8 +4,9 @@ package linq
 // To transform a Query into ParallelQuery, use AsParallel() and use
 // AsSequential() to do vice versa.
 type ParallelQuery struct {
-	values []T
-	err    error
+	values  []T
+	ordered bool
+	err     error
 }
 
 type parallelBinaryResult struct {
@@ -33,6 +34,44 @@ func (q ParallelQuery) AsSequential() Query {
 	return Query{values: q.values, err: q.err}
 }
 
+// copyMeta copies all fields of ParallelQuery except 'values' into a new
+// instance. This should be used for retaining options e.g. 'ordered'.
+func (q ParallelQuery) copyMeta() ParallelQuery {
+	return ParallelQuery{err: q.err,
+		ordered: q.ordered}
+}
+
+// copyMetaWithValues copies all fields of ParallelQuery. This should be used
+// for retaining options e.g. 'ordered' as well as values.
+func (q ParallelQuery) copyMetaWithValues() ParallelQuery {
+	return ParallelQuery{err: q.err,
+		ordered: q.ordered,
+		values:  q.values}
+}
+
+// AsOrdered makes the parallel queries to preserve original order. By default,
+// parallel queries do not preserve the order and process the parallel
+// executions in first-come-first-served fashion.
+//
+// Not applicable for all query methods and comes
+// with a performance penalty in some queries, please refer to
+// http://msdn.microsoft.com/en-us/library/dd460677(v=vs.110).aspx .
+func (q ParallelQuery) AsOrdered() (p ParallelQuery) {
+	p = q.copyMetaWithValues()
+	p.ordered = true
+	return
+}
+
+// AsUnordered undoes the effect of AsOrdered() and do not enforce parallel
+// query to preserve the original order.
+//
+// See AsOrdered() for remarks.
+func (q ParallelQuery) AsUnordered() (p ParallelQuery) {
+	p = q.copyMetaWithValues()
+	p.ordered = true
+	return
+}
+
 // Where filters a sequence of values by running given predicate function
 // in parallel for each element.
 //
@@ -40,15 +79,14 @@ func (q ParallelQuery) AsSequential() Query {
 // as interface[] so it should make type assertion to work on the types.
 // Returns a query with elements satisfy the condition.
 //
-// If you would like to preserve order from the original sequence, pass preserveOrder
-// as true, but this can be computationally expensive. For the cases order does
-// not matter, use false.
-//
 // If any of the parallel executions return with an error, this function
 // immediately returns with the error.
-func (q ParallelQuery) Where(f func(T) (bool, error), preserveOrder bool) (r ParallelQuery) {
-	if q.err != nil {
-		r.err = q.err
+//
+// If you would like to preserve order from the original sequence, use
+// AsOrdered() on the query beforehand.
+func (q ParallelQuery) Where(f func(T) (bool, error)) (r ParallelQuery) {
+	r = q.copyMeta()
+	if r.err != nil {
 		return r
 	}
 	if f == nil {
@@ -83,7 +121,7 @@ func (q ParallelQuery) Where(f func(T) (bool, error), preserveOrder bool) (r Par
 		if out.ok {
 			origI := out.index
 			val := q.values[origI]
-			if preserveOrder {
+			if r.ordered {
 				tmp[origI] = val
 				take[origI] = true
 			} else {
@@ -92,7 +130,7 @@ func (q ParallelQuery) Where(f func(T) (bool, error), preserveOrder bool) (r Par
 		}
 	}
 
-	if preserveOrder {
+	if r.ordered {
 		// iterate over the flag slice to take marked elements
 		for i, v := range tmp {
 			if take[i] {
@@ -108,8 +146,8 @@ func (q ParallelQuery) Where(f func(T) (bool, error), preserveOrder bool) (r Par
 // Returns a query with the return values of invoking the transform function
 // on each element of original source.
 func (q ParallelQuery) Select(f func(T) (T, error)) (r ParallelQuery) {
-	if q.err != nil {
-		r.err = q.err
+	r = q.copyMeta()
+	if r.err != nil {
 		return r
 	}
 	if f == nil {
