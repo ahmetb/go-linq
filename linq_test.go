@@ -16,7 +16,7 @@ type foo struct {
 }
 
 var (
-	empty = []T{}
+	empty []interface{}
 	arr0  = []int{1, 2, 3, 1, 2}
 	arr1  = []string{"foo", "bar", "baz"}
 	arr2  = []T{nil, "foo", 3.14, true, false}
