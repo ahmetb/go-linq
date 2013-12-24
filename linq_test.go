@@ -2,6 +2,8 @@ package linq
 
 import (
 	"errors"
+	"fmt"
+	"github.com/jacobsa/oglematchers"
 	. "github.com/smartystreets/goconvey/convey"
 	"math/rand"
 	"testing"
@@ -15,10 +17,10 @@ type foo struct {
 
 var (
 	empty = []T{}
-	arr0  = []T{1, 2, 3, 1, 2}
-	arr1  = []T{"foo", "bar", "baz"}
+	arr0  = []int{1, 2, 3, 1, 2}
+	arr1  = []string{"foo", "bar", "baz"}
 	arr2  = []T{nil, "foo", 3.14, true, false}
-	arr3  = []T{foo{"A", 0}, foo{"B", 1}, foo{"C", -1}}
+	arr3  = []foo{foo{"A", 0}, foo{"B", 1}, foo{"C", -1}}
 	arr4  = []T{&foo{"C", 0xffff}, nil, &foo{"D", 0x7fff}, byte(12), nil}
 )
 
@@ -36,30 +38,60 @@ var (
 	}
 )
 
+func shouldSlicesResemble(actual interface{}, expected ...interface{}) string {
+	expectedSlice, ok := takeSliceArg(expected[0])
+	if !ok {
+		return "Cannot cast expected slice to []T"
+	}
+	actualSlice, ok := takeSliceArg(actual)
+	if !ok {
+		return "Cannot cast actual slice to []T"
+	}
+
+	if len(expectedSlice) != len(actualSlice) {
+		return fmt.Sprintf("Expected: '%v'\nActual:   '%v'\n(Should resemble: slices have different lengths.)", expectedSlice, actualSlice)
+	}
+	for i := 0; i < len(expectedSlice); i++ {
+		if matchError := oglematchers.DeepEquals(expectedSlice[i]).Matches(actualSlice[i]); matchError != nil {
+			return fmt.Sprintf("Expected: '%v'\nActual:   '%v'\n(Element[%v] Should be equal: %v)", expectedSlice, actualSlice, i, matchError)
+		}
+	}
+	return ""
+}
+
 func TestFrom(t *testing.T) {
 	Convey("When passed nil value, error returned", t, func() {
 		So(From(nil).err, ShouldNotEqual, nil)
 	})
 
+	Convey("When passed non-slice value, error returned", t, func() {
+		var t, u, v T
+		t = "ahoy!"
+		u = foo{"A", 0}
+		v = byte(12)
+		So(From(t).err, ShouldEqual, ErrInvalidInput)
+		So(From(u).err, ShouldEqual, ErrInvalidInput)
+		So(From(v).err, ShouldEqual, ErrInvalidInput)
+	})
+
 	Convey("When passed non-nil value, structure should have the exact same slice at different location", t, func() {
 		Convey("Empty array", func() {
 			r := From(empty).values
-			So(r, ShouldResemble, empty)
+			So(r, shouldSlicesResemble, empty)
 			So(r, ShouldNotEqual, empty) // slice copied?
 		})
 		Convey("Non-empty arrays", func() {
-
 			Convey("Passed & held slices are different", func() {
 				So(From(arr0).values, ShouldNotEqual, arr0)
 				So(From(arr4).values, ShouldNotEqual, arr4)
 			})
 
 			Convey("Deep slice equality", func() {
-				So(From(arr0).values, ShouldResemble, arr0)
-				So(From(arr1).values, ShouldResemble, arr1)
-				So(From(arr2).values, ShouldResemble, arr2)
-				So(From(arr3).values, ShouldResemble, arr3)
-				So(From(arr4).values, ShouldResemble, arr4)
+				So(From(arr0).values, shouldSlicesResemble, arr0)
+				So(From(arr1).values, shouldSlicesResemble, arr1)
+				So(From(arr2).values, shouldSlicesResemble, arr2)
+				So(From(arr3).values, shouldSlicesResemble, arr3)
+				So(From(arr4).values, shouldSlicesResemble, arr4)
 			})
 		})
 	})
@@ -76,10 +108,10 @@ func TestResults(t *testing.T) {
 		So(err.Error(), ShouldEqual, errMsg)
 	})
 	Convey("Given no errors exist, non-nil results are returned", t, func() {
-		q := Query{values: arr0, err: nil}
+		q := From(arr0)
 		val, err := q.Results()
 		So(err, ShouldEqual, nil)
-		So(val, ShouldResemble, arr0)
+		So(val, shouldSlicesResemble, arr0)
 	})
 }
 
@@ -111,7 +143,7 @@ func TestWhere(t *testing.T) {
 
 	Convey("Chose all elements, as is", t, func() {
 		val, _ := From(arr0).Where(alwaysTrue).Results()
-		So(val, ShouldResemble, arr0)
+		So(val, shouldSlicesResemble, arr0)
 	})
 
 	Convey("Basic filtering (x mod 2)==0", t, func() {
@@ -119,7 +151,7 @@ func TestWhere(t *testing.T) {
 		divisibleBy2 := func(i T) (bool, error) {
 			return i.(int)%2 == 0, nil
 		}
-		arr := make([]T, n)
+		arr := make([]int, n)
 		for i := 0; i < n; i++ {
 			arr[i] = i
 		}
@@ -166,7 +198,7 @@ func TestSelect(t *testing.T) {
 	Convey("Select all elements as is", t, func() {
 		val, err := From(arr0).Select(asIs).Results()
 		So(err, ShouldEqual, nil)
-		So(val, ShouldResemble, arr0)
+		So(val, shouldSlicesResemble, arr0)
 	})
 
 	Convey("Pow(x,2) for i in []int", t, func() {
@@ -177,13 +209,13 @@ func TestSelect(t *testing.T) {
 		So(err, ShouldEqual, nil)
 		arr := make([]int, len(arr0))
 		for j, i := range arr0 {
-			arr[j] = i.(int) * i.(int)
+			arr[j] = i * i
 		}
 		res := make([]int, len(val))
 		for j, v := range val {
 			res[j] = v.(int)
 		}
-		So(res, ShouldResemble, arr)
+		So(res, shouldSlicesResemble, arr)
 	})
 }
 
@@ -191,11 +223,11 @@ func TestDistinct(t *testing.T) {
 	Convey("Empty slice", t, func() {
 		res, err := From(empty).Distinct().Results()
 		So(err, ShouldEqual, nil)
-		So(res, ShouldResemble, empty)
+		So(res, shouldSlicesResemble, empty)
 	})
 
-	allSameInt := []T{1, 1, 1, 1, 1, 1, 1, 1, 1}
-	allSameStruct := []T{foo{"A", -1}, foo{"A", -1}, foo{"A", -1}}
+	allSameInt := []int{1, 1, 1, 1, 1, 1, 1, 1, 1}
+	allSameStruct := []foo{foo{"A", -1}, foo{"A", -1}, foo{"A", -1}}
 	allNil := []T{nil, nil, nil, nil, nil, nil, nil, nil, nil}
 
 	Convey("With default equality comparer ==", t, func() {
@@ -205,11 +237,11 @@ func TestDistinct(t *testing.T) {
 		})
 		Convey("All elements are the same", func() {
 			res, _ := From(allSameInt).Distinct().Results()
-			So(res, ShouldResemble, []T{allSameInt[0]})
+			So(res, shouldSlicesResemble, []int{allSameInt[0]})
 
 			Convey("All elements are nil", func() {
 				res, _ = From(allNil).Distinct().Results()
-				So(res, ShouldResemble, []T{allNil[0]})
+				So(res, shouldSlicesResemble, []T{allNil[0]})
 			})
 		})
 		Convey("Distinct on structs and nils", func() {
@@ -259,7 +291,7 @@ func TestDistinct(t *testing.T) {
 		})
 		Convey("All elements are the same", func() {
 			res, _ := From(allSameStruct).DistinctBy(fooComparer).Results()
-			So(res, ShouldResemble, []T{allSameStruct[0]})
+			So(res, shouldSlicesResemble, []T{allSameStruct[0]})
 		})
 		Convey("All elements are distinct", func() {
 			var arr = make([]T, 100)
@@ -269,19 +301,19 @@ func TestDistinct(t *testing.T) {
 			res, _ := From(arr).DistinctBy(func(this T, that T) (bool, error) {
 				return this.(int) == that.(int), nil
 			}).Results()
-			So(res, ShouldResemble, arr)
+			So(res, shouldSlicesResemble, arr)
 		})
 		Convey("Ensure leftmost appearance is returned in multiple occurrence cases", func() {
-			arr := []T{&foo{"A", 0}, &foo{"B", 0}, &foo{"A", 0}, &foo{"C", 0},
+			arr := []*foo{&foo{"A", 0}, &foo{"B", 0}, &foo{"A", 0}, &foo{"C", 0},
 				&foo{"A", 0}, &foo{"B", 0}}
 			res, _ := From(arr).DistinctBy(fooPtrComparer).Results()
-			So(len(res), ShouldResemble, 3)
+			So(len(res), ShouldEqual, 3)
 			So(res[0], ShouldEqual, arr[0]) // A
 			So(res[1], ShouldEqual, arr[1]) // B
 			So(res[2], ShouldEqual, arr[3]) // C
 		})
 		Convey("Randomly generated integers with likely collisions", func() {
-			var arr = make([]T, 10000)
+			var arr = make([]int, 10000)
 			var dict = make(map[int]bool, len(arr))
 			rand.Seed(time.Now().UnixNano())
 			for i := 0; i < len(arr); i++ {
@@ -313,19 +345,19 @@ func TestUnion(t *testing.T) {
 	})
 	Convey("Empty ∪ empty", t, func() {
 		res, _ := From(empty).Union(empty).Results()
-		So(res, ShouldResemble, empty)
+		So(res, shouldSlicesResemble, empty)
 	})
 	Convey("Empty ∪ non-empty", t, func() {
 		res, _ := From(empty).Union(uniqueArr0).Results()
-		So(res, ShouldResemble, uniqueArr0)
+		So(res, shouldSlicesResemble, uniqueArr0)
 	})
 	Convey("Non-empty ∪ empty", t, func() {
 		res, _ := From(uniqueArr0).Union(empty).Results()
-		So(res, ShouldResemble, uniqueArr0)
+		So(res, shouldSlicesResemble, uniqueArr0)
 	})
 	Convey("(Unique slice) ∪ (itself)", t, func() {
 		res, _ := From(uniqueArr0).Union(uniqueArr0).Results()
-		So(res, ShouldResemble, uniqueArr0)
+		So(res, shouldSlicesResemble, uniqueArr0)
 	})
 	Convey("(All same slice) ∪ (itself)", t, func() {
 		res, _ := From(allSameArr).Union(allSameArr).Results()
@@ -354,19 +386,19 @@ func TestIntersect(t *testing.T) {
 	})
 	Convey("Empty ∩ empty", t, func() {
 		res, _ := From(empty).Intersect(empty).Results()
-		So(res, ShouldResemble, empty)
+		So(res, shouldSlicesResemble, empty)
 	})
 	Convey("Empty ∩ non-empty", t, func() {
 		res, _ := From(empty).Intersect(uniqueArr).Results()
-		So(res, ShouldResemble, empty)
+		So(res, shouldSlicesResemble, empty)
 	})
 	Convey("Non-empty ∩ empty", t, func() {
 		res, _ := From(uniqueArr).Intersect(empty).Results()
-		So(res, ShouldResemble, empty)
+		So(res, shouldSlicesResemble, empty)
 	})
 	Convey("(Unique set) ∩ (itself)", t, func() {
 		res, _ := From(uniqueArr).Intersect(uniqueArr).Results()
-		So(res, ShouldResemble, uniqueArr)
+		So(res, shouldSlicesResemble, uniqueArr)
 	})
 	Convey("(All same slice) ∩ (itself)", t, func() {
 		res, _ := From(allSameArr).Intersect(allSameArr).Results()
@@ -374,7 +406,7 @@ func TestIntersect(t *testing.T) {
 	})
 	Convey("There is some intersection", t, func() {
 		res, _ := From([]T{1, 2, 3, 4, 5}).Intersect([]T{3, 4, 5, 6, 7}).Results()
-		So(res, ShouldResemble, []T{3, 4, 5})
+		So(res, shouldSlicesResemble, []T{3, 4, 5})
 	})
 }
 
@@ -391,19 +423,19 @@ func TestExcept(t *testing.T) {
 	})
 	Convey("Empty ∖ empty", t, func() {
 		res, _ := From(empty).Except(empty).Results()
-		So(res, ShouldResemble, empty)
+		So(res, shouldSlicesResemble, empty)
 	})
 	Convey("Empty ∖ non-empty", t, func() {
 		res, _ := From(empty).Except(uniqueArr).Results()
-		So(res, ShouldResemble, empty)
+		So(res, shouldSlicesResemble, empty)
 	})
 	Convey("Non-empty ∖ empty", t, func() {
 		res, _ := From(uniqueArr).Except(empty).Results()
-		So(res, ShouldResemble, uniqueArr)
+		So(res, shouldSlicesResemble, uniqueArr)
 	})
 	Convey("(Unique set) ∖ (itself)", t, func() {
 		res, _ := From(uniqueArr).Except(uniqueArr).Results()
-		So(res, ShouldResemble, empty)
+		So(res, shouldSlicesResemble, empty)
 	})
 	Convey("(All same slice) ∖ (itself)", t, func() {
 		res, _ := From(allSameArr).Except(allSameArr).Results()
@@ -411,7 +443,7 @@ func TestExcept(t *testing.T) {
 	})
 	Convey("There is some intersection", t, func() {
 		res, _ := From([]T{1, 2, 3, 4, 5}).Except([]T{3, 4, 5, 6, 7}).Results()
-		So(res, ShouldResemble, []T{1, 2})
+		So(res, shouldSlicesResemble, []T{1, 2})
 	})
 }
 
@@ -563,15 +595,15 @@ func TestElementAt_ElementAtOrNil(t *testing.T) {
 	})
 	Convey("first element is returned", t, func() {
 		v, _ := From(intArr).ElementAt(0)
-		So(v, ShouldResemble, intArr[0])
+		So(v, ShouldEqual, intArr[0])
 		v, _ = From(intArr).ElementAtOrNil(0)
-		So(v, ShouldResemble, intArr[0])
+		So(v, ShouldEqual, intArr[0])
 	})
 	Convey("last element is returned", t, func() {
 		v, _ := From(intArr).ElementAt(len(intArr) - 1)
-		So(v, ShouldResemble, intArr[len(intArr)-1])
+		So(v, ShouldEqual, intArr[len(intArr)-1])
 		v, _ = From(intArr).ElementAtOrNil(len(intArr) - 1)
-		So(v, ShouldResemble, intArr[len(intArr)-1])
+		So(v, ShouldEqual, intArr[len(intArr)-1])
 	})
 	Convey("out of index returns ErrNoElement on non-empty slice", t, func() {
 		_, err := From(intArr).ElementAt(len(intArr))
@@ -728,19 +760,19 @@ func TestReverse(t *testing.T) {
 	Convey("Reversing empty", t, func() {
 		res, err := From(empty).Reverse().Results()
 		So(err, ShouldEqual, nil)
-		So(res, ShouldResemble, empty)
+		So(res, shouldSlicesResemble, empty)
 	})
 	Convey("Actual reverse", t, func() {
 		arr := []T{1, 2, 3, 4, 5}
 		rev := []T{5, 4, 3, 2, 1}
 		res, _ := From(arr).Reverse().Results()
-		So(res, ShouldResemble, rev)
+		So(res, shouldSlicesResemble, rev)
 
 		Convey("Slice containing nils", func() {
 			arr := []T{1, nil, nil, 2, nil, 3, nil}
 			rev := []T{nil, 3, nil, 2, nil, nil, 1}
 			res, _ := From(arr).Reverse().Results()
-			So(res, ShouldResemble, rev)
+			So(res, shouldSlicesResemble, rev)
 		})
 	})
 }
@@ -753,29 +785,29 @@ func TestTake(t *testing.T) {
 	Convey("Empty slice take n>0", t, func() {
 		res, err := From(empty).Take(1).Results()
 		So(err, ShouldEqual, nil)
-		So(res, ShouldResemble, empty)
+		So(res, shouldSlicesResemble, empty)
 	})
 
 	Convey("Take 0", t, func() {
 		res, _ := From(arr0).Take(0).Results()
-		So(res, ShouldResemble, empty)
+		So(res, shouldSlicesResemble, empty)
 	})
 
 	Convey("Take n < 0", t, func() {
 		res, err := From(arr0).Take(-1).Results()
 		So(err, ShouldEqual, nil)
-		So(res, ShouldResemble, empty)
+		So(res, shouldSlicesResemble, empty)
 	})
 
 	Convey("Take n > 0", t, func() {
 		in := []T{1, 2, 3, 4, 5}
 		res, _ := From(in).Take(3).Results()
-		So(res, ShouldResemble, []T{1, 2, 3})
+		So(res, shouldSlicesResemble, []T{1, 2, 3})
 		Convey("Take n ≥ len(arr)", func() {
 			res, _ := From(in).Take(len(in)).Results()
-			So(res, ShouldResemble, res)
+			So(res, shouldSlicesResemble, res)
 			res, _ = From(in).Take(len(in) + 1).Results()
-			So(res, ShouldResemble, res)
+			So(res, shouldSlicesResemble, res)
 		})
 	})
 }
@@ -796,19 +828,19 @@ func TestTakeWhile(t *testing.T) {
 	Convey("Empty slice take all", t, func() {
 		res, err := From(empty).TakeWhile(alwaysTrue).Results()
 		So(err, ShouldEqual, nil)
-		So(res, ShouldResemble, empty)
+		So(res, shouldSlicesResemble, empty)
 	})
 
 	Convey("Take none", t, func() {
 		res, _ := From(arr0).TakeWhile(alwaysFalse).Results()
-		So(res, ShouldResemble, empty)
+		So(res, shouldSlicesResemble, empty)
 	})
 
 	Convey("Take only first", t, func() {
 		in := []T{1, 2, 3, 4, 5}
 		res, err := From(in).TakeWhile(func(i T) (bool, error) { return i.(int) < 2, nil }).Results()
 		So(err, ShouldEqual, nil)
-		So(res, ShouldResemble, in[:1])
+		So(res, shouldSlicesResemble, in[:1])
 	})
 }
 
@@ -820,36 +852,36 @@ func TestSkip(t *testing.T) {
 	Convey("Empty slice Skip n>0", t, func() {
 		res, err := From(empty).Skip(1).Results()
 		So(err, ShouldEqual, nil)
-		So(res, ShouldResemble, empty)
+		So(res, shouldSlicesResemble, empty)
 	})
 
 	Convey("Skip 0", t, func() {
 		res, _ := From(arr0).Skip(0).Results()
-		So(res, ShouldResemble, arr0)
+		So(res, shouldSlicesResemble, arr0)
 	})
 
 	Convey("Skip n < 0", t, func() {
 		res, err := From(arr0).Skip(-1).Results()
 		So(err, ShouldEqual, nil)
-		So(res, ShouldResemble, arr0)
+		So(res, shouldSlicesResemble, arr0)
 	})
 
 	Convey("Skip n > 0", t, func() {
 		in := []T{1, 2, 3, 4, 5}
 		res, _ := From(in).Skip(3).Results()
-		So(res, ShouldResemble, []T{4, 5})
+		So(res, shouldSlicesResemble, []T{4, 5})
 		Convey("Skip n ≥ len(arr)", func() {
 			res, _ := From(in).Skip(len(in)).Results()
-			So(res, ShouldResemble, empty)
+			So(res, shouldSlicesResemble, empty)
 			res, _ = From(in).Skip(len(in) + 1).Results()
-			So(res, ShouldResemble, empty)
+			So(res, shouldSlicesResemble, empty)
 		})
 	})
 
 	Convey("Skip & take & skip", t, func() {
-		in := []T{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+		in := []int{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
 		res, _ := From(in).Skip(0).Skip(-1000).Skip(1).Take(1000).Take(5).Results()
-		So(res, ShouldResemble, []T{1, 2, 3, 4, 5})
+		So(res, shouldSlicesResemble, []int{1, 2, 3, 4, 5})
 	})
 }
 
@@ -869,31 +901,31 @@ func TestSkipWhile(t *testing.T) {
 	Convey("Empty slice Skip all", t, func() {
 		res, err := From(empty).SkipWhile(alwaysTrue).Results()
 		So(err, ShouldEqual, nil)
-		So(res, ShouldResemble, empty)
+		So(res, shouldSlicesResemble, empty)
 	})
 
 	Convey("Skip none", t, func() {
 		res, _ := From(arr0).SkipWhile(alwaysFalse).Results()
-		So(res, ShouldResemble, arr0)
+		So(res, shouldSlicesResemble, arr0)
 	})
 
 	Convey("Skip all", t, func() {
 		res, _ := From(arr0).SkipWhile(alwaysTrue).Results()
-		So(res, ShouldResemble, empty)
+		So(res, shouldSlicesResemble, empty)
 	})
 
 	Convey("Skip only first", t, func() {
-		in := []T{1, 2, 3, 4, 5}
+		in := []int{1, 2, 3, 4, 5}
 		res, _ := From(in).SkipWhile(func(i T) (bool, error) { return i.(int) < 2, nil }).Results()
-		So(res, ShouldResemble, in[1:])
+		So(res, shouldSlicesResemble, in[1:])
 	})
 
 	Convey("SkipWhile & TakeWhile & SkipWhile", t, func() {
-		in := []T{1, 2, 3, 4, 5, 6, 7, 8, 9}
+		in := []int{1, 2, 3, 4, 5, 6, 7, 8, 9}
 		lessThanTwo := func(i T) (bool, error) { return i.(int) < 2, nil }
 		lessThanSix := func(i T) (bool, error) { return i.(int) < 6, nil }
 		res, _ := From(in).SkipWhile(alwaysFalse).SkipWhile(lessThanTwo).TakeWhile(lessThanSix).Results()
-		So(res, ShouldResemble, []T{2, 3, 4, 5})
+		So(res, shouldSlicesResemble, []T{2, 3, 4, 5})
 	})
 }
 
@@ -910,7 +942,7 @@ func TestOrder(t *testing.T) {
 
 		Convey("Sort order is correct", func() {
 			res, _ := From(arr).OrderInts().Results()
-			So(res, ShouldResemble, arrSorted)
+			So(res, shouldSlicesResemble, arrSorted)
 		})
 
 		Convey("Sequence contain unsupported types", func() {
@@ -931,7 +963,7 @@ func TestOrder(t *testing.T) {
 
 		Convey("Sort order is correct", func() {
 			res, _ := From(arr).OrderFloat64s().Results()
-			So(res, ShouldResemble, arrSorted)
+			So(res, shouldSlicesResemble, arrSorted)
 		})
 
 		Convey("Sequence contain unsupported types", func() {
@@ -953,7 +985,7 @@ func TestOrder(t *testing.T) {
 
 		Convey("Sort order is correct", func() {
 			res, _ := From(arr).OrderStrings().Results()
-			So(res, ShouldResemble, arrSorted)
+			So(res, shouldSlicesResemble, arrSorted)
 		})
 
 		Convey("Sequence contain unsupported types", func() {
@@ -983,11 +1015,11 @@ func TestOrderBy(t *testing.T) {
 	})
 	Convey("Sort empty", t, func() {
 		res, _ := From(empty).OrderBy(sortByNum).Results()
-		So(res, ShouldResemble, empty)
+		So(res, shouldSlicesResemble, empty)
 	})
 	Convey("Sort on structs", t, func() {
 		res, _ := From(unsorted).OrderBy(sortByNum).Results()
-		So(res, ShouldResemble, sorted)
+		So(res, shouldSlicesResemble, sorted)
 	})
 }
 
@@ -1057,7 +1089,7 @@ func TestJoins(t *testing.T) {
 					return ResultPair{outer.(Person).Name, inner.(Pet).Name}
 				}).Results()
 			So(err, ShouldEqual, nil)
-			So(res, ShouldResemble, equiJoinExpected)
+			So(res, shouldSlicesResemble, equiJoinExpected)
 		})
 	})
 
@@ -1085,7 +1117,7 @@ func TestJoins(t *testing.T) {
 					return ResultGroup{outer.(Person).Name, inners}
 				}).Results()
 			So(err, ShouldEqual, nil)
-			So(res, ShouldResemble, groupJoinExpected)
+			So(res, shouldSlicesResemble, groupJoinExpected)
 		})
 	})
 }
@@ -1098,12 +1130,12 @@ func TestRange(t *testing.T) {
 	Convey("count = 0", t, func() {
 		res, err := Range(1, 0).Results()
 		So(err, ShouldEqual, nil)
-		So(res, ShouldResemble, empty)
+		So(res, shouldSlicesResemble, empty)
 	})
 	Convey("range(1,10)", t, func() {
 		res, err := Range(1, 10).Results()
 		So(err, ShouldEqual, nil)
-		So(res, ShouldResemble, []T{1, 2, 3, 4, 5, 6, 7, 8, 9, 10})
+		So(res, shouldSlicesResemble, []T{1, 2, 3, 4, 5, 6, 7, 8, 9, 10})
 	})
 }
 

@@ -66,7 +66,7 @@ func TestWhereParallel(t *testing.T) {
 	Convey("Preserve order", t, func() {
 		Convey("Chose all elements, as is", func() {
 			val, _ := From(arr).AsParallel().AsOrdered().Where(alwaysTrueDelayed).Results()
-			So(val, ShouldResemble, arr)
+			So(val, shouldSlicesResemble, arr)
 		})
 		Convey("Basic filtering (x mod 2)==0", func() {
 			q := From(arr).AsParallel().AsOrdered().Where(divisibleBy2Delayed)
@@ -117,7 +117,8 @@ func TestSelectParallel(t *testing.T) {
 	Convey("Select all elements as is", t, func() {
 		val, err := From(arr0).AsParallel().Select(asIs).Results()
 		So(err, ShouldEqual, nil)
-		So(val, ShouldResemble, arr0)
+		So(val, ShouldNotEqual, arr0)
+		So(val, shouldSlicesResemble, arr0)
 	})
 
 	Convey("Pow(x,2) for i in []int", t, func() {
@@ -137,7 +138,7 @@ func TestSelectParallel(t *testing.T) {
 			return i.(int) * i.(int), nil
 		}
 		val, _ := From(arr).AsParallel().Select(slowPow).Results()
-		So(val, ShouldResemble, expected)
+		So(val, shouldSlicesResemble, expected)
 	})
 }
 

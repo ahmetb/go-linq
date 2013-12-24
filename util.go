@@ -1,5 +1,29 @@
 package linq
 
+import "reflect"
+
+func takeSliceArg(arg T) (out []T, ok bool) {
+	slice, success := takeArg(arg, reflect.Slice)
+	if !success {
+		ok = false
+		return
+	}
+	c := slice.Len()
+	out = make([]T, c)
+	for i := 0; i < c; i++ {
+		out[i] = slice.Index(i).Interface()
+	}
+	return out, true
+}
+
+func takeArg(arg T, kind reflect.Kind) (val reflect.Value, ok bool) {
+	val = reflect.ValueOf(arg)
+	if val.Kind() == kind {
+		ok = true
+	}
+	return
+}
+
 func toInts(in []T) ([]int, error) {
 	dst := make([]int, len(in))
 	var ok bool

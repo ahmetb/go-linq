@@ -37,6 +37,7 @@ func (q sortableQuery) Less(i, j int) bool { return q.less(q.values[i], q.values
 var (
 	ErrNilFunc       = errors.New("linq: passed evaluation function is nil")                                           // a predicate, selector or comparer is nil
 	ErrNilInput      = errors.New("linq: nil sequence passed as input to function")                                    // nil value of []T is passed
+	ErrInvalidInput  = errors.New("linq: non-slice value passed to From function")                                     // a slice input must be passed to From function
 	ErrNoElement     = errors.New("linq: element satisfying the conditions does not exist")                            // strictly element requesting methods are called and element is not found
 	ErrEmptySequence = errors.New("linq: empty sequence, operation requires non-empty results sequence")               // requested operation is invalid on empty sequences
 	ErrNegativeParam = errors.New("linq: parameter cannot be negative")                                                // negative value passed to an index parameter
@@ -47,13 +48,20 @@ var (
 
 // From initializes a linq query with passed slice as the source.
 // The slice has to be of type []T. This is a language limitation.
-func From(input []T) Query {
+func From(input T) Query {
 	var _err error
 	if input == nil {
 		_err = ErrNilInput
 	}
+
+	out, ok := takeSliceArg(input)
+	if !ok {
+		_err = ErrInvalidInput
+		out = nil
+	}
+
 	return Query{
-		values: input,
+		values: out,
 		err:    _err}
 }
 
