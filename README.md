@@ -55,6 +55,9 @@ for more).
 ## Release Notes
 
 ~~~
+v0.9-rc2.5
+* slice-accepting methods accept slices of any type with reflections
+
 v0.9-rc2
 * parallel linq (plinq) implemented
 * Queryable separated into Query & ParallelQuery
