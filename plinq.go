@@ -68,7 +68,7 @@ func (q ParallelQuery) AsOrdered() (p ParallelQuery) {
 // See AsOrdered() for remarks.
 func (q ParallelQuery) AsUnordered() (p ParallelQuery) {
 	p = q.copyMetaWithValues()
-	p.ordered = true
+	p.ordered = false
 	return
 }
 
