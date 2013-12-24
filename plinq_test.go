@@ -85,7 +85,7 @@ func TestSelectParallel(t *testing.T) {
 		return i, nil
 	}
 	erroneusFunc := func(i T) (T, error) {
-		return nil, genericError
+		return nil, errFoo
 	}
 
 	Convey("Previous error is reflected on result", t, func() {

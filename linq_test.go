@@ -24,7 +24,7 @@ var (
 
 var (
 	maxRandDelayMs = 100
-	genericError   = errors.New("")
+	errFoo         = errors.New("")
 	alwaysTrue     = func(i T) (bool, error) {
 		return true, nil
 	}
@@ -32,7 +32,7 @@ var (
 		return false, nil
 	}
 	erroneusBinaryFunc = func(i T) (bool, error) {
-		return true, genericError
+		return true, errFoo
 	}
 )
 
@@ -134,7 +134,7 @@ func TestSelect(t *testing.T) {
 		return i, nil
 	}
 	erroneusFunc := func(i T) (T, error) {
-		return nil, genericError
+		return nil, errFoo
 	}
 
 	Convey("Previous error is reflected on result", t, func() {
@@ -242,7 +242,7 @@ func TestDistinct(t *testing.T) {
 		_ = fooPtrComparer
 
 		erroneusComparer := func(i T, j T) (bool, error) {
-			return false, genericError
+			return false, errFoo
 		}
 
 		Convey("Previous error is reflected on result", func() {

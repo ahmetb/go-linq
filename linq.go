@@ -162,7 +162,7 @@ func (q Query) distinct(f func(T, T) (bool, error)) (r Query) {
 		}
 		res := make([]T, len(dict))
 		i := 0
-		for key, _ := range dict {
+		for key := range dict {
 			res[i] = key
 			i++
 		}
@@ -209,8 +209,7 @@ func (q Query) Union(in []T) (r Query) {
 		r.err = ErrNilInput
 		return
 	}
-	var set map[T]bool = make(map[T]bool)
-
+	set := make(map[T]bool)
 	for _, v := range q.values {
 		if _, ok := set[v]; !ok {
 			set[v] = true
@@ -223,7 +222,7 @@ func (q Query) Union(in []T) (r Query) {
 	}
 	r.values = make([]T, len(set))
 	i := 0
-	for k, _ := range set {
+	for k := range set {
 		r.values[i] = k
 		i++
 	}
@@ -242,8 +241,8 @@ func (q Query) Intersect(in []T) (r Query) {
 		r.err = ErrNilInput
 		return
 	}
-	var set map[T]bool = make(map[T]bool)
-	var intersection map[T]bool = make(map[T]bool)
+	set := make(map[T]bool)
+	intersection := make(map[T]bool)
 
 	for _, v := range q.values {
 		if _, ok := set[v]; !ok {
@@ -260,7 +259,7 @@ func (q Query) Intersect(in []T) (r Query) {
 	}
 	r.values = make([]T, len(intersection))
 	i := 0
-	for k, _ := range intersection {
+	for k := range intersection {
 		r.values[i] = k
 		i++
 	}
@@ -279,7 +278,7 @@ func (q Query) Except(in []T) (r Query) {
 		r.err = ErrNilInput
 		return
 	}
-	var set map[T]bool = make(map[T]bool)
+	set := make(map[T]bool)
 
 	for _, v := range q.values {
 		if _, ok := set[v]; !ok {
@@ -291,7 +290,7 @@ func (q Query) Except(in []T) (r Query) {
 	}
 	r.values = make([]T, len(set))
 	i := 0
-	for k, _ := range set {
+	for k := range set {
 		r.values[i] = k
 		i++
 	}
@@ -917,11 +916,11 @@ func (q Query) Sum() (sum float64, err error) {
 		err = q.err
 		return
 	}
-	sum, err = sum_(q.values)
+	sum, err = sumMixed(q.values)
 	return
 }
 
-func sum_(in []T) (sum float64, err error) {
+func sumMixed(in []T) (sum float64, err error) {
 	// here we do a poor performance operation
 	// we use type assertion to convert every numeric value type
 	// into float64 for each element in values list
@@ -977,7 +976,7 @@ func (q Query) Average() (avg float64, err error) {
 	if len(q.values) == 0 {
 		return 0, ErrEmptySequence
 	}
-	sum, err := sum_(q.values)
+	sum, err := sumMixed(q.values)
 	if err != nil {
 		return
 	}
