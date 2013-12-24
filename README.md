@@ -13,7 +13,7 @@ I also try to not to break any calls to API and design for backwards compatibili
 
 ## Quick Start
 
-Let find names of first 5 students over 18:
+To find names of first 5 students over 18:
 
 ```go
 import . "github.com/ahmetalpbalkan/go-linq"
@@ -27,7 +27,7 @@ over18Names, err := From(students)
 	.Where(func (s T) (bool,error){
 		return s.(*Student).age >= 18, nil
 	})
-    .Take(5)
+	.Take(5)
 	.Select(func (s T) (T,error){
 		return s.(*Student).name, nil
 	}).Results()
