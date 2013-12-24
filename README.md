@@ -22,7 +22,7 @@ type Student struct {
     name string
 }
 
-var over18Names, err = From(students)
+over18Names, err := From(students)
 	.Where(func (s T) (bool,error){
 		return s.(*Student).age >= 18, nil
 	})
@@ -38,9 +38,12 @@ var over18Names, err = From(students)
 
 Here is wiki:
 
-1. [Quickstart](https://github.com/ahmetalpbalkan/go-linq/wiki/Quickstart)
-2. [Tutorials](https://github.com/ahmetalpbalkan/go-linq/wiki/Tutorials)
-3. [FAQ](https://github.com/ahmetalpbalkan/go-linq/wiki/FAQ)
+1. [Install & Import](https://github.com/ahmetalpbalkan/go-linq/wiki/Quickstart)
+2. [Quickstart (Crash Course)](https://github.com/ahmetalpbalkan/go-linq/wiki/Quickstart)
+3. [Parallel Linq](https://github.com/ahmetalpbalkan/go-linq/wiki/Parallel-LINQ)
+4. [Table of Query Functions](https://github.com/ahmetalpbalkan/go-linq/wiki/Query-Functions)
+5. [Remarks & Notes](https://github.com/ahmetalpbalkan/go-linq/wiki/Remarks-%26-notes)
+6. [FAQ](https://github.com/ahmetalpbalkan/go-linq/wiki/FAQ)
 
 ## License
 

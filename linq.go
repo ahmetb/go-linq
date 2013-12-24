@@ -791,8 +791,8 @@ func (q Query) OrderBy(less func(this T, that T) bool) (r Query) {
 // Inner sequence is the one provided as input.
 // outerKeySelector extracts a key from outer element for comparison.
 // innerKeySelector extracts a key from outer element for comparison.
-// resultSelector takes key of inner element and key of outer element as input
-// and returns a value and these values are returned as a new query.
+// resultSelector takes outer element and inner element as inputs
+// and returns a value which will be an element in the resulting query.
 func (q Query) Join(innerCollection []T,
 	outerKeySelector func(T) T,
 	innerKeySelector func(T) T,
@@ -840,8 +840,8 @@ func (q Query) Join(innerCollection []T,
 // Inner sequence is the one provided as input.
 // outerKeySelector extracts a key from outer element for comparison.
 // innerKeySelector extracts a key from outer element for comparison.
-// resultSelector takes key of inner element and key of outer element as input
-// and returns a value and these values are returned as a new query.
+// resultSelector takes outer element and inner element as inputs
+// and returns a value which will be an element in the resulting query.
 func (q Query) GroupJoin(innerCollection []T,
 	outerKeySelector func(T) T,
 	innerKeySelector func(T) T,
