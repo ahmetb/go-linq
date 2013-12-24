@@ -37,7 +37,7 @@ func (q sortableQuery) Less(i, j int) bool { return q.less(q.values[i], q.values
 var (
 	ErrNilFunc       = errors.New("linq: passed evaluation function is nil")                                           // a predicate, selector or comparer is nil
 	ErrNilInput      = errors.New("linq: nil sequence passed as input to function")                                    // nil value of []T is passed
-	ErrInvalidInput  = errors.New("linq: non-slice value passed to From function")                                     // a slice input must be passed to From function
+	ErrInvalidInput  = errors.New("linq: non-slice value passed to a T parameter indicating a slice")                  // a slice input must be passed to functions requiring a slice (e.g From, Union, Intersect, Except, Join, GroupJoin)
 	ErrNoElement     = errors.New("linq: element satisfying the conditions does not exist")                            // strictly element requesting methods are called and element is not found
 	ErrEmptySequence = errors.New("linq: empty sequence, operation requires non-empty results sequence")               // requested operation is invalid on empty sequences
 	ErrNegativeParam = errors.New("linq: parameter cannot be negative")                                                // negative value passed to an index parameter
@@ -47,7 +47,7 @@ var (
 )
 
 // From initializes a linq query with passed slice as the source.
-// The slice has to be of type []T. This is a language limitation.
+// input parameter must be a slice of any type although it looks like T.
 func From(input T) Query {
 	var _err error
 	if input == nil {
@@ -207,16 +207,24 @@ func (q Query) distinct(f func(T, T) (bool, error)) (r Query) {
 
 // Union returns set union of the source sequence and the provided
 // input slice using default equality comparer. This is a set operation and
-// returns an unordered sequence.
-func (q Query) Union(in []T) (r Query) {
+// returns an unordered sequence. inputSlice must be slice of a type although
+// it looks like T.
+func (q Query) Union(inputSlice T) (r Query) {
 	if q.err != nil {
 		r.err = q.err
 		return
 	}
-	if in == nil {
+	if inputSlice == nil {
 		r.err = ErrNilInput
 		return
 	}
+
+	in, ok := takeSliceArg(inputSlice)
+	if !ok {
+		r.err = ErrInvalidInput
+		return
+	}
+
 	set := make(map[T]bool)
 	for _, v := range q.values {
 		if _, ok := set[v]; !ok {
@@ -239,16 +247,24 @@ func (q Query) Union(in []T) (r Query) {
 
 // Intersect returns set intersection of the source sequence and the
 // provided input slice using default equality comparer. This is a set
-// operation and may return an unordered sequence.
-func (q Query) Intersect(in []T) (r Query) {
+// operation and may return an unordered sequence. inputSlice must be slice of
+// a type although it looks like T.
+func (q Query) Intersect(inputSlice T) (r Query) {
 	if q.err != nil {
 		r.err = q.err
 		return
 	}
-	if in == nil {
+	if inputSlice == nil {
 		r.err = ErrNilInput
 		return
 	}
+
+	in, ok := takeSliceArg(inputSlice)
+	if !ok {
+		r.err = ErrInvalidInput
+		return
+	}
+
 	set := make(map[T]bool)
 	intersection := make(map[T]bool)
 
@@ -276,18 +292,25 @@ func (q Query) Intersect(in []T) (r Query) {
 
 // Except returns set difference of the source sequence and the
 // provided input slice using default equality comparer. This is a set
-// operation and returns an unordered sequence.
-func (q Query) Except(in []T) (r Query) {
+// operation and returns an unordered sequence. inputSlice must be slice of
+// a type although it looks like T.
+func (q Query) Except(inputSlice T) (r Query) {
 	if q.err != nil {
 		r.err = q.err
 		return
 	}
-	if in == nil {
+	if inputSlice == nil {
 		r.err = ErrNilInput
 		return
 	}
-	set := make(map[T]bool)
 
+	in, ok := takeSliceArg(inputSlice)
+	if !ok {
+		r.err = ErrInvalidInput
+		return
+	}
+
+	set := make(map[T]bool)
 	for _, v := range q.values {
 		if _, ok := set[v]; !ok {
 			set[v] = true
@@ -794,13 +817,18 @@ func (q Query) OrderBy(less func(this T, that T) bool) (r Query) {
 // Join correlates the elements of two sequences based on the equality of keys.
 // Inner and outer keys are matched using default equality comparer, ==.
 //
-// Outer sequence is the original sequence.
-// Inner sequence is the one provided as input.
+// Outer collection is the original sequence.
+//
+// Inner collection is the one provided as innerSlice input parameter as slice
+// of a type.
+//
 // outerKeySelector extracts a key from outer element for comparison.
+//
 // innerKeySelector extracts a key from outer element for comparison.
+//
 // resultSelector takes outer element and inner element as inputs
 // and returns a value which will be an element in the resulting query.
-func (q Query) Join(innerCollection []T,
+func (q Query) Join(innerSlice T,
 	outerKeySelector func(T) T,
 	innerKeySelector func(T) T,
 	resultSelector func(
@@ -810,8 +838,13 @@ func (q Query) Join(innerCollection []T,
 		r.err = q.err
 		return
 	}
-	if innerCollection == nil {
+	if innerSlice == nil {
 		r.err = ErrNilInput
+		return
+	}
+	innerCollection, ok := takeSliceArg(innerSlice)
+	if !ok {
+		r.err = ErrInvalidInput
 		return
 	}
 	if outerKeySelector == nil || innerKeySelector == nil || resultSelector == nil {
@@ -843,13 +876,19 @@ func (q Query) Join(innerCollection []T,
 // keys.
 //
 // Inner and outer keys are matched using default equality comparer, ==.
-// Outer sequence is the original sequence.
-// Inner sequence is the one provided as input.
+//
+// Outer collection is the original sequence.
+//
+// Inner collection is the one provided as innerSlice input parameter as slice
+// of a type.
+//
 // outerKeySelector extracts a key from outer element for comparison.
+//
 // innerKeySelector extracts a key from outer element for comparison.
+//
 // resultSelector takes outer element and inner element as inputs
 // and returns a value which will be an element in the resulting query.
-func (q Query) GroupJoin(innerCollection []T,
+func (q Query) GroupJoin(innerSlice T,
 	outerKeySelector func(T) T,
 	innerKeySelector func(T) T,
 	resultSelector func(
@@ -859,14 +898,20 @@ func (q Query) GroupJoin(innerCollection []T,
 		r.err = q.err
 		return
 	}
-	if innerCollection == nil {
+	if innerSlice == nil {
 		r.err = ErrNilInput
+		return
+	}
+	innerCollection, ok := takeSliceArg(innerSlice)
+	if !ok {
+		r.err = ErrInvalidInput
 		return
 	}
 	if outerKeySelector == nil || innerKeySelector == nil || resultSelector == nil {
 		r.err = ErrNilFunc
 		return
 	}
+
 	var outerCollection = q.values
 	innerKeyLookup := make(map[T]T)
 
