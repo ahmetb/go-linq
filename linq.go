@@ -9,9 +9,7 @@ import (
 	"sort"
 )
 
-// T is an alias for interface{} to make things shorter. Whatever you pass
-// to linq functions (e.g. From, Union, Intersect, Except) should be a struct
-// of this type, []T.
+// T is an alias for interface{} to make your LINQ code shorter.
 type T interface{}
 
 // Query is the type returned from query functions. To evaluate
