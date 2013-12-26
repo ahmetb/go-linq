@@ -47,20 +47,18 @@ var (
 // From initializes a linq query with passed slice as the source.
 // input parameter must be a slice of any type although it looks like T.
 func From(input T) Query {
-	var _err error
+	var e error
 	if input == nil {
-		_err = ErrNilInput
+		e = ErrNilInput
 	}
 
 	out, ok := takeSliceArg(input)
 	if !ok {
-		_err = ErrInvalidInput
+		e = ErrInvalidInput
 		out = nil
 	}
 
-	return Query{
-		values: out,
-		err:    _err}
+	return Query{values: out, err: e}
 }
 
 // Results evaluates the query and returns the results as T slice.

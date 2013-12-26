@@ -88,10 +88,12 @@ func stringsToInterface(in []string) []T {
 }
 
 func minMaxInts(in []T) (int, int, error) {
-	var ok bool
-	var minVal, maxVal int
-	var min, max int
-	var minSet, maxSet bool
+	var (
+		ok             bool
+		minVal, maxVal int
+		min, max       int
+		minSet, maxSet bool
+	)
 	for i, v := range in {
 		var r int
 		if r, ok = v.(int); !ok {
@@ -112,10 +114,12 @@ func minMaxInts(in []T) (int, int, error) {
 }
 
 func minMaxUints(in []T) (int, int, error) {
-	var ok bool
-	var minVal, maxVal uint
-	var min, max int
-	var minSet, maxSet bool
+	var (
+		ok             bool
+		minVal, maxVal uint
+		min, max       int
+		minSet, maxSet bool
+	)
 	for i, v := range in {
 		var r uint
 		if r, ok = v.(uint); !ok {
@@ -136,10 +140,12 @@ func minMaxUints(in []T) (int, int, error) {
 }
 
 func minMaxFloat64s(in []T) (int, int, error) {
-	var ok bool
-	var minVal, maxVal float64
-	var min, max int
-	var minSet, maxSet bool
+	var (
+		ok             bool
+		minVal, maxVal float64
+		min, max       int
+		minSet, maxSet bool
+	)
 	for i, v := range in {
 		var r float64
 		if r, ok = v.(float64); !ok {
