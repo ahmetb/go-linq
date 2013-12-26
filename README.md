@@ -4,8 +4,10 @@ A powerful language integrated query library for Go. Querying and manipulation
 operations made easy, don't repeat yourself. Inspired by Microsoft's
 [LINQ](http://msdn.microsoft.com/en-us/library/bb397926.aspx).
 
-This library has tests and has 100.0% code coverage on all stable [releases](https://github.com/ahmetalpbalkan/go-linq/releases).
-I also try to not to break any calls to API and design for backwards compatibility.
+* No dependencies: written in vanilla Go!
+* Tested: 100.0% code coverage on all stable [releases](https://github.com/ahmetalpbalkan/go-linq/releases).
+* Backwards compatibility: Your integration with the library will not be broken
+  except major releases.
 
 ## Installation
 
@@ -51,6 +53,13 @@ Here is wiki:
 
 This software is distributed under Apache 2.0 License (see [LICENSE](LICENSE)
 for more).
+
+## Disclaimer
+
+As noted in LICENSE, this library is distributed on an "as is" basis and
+author's employment association with Microsoft does not imply any sort of
+warranty or official representation the company. This is purely a personal sid
+project developed on spare times.
 
 ## Release Notes
 
