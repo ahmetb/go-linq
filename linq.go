@@ -62,7 +62,16 @@ var (
 )
 
 // From initializes a linq query with passed slice as the source.
-// input parameter must be a slice of any type although it looks like T.
+// input parameter must be a slice. Otherwise returns ErrInvalidInput in
+// query result evaluating method.
+//
+// Example:
+//     i := []int{1,2,3,4,5,6}
+//     q := From(i)
+//
+// Note: Although it looks like a T (interface{}) input, you should pass a
+// slice of any type. There is a hack there to accept any type of slice, which
+// is a workaround of type system of Go.
 func From(input T) Query {
 	var e error
 	if input == nil {
@@ -221,7 +230,7 @@ func (q Query) distinct(f func(T, T) (bool, error)) (r Query) {
 // Union returns set union of the source sequence and the provided
 // input slice using default equality comparer. This is a set operation and
 // returns an unordered sequence. inputSlice must be slice of a type although
-// it looks like T.
+// it looks like T, otherwise returns ErrInvalidInput.
 func (q Query) Union(inputSlice T) (r Query) {
 	if q.err != nil {
 		r.err = q.err
@@ -261,7 +270,7 @@ func (q Query) Union(inputSlice T) (r Query) {
 // Intersect returns set intersection of the source sequence and the
 // provided input slice using default equality comparer. This is a set
 // operation and may return an unordered sequence. inputSlice must be slice of
-// a type although it looks like T.
+// a type although it looks like T, otherwise returns ErrInvalidInput.
 func (q Query) Intersect(inputSlice T) (r Query) {
 	if q.err != nil {
 		r.err = q.err
@@ -306,7 +315,7 @@ func (q Query) Intersect(inputSlice T) (r Query) {
 // Except returns set difference of the source sequence and the
 // provided input slice using default equality comparer. This is a set
 // operation and returns an unordered sequence. inputSlice must be slice of
-// a type although it looks like T.
+// a type although it looks like T, otherwise returns ErrInvalidInput.
 func (q Query) Except(inputSlice T) (r Query) {
 	if q.err != nil {
 		r.err = q.err
@@ -833,7 +842,7 @@ func (q Query) OrderBy(less func(this T, that T) bool) (r Query) {
 // Outer collection is the original sequence.
 //
 // Inner collection is the one provided as innerSlice input parameter as slice
-// of a type.
+// of any type. Otherwise returns ErrInvalidInput.
 //
 // outerKeySelector extracts a key from outer element for comparison.
 //
@@ -893,7 +902,7 @@ func (q Query) Join(innerSlice T,
 // Outer collection is the original sequence.
 //
 // Inner collection is the one provided as innerSlice input parameter as slice
-// of a type.
+// of any type. Otherwise returns ErrInvalidInput.
 //
 // outerKeySelector extracts a key from outer element for comparison.
 //
