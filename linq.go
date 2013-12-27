@@ -33,15 +33,32 @@ func (q sortableQuery) Swap(i, j int)      { q.values[i], q.values[j] = q.values
 func (q sortableQuery) Less(i, j int) bool { return q.less(q.values[i], q.values[j]) }
 
 var (
-	ErrNilFunc       = errors.New("linq: passed evaluation function is nil")                                           // a predicate, selector or comparer is nil
-	ErrNilInput      = errors.New("linq: nil sequence passed as input to function")                                    // nil value of []T is passed
-	ErrInvalidInput  = errors.New("linq: non-slice value passed to a T parameter indicating a slice")                  // a slice input must be passed to functions requiring a slice (e.g From, Union, Intersect, Except, Join, GroupJoin)
-	ErrNoElement     = errors.New("linq: element satisfying the conditions does not exist")                            // strictly element requesting methods are called and element is not found
-	ErrEmptySequence = errors.New("linq: empty sequence, operation requires non-empty results sequence")               // requested operation is invalid on empty sequences
-	ErrNegativeParam = errors.New("linq: parameter cannot be negative")                                                // negative value passed to an index parameter
-	ErrNan           = errors.New("linq: sequence contains an element of non-numeric types")                           // sequence has invalid elements that method cannot assert into one of builtin numeric types
-	ErrTypeMismatch  = errors.New("linq: sequence contains element(s) with type different than requested type or nil") // sequence elements or nil of different type than function can work with
-	ErrNotSingle     = errors.New("linq: sequence contains more than one element matching the given predicate found")  // sequence contains more than one elements satisfy given predicate func
+	// a predicate, selector or comparer is nil
+	ErrNilFunc = errors.New("linq: passed evaluation function is nil")
+
+	// nil value of []T is passed
+	ErrNilInput = errors.New("linq: nil sequence passed as input to function")
+
+	// a slice input must be passed to functions requiring a slice (e.g From, Union, Intersect, Except, Join, GroupJoin)
+	ErrInvalidInput = errors.New("linq: non-slice value passed to a T parameter indicating a slice")
+
+	// strictly element requesting methods are called and element is not found
+	ErrNoElement = errors.New("linq: element satisfying the conditions does not exist")
+
+	// requested operation is invalid on empty sequences
+	ErrEmptySequence = errors.New("linq: empty sequence, operation requires non-empty results sequence")
+
+	// negative value passed to an index parameter
+	ErrNegativeParam = errors.New("linq: parameter cannot be negative")
+
+	// sequence has invalid elements that method cannot assert into one of builtin numeric types
+	ErrNan = errors.New("linq: sequence contains an element of non-numeric types")
+
+	// sequence elements or nil of different type than function can work with
+	ErrTypeMismatch = errors.New("linq: sequence contains element(s) with type different than requested type or nil")
+
+	// sequence contains more than one elements satisfy given predicate func
+	ErrNotSingle = errors.New("linq: sequence contains more than one element matching the given predicate found")
 )
 
 // From initializes a linq query with passed slice as the source.
