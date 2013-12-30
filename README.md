@@ -44,10 +44,12 @@ Here is wiki:
 
 1. [Install & Import](https://github.com/ahmetalpbalkan/go-linq/wiki/Install-&-Import)
 2. [Quickstart (Crash Course)](https://github.com/ahmetalpbalkan/go-linq/wiki/Quickstart)
-3. [Parallel Linq](https://github.com/ahmetalpbalkan/go-linq/wiki/Parallel-LINQ)
+3. [Parallel LINQ][plinq]
 4. [Table of Query Functions](https://github.com/ahmetalpbalkan/go-linq/wiki/Query-Functions)
 5. [Remarks & Notes](https://github.com/ahmetalpbalkan/go-linq/wiki/Remarks-%26-notes)
 6. [FAQ](https://github.com/ahmetalpbalkan/go-linq/wiki/FAQ)
+
+[plinq]: https://github.com/ahmetalpbalkan/go-linq/wiki/Parallel-LINQ-(PLINQ)
 
 ## License
 
