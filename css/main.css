@@ -26,7 +26,7 @@ header {
     text-align: center;
     padding: 2em 10em 5em 10em;
 
-    background-color: #34495e;
+    background-color: rgb(24,43,70);/*#34495e;*/
     color: #fbfcfc;
 }
 
@@ -63,7 +63,7 @@ body > section {
 }
 
 section.features {
-    background-color: #9b59b6;
+    background-color: rgb(117,27,115);
 }
 
     section.features .inner {
@@ -84,11 +84,12 @@ section.features {
     }
 
 section.demo {
-    background-color: #f39c12;
+    background-color: #e67e22;
+    padding-bottom: 4em;
 }
 
     section.demo .inner {
-        width: 60%;
+        width: 70%;
         margin: 0 auto;
     }
 
@@ -110,6 +111,8 @@ section.demo {
 
         td.docs {
             width: 40%;
+            text-align: justify;
+            padding-right: 2%;
         }
 
         td.code {
@@ -119,8 +122,8 @@ section.demo {
 
 
 section.about {
-    background-color: #3498db;
-    padding: 3em 0 10em 0;
+    background-color: #16a085;
+    padding: 4em 0 8em 0;
     color: #ecf0f1;
 }
     section.about .inner {
@@ -133,7 +136,7 @@ section.about {
     }
 
     section.about a:not(.btn) {
-        color: #ecf0f1;
+        color: #2c3e50;
     }
     section.about a:not(.btn):hover {
         color: #bdc3c7;
@@ -143,3 +146,13 @@ section.about {
         width: 60%;
         margin: 0 auto;
     }
+
+footer {
+    background-color: #16a085;
+    color: #1abc9c;
+    font-size: 80%;
+    text-align: center;
+    width: 100%;
+    clear: both;
+    padding-bottom: 1em;
+}

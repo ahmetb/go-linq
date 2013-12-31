@@ -3,7 +3,7 @@
     <head>
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-        <title>go-linq</title>
+        <title>go-linq: LINQ query functions over slices for Golang</title>
         <meta name="viewport" content="width=device-width">
         <link href="//netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" rel="stylesheet">
         <link rel="stylesheet" href="css/main.css">
@@ -25,13 +25,13 @@
             </p>
 
             <div class='promo'>
-                <iframe src="http://ghbtns.com/github-btn.html?user=ahmetalpbalkan&repo=go-linq&type=watch&count=true&size=large" allowtransparency="true" frameborder="0" scrolling="0" width="142px" height="30px"></iframe>
+                <p><iframe src="http://ghbtns.com/github-btn.html?user=ahmetalpbalkan&repo=go-linq&type=watch&count=true&size=large" allowtransparency="true" frameborder="0" scrolling="0" width="142px" height="30px" style='margin-left:30px'></iframe></p>
+
                 <p>
-                    <a href='https://github.com/ahmetalpbalkan/go-linq/wiki'>Read the wiki</a>
-                    for tutorials or head to the
-                    <a href='http://godoc.org/github.com/ahmetalpbalkan/go-linq'>package reference</a>.
+                    <a class='btn btn-default btn-lg' href='https://github.com/ahmetalpbalkan/go-linq'>Fork it!</a>
+                    <a class='btn btn-default btn-lg' href='https://github.com/ahmetalpbalkan/go-linq/wiki'>Wiki</a>
+                    <a class='btn btn-default btn-lg' href='http://godoc.org/github.com/ahmetalpbalkan/go-linq'>GoDoc</a>
                 </p>
-            </div>
 
         </header>
 
@@ -69,26 +69,29 @@
 
         <section class='demo hidden-xs'>
             <h2>Simple Demo</h2>
+            <p>Find average age of students over 20.</p>
             <div class='inner row'>
                 <table>
                     <tr>
                         <td class='docs'>
-                            Import your <em>Student</em> slice.
+                            Import your <code>[]*Student</code>.
                         </td>
 
                         <td class='code'><code>
-                            From(students)
+                            results, err := From(students)
                         </code></td>
                     </tr>
 
                     <tr>
                         <td class='docs'>
-                            Find those over 18.
+                            Find those over 20. Note <code>T</code> is an alias for <code>
+                                interface{}</code>. So we make type assertion to
+                                our input type.
                         </td>
 
                         <td class='code'><code>
                             &nbsp;&nbsp;&nbsp;&nbsp;.Where(func (s T) (bool, error){<br/>&nbsp; &nbsp; 
-                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return s.(*Student).age >= 18, nil<br/>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return s.(*Student).age >= 20, nil<br/>
                             &nbsp;&nbsp;&nbsp;&nbsp;})
                         </code></td>
                     </tr>
@@ -132,16 +135,6 @@
 
                     <tr>
                         <td class='docs'>
-                            Let's parallelize what's following
-                        </td>
-
-                        <td class='code'><code>
-                            &nbsp;&nbsp;&nbsp;&nbsp;.AsParallel()
-                        </code></td>
-                    </tr>
-
-                    <tr>
-                        <td class='docs'>
                             Convert domain names to full URLs.
                         </td>
 
@@ -151,14 +144,26 @@
                             &nbsp;&nbsp;&nbsp;&nbsp;})
                         </code></td>
                     </tr>
+
+
+                    <tr>
+                        <td class='docs'>
+                            Let's run the following in parallel.
+                        </td>
+
+                        <td class='code'><code>
+                            &nbsp;&nbsp;&nbsp;&nbsp;.AsParallel()
+                        </code></td>
+                    </tr>
+
                     <tr>
                         <td class='docs'>
                             Find if all have the favicon.
                         </td>
 
                         <td class='code'><code>
-                            &nbsp;&nbsp;&nbsp;&nbsp;.All(func (sin T) (bool, error){<br/>
-                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;resp, err := http.Get(in.(string))</br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;.All(func (url T) (bool, error){<br/>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;resp, err := http.Get(url.(string))</br>
                             &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if err != nil {</br>
                             &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return false, err</br>
                             &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}</br>
@@ -174,30 +179,39 @@
             <h2>About</h2>
                 <div class='inner'>
                 <p>
-                    This library is brought you by <b><a href='https://twitter.com/ahmetalpbalkan'>
-                    @ahmetalpbalkan</a></b>.
+                    If you have suggestions or improvements, feel free to contact or
+                    submit a pull request. All contributions are welcomed.
+                </p>
+
+                <p>
+                    This is my first significant project ever in Go. So I probably
+                    get many practices wrong. Feel free to review and 
+                    <a href='mailto:ahmetalpbalkan+golinq@gmail.com'>let me know</a>!
+                    <br/>&nbsp;
+                </p>
+
+                <p>
+                    This library is brought you by <a href='https://twitter.com/ahmetalpbalkan'>
+                    @ahmetalpbalkan</a>.
                 </p>
                 <p>
                     <a href='http://ahmetalpbalkan.com'><img src='img/me.png' width='150' height='150'
                         alt="Ahmet Alp Balkan, 2013"/></a>
                 </p>
-                <p>&nbsp;</p>
-                <p>
-                    If you have suggestions or improvements, feel free to contact or
-                    submit a pull request. All contributions are welcomed.
-                </p>
 
                 <div class='promo'>
-                    <a class='btn btn-default btn-lg' href='https://github.com/ahmetalpbalkan/go-linq'>Fork it!</a>
-                    <a class='btn btn-default btn-lg' href='https://github.com/ahmetalpbalkan/go-linq/wiki'>Read wiki</a>
-                    <a class='btn btn-default btn-lg' href='http://godoc.org/github.com/ahmetalpbalkan/go-linq'>Read GoDoc</a>
                     <p>
                         master: <a href="https://travis-ci.org/ahmetalpbalkan/go-linq"><img src="https://api.travis-ci.org/ahmetalpbalkan/go-linq.png" alt="travis-ci status" style="max-width:100%;"></a>
                         &mdash;
                         dev: <a href="https://travis-ci.org/ahmetalpbalkan/go-linq"><img src="https://api.travis-ci.org/ahmetalpbalkan/go-linq.png?branch=dev" alt="travis-ci status" style="max-width:100%;"></a>
                     </p>
                 </div>
+                
             </div>
         </section>
+
+        <footer>
+            Lovingly made in Seattle.
+        </footer>
     </body>
 </html>
