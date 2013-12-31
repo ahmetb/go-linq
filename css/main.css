@@ -26,7 +26,7 @@ header {
     text-align: center;
     padding: 2em 10em 5em 10em;
 
-    background-color: rgb(24,43,70);/*#34495e;*/
+    background-color: #355c7d;
     color: #fbfcfc;
 }
 
@@ -63,7 +63,7 @@ body > section {
 }
 
 section.features {
-    background-color: rgb(117,27,115);
+    background-color: #8e6e85;
 }
 
     section.features .inner {
@@ -84,7 +84,7 @@ section.features {
     }
 
 section.demo {
-    background-color: #e67e22;
+    background-color: rgb(192,108,132);
     padding-bottom: 4em;
 }
 
