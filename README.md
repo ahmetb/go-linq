@@ -1,4 +1,6 @@
-# go-linq [![travis-ci status](https://api.travis-ci.org/ahmetalpbalkan/go-linq.png)](https://travis-ci.org/ahmetalpbalkan/go-linq)  [![Codebot](https://codebot.io/badge/github.com/ahmetalpbalkan/go-linq.png)](http://codebot.io/doc/pkg/github.com/ahmetalpbalkan/go-linq "Codebot") [![GoDoc](https://godoc.org/github.com/ahmetalpbalkan/go-linq?status.png)](https://godoc.org/github.com/ahmetalpbalkan/go-linq) [![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/ahmetalpbalkan/go-linq/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
+# [go-linq][home] [![travis-ci status](https://api.travis-ci.org/ahmetalpbalkan/go-linq.png)](https://travis-ci.org/ahmetalpbalkan/go-linq)  [![Codebot](https://codebot.io/badge/github.com/ahmetalpbalkan/go-linq.png)](http://codebot.io/doc/pkg/github.com/ahmetalpbalkan/go-linq "Codebot") [![GoDoc](https://godoc.org/github.com/ahmetalpbalkan/go-linq?status.png)](https://godoc.org/github.com/ahmetalpbalkan/go-linq) [![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/ahmetalpbalkan/go-linq/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
+
+[home]: http://ahmetalpbalkan.github.io/go-linq/
 
 A powerful language integrated query library for Go. Inspired by Microsoft's
 [LINQ](http://msdn.microsoft.com/en-us/library/bb397926.aspx).
@@ -7,7 +9,6 @@ A powerful language integrated query library for Go. Inspired by Microsoft's
 * **Tested:** 100.0% code coverage on all stable [releases](https://github.com/ahmetalpbalkan/go-linq/releases).
 * **Backwards compatibility:** Your integration with the library will not be broken
   except major releases.
-
 
 ## Installation
 
@@ -62,6 +63,10 @@ As noted in LICENSE, this library is distributed on an "as is" basis and
 author's employment association with Microsoft does not imply any sort of
 warranty or official representation the company. This is purely a personal sid
 project developed on spare times.
+
+## Authors
+
+[Ahmet Alp Balkan](http://ahmetalpbalkan.com) – [@ahmetalpbalkan](https://twitter.com/ahmetalpbalkan)
 
 ## Release Notes
 
