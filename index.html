@@ -158,11 +158,11 @@
 
                         <td class='code'><code>
                             &nbsp;&nbsp;&nbsp;&nbsp;.All(func (sin T) (bool, error){<br/>
-                            &nbsp;&nbsp;&nbsp;&nbsp;resp, err := http.Get(in.(string))</br>
-                            &nbsp;&nbsp;&nbsp;&nbsp;if err != nil {</br>
-                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return false, err</br>
-                            &nbsp;&nbsp;&nbsp;&nbsp;}</br>
-                            &nbsp;&nbsp;&nbsp;&nbsp;return resp.Status/100 == 2, nil</br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;resp, err := http.Get(in.(string))</br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if err != nil {</br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return false, err</br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}</br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return resp.Status/100 == 2, nil</br>
                             &nbsp;&nbsp;&nbsp;&nbsp;}
                         </code></td>
                     </tr>
