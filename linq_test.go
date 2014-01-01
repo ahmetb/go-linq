@@ -589,177 +589,140 @@ func TestAll(t *testing.T) {
 	})
 }
 
-func TestElementAt_ElementAtOrNil(t *testing.T) {
+func TestElementAt(t *testing.T) {
 	intArr := []int{1, 2, 3, 4, 5}
-	Convey("empty.ElementAt is ErrNoElement", t, func() {
-		_, err := From(empty).ElementAt(1)
-		So(err, ShouldEqual, ErrNoElement)
-	})
-	Convey("empty.ElementAtOrNil is nil", t, func() {
-		v, _ := From(empty).ElementAtOrNil(1)
-		So(v, ShouldEqual, nil)
+	Convey("empty.ElementAt(1) is not found", t, func() {
+		_, ok, err := From(empty).ElementAt(1)
+		So(ok, ShouldBeFalse)
+		So(err, ShouldEqual, nil)
 	})
 	Convey("negative index returns is ErrNegativeParam", t, func() {
-		_, err := From(empty).ElementAt(-1)
-		So(err, ShouldEqual, ErrNegativeParam)
-		_, err = From(empty).ElementAtOrNil(-1)
+		_, _, err := From(empty).ElementAt(-1)
 		So(err, ShouldEqual, ErrNegativeParam)
 	})
 	Convey("first element is returned", t, func() {
-		v, _ := From(intArr).ElementAt(0)
-		So(v, ShouldEqual, intArr[0])
-		v, _ = From(intArr).ElementAtOrNil(0)
+		v, ok, _ := From(intArr).ElementAt(0)
+		So(ok, ShouldBeTrue)
 		So(v, ShouldEqual, intArr[0])
 	})
 	Convey("last element is returned", t, func() {
-		v, _ := From(intArr).ElementAt(len(intArr) - 1)
-		So(v, ShouldEqual, intArr[len(intArr)-1])
-		v, _ = From(intArr).ElementAtOrNil(len(intArr) - 1)
+		v, ok, _ := From(intArr).ElementAt(len(intArr) - 1)
+		So(ok, ShouldBeTrue)
 		So(v, ShouldEqual, intArr[len(intArr)-1])
 	})
-	Convey("out of index returns ErrNoElement on non-empty slice", t, func() {
-		_, err := From(intArr).ElementAt(len(intArr))
-		So(err, ShouldEqual, ErrNoElement)
-		_, err = From(intArr).ElementAtOrNil(len(intArr))
+	Convey("out of index returns not found on non-empty slice", t, func() {
+		_, ok, err := From(intArr).ElementAt(len(intArr))
+		So(ok, ShouldBeFalse)
 		So(err, ShouldEqual, nil)
 	})
 	Convey("previous errors are reflected", t, func() {
-		_, err1 := From(arr0).Where(erroneusBinaryFunc).ElementAt(0)
-		_, err2 := From(arr0).Where(erroneusBinaryFunc).ElementAtOrNil(0)
-		So(err1, ShouldNotEqual, nil)
-		So(err2, ShouldNotEqual, nil)
+		_, _, err := From(arr0).Where(erroneusBinaryFunc).ElementAt(0)
+		So(err, ShouldNotEqual, nil)
 	})
 }
 
-func TestFirst_FirstOrNil(t *testing.T) {
-	Convey("empty.First is ErrNoElement", t, func() {
-		_, err := From(empty).First()
-		So(err, ShouldEqual, ErrNoElement)
-	})
-	Convey("empty.FirstOrNil is nil", t, func() {
-		v, _ := From(empty).FirstOrNil()
-		So(v, ShouldEqual, nil)
+func TestFirst(t *testing.T) {
+	Convey("empty.First is not found", t, func() {
+		_, ok, err := From(empty).First()
+		So(err, ShouldEqual, nil)
+		So(ok, ShouldBeFalse)
 	})
 	Convey("first element is returned", t, func() {
-		v, _ := From(arr3).First()
-		So(v, ShouldResemble, arr3[0])
-		v, _ = From(arr3).FirstOrNil()
+		v, ok, _ := From(arr3).First()
+		So(ok, ShouldBeTrue)
 		So(v, ShouldResemble, arr3[0])
 	})
 	Convey("previous errors are reflected", t, func() {
-		_, err1 := From(arr0).Where(erroneusBinaryFunc).First()
-		_, err2 := From(arr0).Where(erroneusBinaryFunc).FirstOrNil()
+		_, _, err1 := From(arr0).Where(erroneusBinaryFunc).First()
 		So(err1, ShouldNotEqual, nil)
-		So(err2, ShouldNotEqual, nil)
 	})
 }
 
-func TestFirstBy_FirstOrNilBy(t *testing.T) {
+func TestFirstBy(t *testing.T) {
 	Convey("previous errors are reflected", t, func() {
-		_, err1 := From(arr0).Where(erroneusBinaryFunc).FirstBy(alwaysTrue)
-		_, err2 := From(arr0).Where(erroneusBinaryFunc).FirstOrNilBy(alwaysTrue)
+		_, _, err1 := From(arr0).Where(erroneusBinaryFunc).FirstBy(alwaysTrue)
 		So(err1, ShouldNotEqual, nil)
-		So(err2, ShouldNotEqual, nil)
 	})
 	Convey("Given a nil function, ErrNilFunc is returned", t, func() {
-		_, err1 := From(arr0).FirstBy(nil)
-		_, err2 := From(arr0).FirstBy(nil)
-		So(err1, ShouldNotEqual, nil)
-		So(err2, ShouldNotEqual, nil)
+		_, _, err1 := From(arr0).FirstBy(nil)
+		_, _, err2 := From(arr0).FirstBy(nil)
+		So(err1, ShouldEqual, ErrNilFunc)
+		So(err2, ShouldEqual, ErrNilFunc)
 	})
 	Convey("erroneus function reflected on result", t, func() {
-		_, err1 := From(arr0).FirstBy(erroneusBinaryFunc)
-		_, err2 := From(arr0).FirstBy(erroneusBinaryFunc)
+		_, _, err1 := From(arr0).FirstBy(erroneusBinaryFunc)
+		_, _, err2 := From(arr0).FirstBy(erroneusBinaryFunc)
 		So(err1, ShouldNotEqual, nil)
 		So(err2, ShouldNotEqual, nil)
 	})
-	Convey("empty.FirstBy is ErrNoElement", t, func() {
-		_, err1 := From(empty).FirstBy(alwaysFalse)
-		So(err1, ShouldEqual, ErrNoElement)
-	})
-	Convey("empty.FirstOrNilBy is ErrNoElement", t, func() {
-		_, err1 := From(empty).FirstBy(alwaysFalse)
-		So(err1, ShouldEqual, ErrNoElement)
+	Convey("empty.FirstBy is not found", t, func() {
+		_, ok, err1 := From(empty).FirstBy(alwaysFalse)
+		So(err1, ShouldEqual, nil)
+		So(ok, ShouldBeFalse)
 	})
 	Convey("Actual first element is returned", t, func() {
-		val, _ := From(arr3).FirstBy(alwaysTrue)
-		So(val, ShouldResemble, arr3[0])
-		val, _ = From(arr3).FirstOrNilBy(alwaysTrue)
+		val, ok, _ := From(arr3).FirstBy(alwaysTrue)
+		So(ok, ShouldBeTrue)
 		So(val, ShouldResemble, arr3[0])
 	})
 	Convey("No matches", t, func() {
-		_, err := From(arr3).FirstBy(alwaysFalse)
-		So(err, ShouldEqual, ErrNoElement)
-		elm, err := From(arr3).FirstOrNilBy(alwaysFalse)
+		_, ok, err := From(arr3).FirstBy(alwaysFalse)
+		So(ok, ShouldBeFalse)
 		So(err, ShouldEqual, nil)
-		So(elm, ShouldEqual, nil)
 	})
 }
 
-func TestLast_LastOrNil(t *testing.T) {
-	Convey("empty.Last is ErrNoElement", t, func() {
-		_, err := From(empty).Last()
-		So(err, ShouldEqual, ErrNoElement)
-	})
-	Convey("empty.LastOrNil is nil", t, func() {
-		v, _ := From(empty).LastOrNil()
-		So(v, ShouldEqual, nil)
+func TestLast(t *testing.T) {
+	Convey("empty.Last is not found", t, func() {
+		_, ok, err := From(empty).Last()
+		So(ok, ShouldBeFalse)
+		So(err, ShouldEqual, nil)
 	})
 	Convey("Last element is returned", t, func() {
-		v, _ := From(arr3).Last()
-		So(v, ShouldResemble, arr3[len(arr3)-1])
-		v, _ = From(arr3).LastOrNil()
+		v, ok, _ := From(arr3).Last()
+		So(ok, ShouldBeTrue)
 		So(v, ShouldResemble, arr3[len(arr3)-1])
 	})
 	Convey("previous errors are reflected", t, func() {
-		_, err1 := From(arr0).Where(erroneusBinaryFunc).Last()
-		_, err2 := From(arr0).Where(erroneusBinaryFunc).LastOrNil()
+		_, _, err1 := From(arr0).Where(erroneusBinaryFunc).Last()
 		So(err1, ShouldNotEqual, nil)
-		So(err2, ShouldNotEqual, nil)
 	})
 }
 
-func TestLastBy_LastOrNilBy(t *testing.T) {
+func TestLastBy(t *testing.T) {
 	Convey("Previous error is reflected on result", t, func() {
-		_, err := From(arr0).Where(erroneusBinaryFunc).LastBy(alwaysTrue)
+		_, _, err := From(arr0).Where(erroneusBinaryFunc).LastBy(alwaysTrue)
 		So(err, ShouldNotEqual, nil)
 	})
 
 	Convey("Given a nil function, ErrNilFunc is returned", t, func() {
-		_, err1 := From(arr0).LastBy(nil)
-		_, err2 := From(arr0).LastBy(nil)
-		So(err1, ShouldNotEqual, nil)
-		So(err2, ShouldNotEqual, nil)
+		_, _, err1 := From(arr0).LastBy(nil)
+		_, _, err2 := From(arr0).LastBy(nil)
+		So(err1, ShouldEqual, ErrNilFunc)
+		So(err2, ShouldEqual, ErrNilFunc)
 	})
 
 	Convey("erroneus function reflected on result", t, func() {
-		_, err1 := From(arr0).LastBy(erroneusBinaryFunc)
-		_, err2 := From(arr0).LastBy(erroneusBinaryFunc)
+		_, _, err1 := From(arr0).LastBy(erroneusBinaryFunc)
+		_, _, err2 := From(arr0).LastBy(erroneusBinaryFunc)
 		So(err1, ShouldNotEqual, nil)
 		So(err2, ShouldNotEqual, nil)
 	})
-	Convey("empty.LastBy is ErrNoElement", t, func() {
-		_, err1 := From(empty).LastBy(alwaysFalse)
-		So(err1, ShouldEqual, ErrNoElement)
-	})
-
-	Convey("empty.LastOrNilBy is ErrNoElement", t, func() {
-		_, err1 := From(empty).LastBy(alwaysFalse)
-		So(err1, ShouldEqual, ErrNoElement)
+	Convey("empty.LastBy is not found", t, func() {
+		_, ok, err := From(empty).LastBy(alwaysFalse)
+		So(ok, ShouldBeFalse)
+		So(err, ShouldEqual, nil)
 	})
 
 	Convey("Actual last element is returned", t, func() {
-		val1, _ := From(arr3).LastBy(alwaysTrue)
-		val2, _ := From(arr3).LastOrNilBy(alwaysTrue)
+		val1, ok, _ := From(arr3).LastBy(alwaysTrue)
+		So(ok, ShouldBeTrue)
 		So(val1, ShouldResemble, arr3[len(arr3)-1])
-		So(val2, ShouldResemble, arr3[len(arr3)-1])
 	})
 	Convey("No matches", t, func() {
-		_, err := From(arr3).LastBy(alwaysFalse)
-		So(err, ShouldEqual, ErrNoElement)
-		elm, err := From(arr3).LastOrNilBy(alwaysFalse)
+		_, ok, err := From(arr3).LastBy(alwaysFalse)
+		So(ok, ShouldBeFalse)
 		So(err, ShouldEqual, nil)
-		So(elm, ShouldEqual, nil)
 	})
 
 }

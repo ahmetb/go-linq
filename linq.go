@@ -33,31 +33,28 @@ func (q sortableQuery) Swap(i, j int)      { q.values[i], q.values[j] = q.values
 func (q sortableQuery) Less(i, j int) bool { return q.less(q.values[i], q.values[j]) }
 
 var (
-	// a predicate, selector or comparer is nil
+	// ErrNilFunc returned when a predicate, selector or comparer is nil
 	ErrNilFunc = errors.New("linq: passed evaluation function is nil")
 
-	// nil value of []T is passed
+	// ErrNilInput returned when nil value passed in a slice parameter
 	ErrNilInput = errors.New("linq: nil sequence passed as input to function")
 
-	// a slice input must be passed to functions requiring a slice (e.g From, Union, Intersect, Except, Join, GroupJoin)
+	// ErrInvalidInput returned when a non-slice input passed to functions requiring a slice (e.g From, Union, Intersect, Except, Join, GroupJoin)
 	ErrInvalidInput = errors.New("linq: non-slice value passed to a T parameter indicating a slice")
 
-	// strictly element requesting methods are called and element is not found
-	ErrNoElement = errors.New("linq: element satisfying the conditions does not exist")
-
-	// requested operation is invalid on empty sequences
+	// ErrEmptySequence requested operation is invalid on empty sequences
 	ErrEmptySequence = errors.New("linq: empty sequence, operation requires non-empty results sequence")
 
-	// negative value passed to an index parameter
+	// ErrNegativeParam requested when negative value passed to a non-negative requiring parameter
 	ErrNegativeParam = errors.New("linq: parameter cannot be negative")
 
-	// sequence has invalid elements that method cannot assert into one of builtin numeric types
+	// ErrNan requested when sequence has invalid elements that method cannot assert into one of builtin numeric types
 	ErrNan = errors.New("linq: sequence contains an element of non-numeric types")
 
-	// sequence elements or nil of different type than function can work with
+	// ErrTypeMismatch returned when sequence nils or elements of different types than function can work with
 	ErrTypeMismatch = errors.New("linq: sequence contains element(s) with type different than requested type or nil")
 
-	// sequence contains more than one elements satisfy given predicate func
+	// ErrNotSingle returned when sequence contains more than one element satisfying the predicate function
 	ErrNotSingle = errors.New("linq: sequence contains more than one element matching the given predicate found")
 )
 
@@ -472,9 +469,9 @@ func (q Query) Single(f func(T) (bool, error)) (single T, err error) {
 }
 
 // ElementAt returns the element at the specified index i. If i is a negative
-// number ErrNegativeParam, if no element exists at i-th index, ErrNoElement
-// is returned.
-func (q Query) ElementAt(i int) (elem T, err error) {
+// number ErrNegativeParam, if no element exists at i-th index, found will
+// be returned false.
+func (q Query) ElementAt(i int) (elem T, found bool, err error) {
 	if q.err != nil {
 		err = q.err
 		return
@@ -483,61 +480,32 @@ func (q Query) ElementAt(i int) (elem T, err error) {
 		err = ErrNegativeParam
 		return
 	}
-	if len(q.values) < i+1 {
-		err = ErrNoElement
-	} else {
+	if len(q.values) >= i+1 {
 		elem = q.values[i]
-	}
-	return
-}
-
-// ElementAtOrNil returns the element at the specified index i if exists,
-// otherwise returns nil. If i is a negative number, ErrNegativeParam is
-// returned.
-func (q Query) ElementAtOrNil(i int) (elem T, err error) {
-	if q.err != nil {
-		err = q.err
-		return
-	}
-	if i < 0 {
-		err = ErrNegativeParam
-		return
-	}
-	if len(q.values) > i {
-		elem = q.values[i]
+		found = true
 	}
 	return
 }
 
 // First returns the element at first position of the query source if exists.
-// If source is empty, ErrNoElement is returned.
-func (q Query) First() (elem T, err error) {
-	if q.err != nil {
-		err = q.err
-		return
-	}
-	if len(q.values) == 0 {
-		err = ErrNoElement
-	} else {
-		elem = q.values[0]
-	}
-	return
-}
-
-// FirstOrNil returns the element at first position of the query source, if
-// exists. Otherwise returns nil.
-func (q Query) FirstOrNil() (elem T, err error) {
+// If source is empty or such element is not found, found value will be false,
+// otherwise elem is provided.
+func (q Query) First() (elem T, found bool, err error) {
 	if q.err != nil {
 		err = q.err
 		return
 	}
 	if len(q.values) > 0 {
+		found = true
 		elem = q.values[0]
 	}
 	return
 }
 
-func (q Query) firstBy(f func(T) (bool, error)) (elem T, found bool, err error) {
+// FirstBy returns the first element in the query source that satisfies the
+// provided predicate. If source is empty or such element is not found, found
+// value will be false, otherwise elem is provided.
+func (q Query) FirstBy(f func(T) (bool, error)) (elem T, found bool, err error) {
 	if q.err != nil {
 		err = q.err
 		return
@@ -561,57 +529,25 @@ func (q Query) firstBy(f func(T) (bool, error)) (elem T, found bool, err error) 
 	return
 }
 
-// FirstBy returns the first element in the query source that satisfies the
-// provided predicate. If source is empty, ErrNoElement is returned.
-func (q Query) FirstBy(f func(T) (bool, error)) (elem T, err error) {
-	var found bool
-	elem, found, err = q.firstBy(f)
-
-	if err == nil && !found {
-		err = ErrNoElement
-	}
-	return
-}
-
-// FirstOrNilBy returns the first element in the query source that satisfies
-// the provided predicate, if exists, otherwise nil.
-func (q Query) FirstOrNilBy(f func(T) (bool, error)) (elem T, err error) {
-	elem, found, err := q.firstBy(f)
-	if !found {
-		elem = nil
-	}
-	return
-}
-
 // Last returns the element at last position of the query source if exists.
-// If source is empty, ErrNoElement is returned.
-func (q Query) Last() (elem T, err error) {
-	if q.err != nil {
-		err = q.err
-		return
-	}
-	if len(q.values) == 0 {
-		err = ErrNoElement
-	} else {
-		elem = q.values[len(q.values)-1]
-	}
-	return
-}
-
-// LastOrNil returns the element at last index of the query source, if exists.
-// Otherwise returns nil.
-func (q Query) LastOrNil() (elem T, err error) {
+// If source is empty or such element is not found, found
+// value will be false, otherwise elem is provided.
+func (q Query) Last() (elem T, found bool, err error) {
 	if q.err != nil {
 		err = q.err
 		return
 	}
 	if len(q.values) > 0 {
+		found = true
 		elem = q.values[len(q.values)-1]
 	}
 	return
 }
 
-func (q Query) lastBy(f func(T) (bool, error)) (elem T, found bool, err error) {
+// LastBy returns the last element in the query source that satisfies the
+// provided predicate. If source is empty or such element is not found, found
+// value will be false, otherwise elem is provided.
+func (q Query) LastBy(f func(T) (bool, error)) (elem T, found bool, err error) {
 	if q.err != nil {
 		err = q.err
 		return
@@ -632,28 +568,6 @@ func (q Query) lastBy(f func(T) (bool, error)) (elem T, found bool, err error) {
 			found = true
 			break
 		}
-	}
-	return
-}
-
-// LastBy returns the last element in the query source that satisfies the
-// provided predicate. If source is empty, ErrNoElement is returned.
-func (q Query) LastBy(f func(T) (bool, error)) (elem T, err error) {
-	var found bool
-	elem, found, err = q.lastBy(f)
-
-	if err == nil && !found {
-		err = ErrNoElement
-	}
-	return
-}
-
-// LastOrNilBy returns the last element in the query source that satisfies
-// the provided predicate, if exists, otherwise nil.
-func (q Query) LastOrNilBy(f func(T) (bool, error)) (elem T, err error) {
-	elem, found, err := q.lastBy(f)
-	if !found {
-		elem = nil
 	}
 	return
 }
