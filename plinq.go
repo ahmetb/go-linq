@@ -23,6 +23,9 @@ type parallelValueResult struct {
 
 // Results evaluates the query and returns the results as T slice.
 // An error occurred in during evaluation of the query will be returned.
+//
+// Example:
+// 	results, err := From(slice).AsParallel().Select(something).Results()
 func (q ParallelQuery) Results() ([]T, error) {
 	return q.values, q.err
 }
@@ -84,6 +87,11 @@ func (q ParallelQuery) AsUnordered() (p ParallelQuery) {
 //
 // If you would like to preserve order from the original sequence, use
 // AsOrdered() on the query beforehand.
+//
+// Example:
+// 	flying, err := From(animals).AsParallel().Where(func (a T) (bool, error){
+//		return a.(*Animal).IsFlying, nil
+// 	}).Results()
 func (q ParallelQuery) Where(f func(T) (bool, error)) (r ParallelQuery) {
 	r = q.copyMeta()
 	if r.err != nil {
@@ -145,6 +153,11 @@ func (q ParallelQuery) Where(f func(T) (bool, error)) (r ParallelQuery) {
 // the given transform function in parallel for each element.
 // Returns a query with the return values of invoking the transform function
 // on each element of original source.
+//
+// Example:
+// 	names, err := From(animals).AsParallel().Select(func (a T) (T, error){
+//		return a.(*Animal).Name, nil
+// 	}).Results()
 func (q ParallelQuery) Select(f func(T) (T, error)) (r ParallelQuery) {
 	r = q.copyMeta()
 	if r.err != nil {
@@ -182,12 +195,21 @@ func (q ParallelQuery) Select(f func(T) (T, error)) (r ParallelQuery) {
 }
 
 // Any determines whether the query source contains any elements.
+// Example:
+// 	anyOver18, err := From(students).AsParallel().Where(func (s T)(bool, error){
+//		return s.(*Person).Age > 18, nil
+//	}).Any()
 func (q ParallelQuery) Any() (exists bool, err error) {
 	return len(q.values) > 0, q.err
 }
 
 // AnyWith determines whether the query source contains any elements satisfying
 // the provided predicate function.
+//
+// Example:
+// 	anyOver18, err := From(students).AsParallel().AnyWith(func (s T)(bool, error){
+//		return s.(*Person).Age > 18, nil
+//	})
 func (q ParallelQuery) AnyWith(f func(T) (bool, error)) (exists bool, err error) {
 	if q.err != nil {
 		err = q.err
@@ -227,6 +249,11 @@ func (q ParallelQuery) AnyWith(f func(T) (bool, error)) (exists bool, err error)
 // predicate function by executing the function for each element in parallel.
 //
 // Returns early if one element does not meet the conditions provided.
+//
+// Example:
+// 	allOver18, err := From(students).AsParallel().All(func (s T)(bool, error){
+//		return s.(*Person).Age > 18, nil
+//	})
 func (q ParallelQuery) All(f func(T) (bool, error)) (all bool, err error) {
 	if q.err != nil {
 		err = q.err
@@ -261,6 +288,13 @@ func (q ParallelQuery) All(f func(T) (bool, error)) (all bool, err error) {
 // Single returns the only one element of the original sequence satisfies the
 // provided predicate function if exists, otherwise returns ErrNotSingle.
 // Predicate function is executed in parallel for each element of the sequence.
+// Example:
+// 	admin, err := From(students).AsParallel().Single(func (s T)(bool, error){
+//		return s.(*Person).Id == 1, nil
+//	})
+//	if err == nil {
+//		// use admin.(*Person)
+// 	}
 func (q ParallelQuery) Single(f func(T) (bool, error)) (single T, err error) {
 	if q.err != nil {
 		err = q.err
@@ -304,6 +338,11 @@ func (q ParallelQuery) Single(f func(T) (bool, error)) (single T, err error) {
 }
 
 // Count returns number of elements in the sequence.
+//
+// Example:
+// 	over18, err := From(students).AsParallel().Where(func (s T)(bool, error){
+//		return s.(*Person).Age > 18, nil
+//	}).Count()
 func (q ParallelQuery) Count() (count int, err error) {
 	return len(q.values), q.err
 }
@@ -311,6 +350,11 @@ func (q ParallelQuery) Count() (count int, err error) {
 // CountBy returns number of elements satisfying the provided predicate
 // function by running the function for each element of the sequence
 // in parallel.
+//
+// Example:
+// 	over18, err := From(students).AsParallel().CountBy(func (s T)(bool, error){
+//		return s.(*Person).Age > 18, nil
+//	})
 func (q ParallelQuery) CountBy(f func(T) (bool, error)) (c int, err error) {
 	if q.err != nil {
 		err = q.err
