@@ -71,6 +71,9 @@ project developed on spare times.
 ## Release Notes
 
 ~~~
+v0.9-rc3
+* removed FirstOrNil, LastOrNil, ElementAtOrNil methods 
+
 v0.9-rc2.5
 * slice-accepting methods accept slices of any type with reflections
 

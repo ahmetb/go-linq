@@ -33,31 +33,28 @@ func (q sortableQuery) Swap(i, j int)      { q.values[i], q.values[j] = q.values
 func (q sortableQuery) Less(i, j int) bool { return q.less(q.values[i], q.values[j]) }
 
 var (
-	// a predicate, selector or comparer is nil
+	// ErrNilFunc returned when a predicate, selector or comparer is nil
 	ErrNilFunc = errors.New("linq: passed evaluation function is nil")
 
-	// nil value of []T is passed
+	// ErrNilInput returned when nil value passed in a slice parameter
 	ErrNilInput = errors.New("linq: nil sequence passed as input to function")
 
-	// a slice input must be passed to functions requiring a slice (e.g From, Union, Intersect, Except, Join, GroupJoin)
+	// ErrInvalidInput returned when a non-slice input passed to functions requiring a slice (e.g From, Union, Intersect, Except, Join, GroupJoin)
 	ErrInvalidInput = errors.New("linq: non-slice value passed to a T parameter indicating a slice")
 
-	// strictly element requesting methods are called and element is not found
-	ErrNoElement = errors.New("linq: element satisfying the conditions does not exist")
-
-	// requested operation is invalid on empty sequences
+	// ErrEmptySequence requested operation is invalid on empty sequences
 	ErrEmptySequence = errors.New("linq: empty sequence, operation requires non-empty results sequence")
 
-	// negative value passed to an index parameter
+	// ErrNegativeParam requested when negative value passed to a non-negative requiring parameter
 	ErrNegativeParam = errors.New("linq: parameter cannot be negative")
 
-	// sequence has invalid elements that method cannot assert into one of builtin numeric types
+	// ErrNan requested when sequence has invalid elements that method cannot assert into one of builtin numeric types
 	ErrNan = errors.New("linq: sequence contains an element of non-numeric types")
 
-	// sequence elements or nil of different type than function can work with
+	// ErrTypeMismatch returned when sequence nils or elements of different types than function can work with
 	ErrTypeMismatch = errors.New("linq: sequence contains element(s) with type different than requested type or nil")
 
-	// sequence contains more than one elements satisfy given predicate func
+	// ErrNotSingle returned when sequence contains more than one element satisfying the predicate function
 	ErrNotSingle = errors.New("linq: sequence contains more than one element matching the given predicate found")
 )
 
@@ -89,6 +86,9 @@ func From(input T) Query {
 
 // Results evaluates the query and returns the results as T slice.
 // An error occurred in during evaluation of the query will be returned.
+//
+// Example:
+// 	results, err := From(slice).Select(something).Results()
 func (q Query) Results() ([]T, error) {
 	return q.values, q.err
 }
@@ -107,6 +107,11 @@ func (q Query) AsParallel() ParallelQuery {
 // function will take elements of the source (or results of previous query)
 // as interface[] so it should make type assertion to work on the types.
 // Returns a query with elements satisfy the condition.
+//
+// Example:
+// 	flying, err := From(animals).Where(func (a T) (bool, error){
+//		return a.(*Animal).IsFlying, nil
+// 	}).Results()
 func (q Query) Where(f func(T) (bool, error)) (r Query) {
 	if q.err != nil {
 		r.err = q.err
@@ -133,6 +138,11 @@ func (q Query) Where(f func(T) (bool, error)) (r Query) {
 // Select projects each element of a sequence into a new form.
 // Returns a query with the result of invoking the transform function
 // on each element of original source.
+//
+// Example:
+// 	names, err := From(animals).Select(func (a T) (T, error){
+//		return a.(*Animal).Name, nil
+// 	}).Results()
 func (q Query) Select(f func(T) (T, error)) (r Query) {
 	if q.err != nil {
 		r.err = q.err
@@ -157,6 +167,9 @@ func (q Query) Select(f func(T) (T, error)) (r Query) {
 // Distinct returns distinct elements from the provided source using default
 // equality comparer, ==. This is a set operation and returns an unordered
 // sequence.
+//
+// Example:
+// 	distinctInts, err := From(integers).Distinct().Results()
 func (q Query) Distinct() (r Query) {
 	return q.distinct(nil)
 }
@@ -165,6 +178,11 @@ func (q Query) Distinct() (r Query) {
 // provided equality comparer. This is a set operation and returns an unordered
 // sequence. Number of calls to f will be at most N^2 (all elements are
 // distinct) and at best N (all elements are the same).
+//
+// Example:
+// 	distinctFirstNames, err := From(people).DistinctBy(func (p T) (bool, error){
+//		return p.(*Person).FirstName
+// 	}).Results()
 func (q Query) DistinctBy(f func(T, T) (bool, error)) (r Query) {
 	if f == nil {
 		r.err = ErrNilFunc
@@ -231,6 +249,10 @@ func (q Query) distinct(f func(T, T) (bool, error)) (r Query) {
 // input slice using default equality comparer. This is a set operation and
 // returns an unordered sequence. inputSlice must be slice of a type although
 // it looks like T, otherwise returns ErrInvalidInput.
+//
+// Example:
+// 	all, err := From(int[]{1,2,3,4,5}).Union(int[]{3,4,5,6}).Results()
+// 	// all is {1,2,3,4,5,6}
 func (q Query) Union(inputSlice T) (r Query) {
 	if q.err != nil {
 		r.err = q.err
@@ -271,6 +293,10 @@ func (q Query) Union(inputSlice T) (r Query) {
 // provided input slice using default equality comparer. This is a set
 // operation and may return an unordered sequence. inputSlice must be slice of
 // a type although it looks like T, otherwise returns ErrInvalidInput.
+//
+// Example:
+// 	both, err := From(int[]{1,2,3,4,5}).Intersect(int[]{3,4,5,6}).Results()
+// 	// both is {3,4,5}
 func (q Query) Intersect(inputSlice T) (r Query) {
 	if q.err != nil {
 		r.err = q.err
@@ -316,6 +342,11 @@ func (q Query) Intersect(inputSlice T) (r Query) {
 // provided input slice using default equality comparer. This is a set
 // operation and returns an unordered sequence. inputSlice must be slice of
 // a type although it looks like T, otherwise returns ErrInvalidInput.
+//
+// Example:
+// Example:
+// 	diffAB, err := From(int[]{1,2,3,4,5}).Except(int[]{3,4,5,6}).Results()
+// 	// diffAB is {1,2}
 func (q Query) Except(inputSlice T) (r Query) {
 	if q.err != nil {
 		r.err = q.err
@@ -350,13 +381,23 @@ func (q Query) Except(inputSlice T) (r Query) {
 	return
 }
 
-// Count returns number of elements in the sequence.
+// Count returns number of elements in the sequence. Range().
+//
+// Example:
+// 	over18, err := From(students).Where(func (s T)(bool, error){
+//		return s.(*Person).Age > 18, nil
+//	}).Count()
 func (q Query) Count() (count int, err error) {
 	return len(q.values), q.err
 }
 
 // CountBy returns number of elements satisfying the provided predicate
 // function.
+//
+// Example:
+// 	over18, err := From(students).CountBy(func (s T)(bool, error){
+//		return s.(*Person).Age > 18, nil
+//	})
 func (q Query) CountBy(f func(T) (bool, error)) (c int, err error) {
 	if q.err != nil {
 		err = q.err
@@ -381,12 +422,22 @@ func (q Query) CountBy(f func(T) (bool, error)) (c int, err error) {
 }
 
 // Any determines whether the query source contains any elements.
+//
+// Example:
+// 	anyOver18, err := From(students).Where(func (s T)(bool, error){
+//		return s.(*Person).Age > 18, nil
+//	}).Any()
 func (q Query) Any() (exists bool, err error) {
 	return len(q.values) > 0, q.err
 }
 
 // AnyWith determines whether the query source contains any elements satisfying
 // the provided predicate function.
+//
+// Example:
+// 	anyOver18, err := From(students).AnyWith(func (s T)(bool, error){
+//		return s.(*Person).Age > 18, nil
+//	})
 func (q Query) AnyWith(f func(T) (bool, error)) (exists bool, err error) {
 	if q.err != nil {
 		err = q.err
@@ -415,6 +466,11 @@ func (q Query) AnyWith(f func(T) (bool, error)) (exists bool, err error) {
 // predicate function.
 //
 // Returns early if one element does not meet the conditions provided.
+//
+// Example:
+// 	allOver18, err := From(students).All(func (s T)(bool, error){
+//		return s.(*Person).Age > 18, nil
+//	})
 func (q Query) All(f func(T) (bool, error)) (all bool, err error) {
 	if q.err != nil {
 		err = q.err
@@ -440,6 +496,14 @@ func (q Query) All(f func(T) (bool, error)) (all bool, err error) {
 
 // Single returns the only one element of the original sequence satisfies the
 // provided predicate function if exists, otherwise returns ErrNotSingle.
+//
+// Example:
+// 	admin, err := From(students).Single(func (s T)(bool, error){
+//		return s.(*Person).Id == 1, nil
+//	})
+//	if err == nil {
+//		// use admin.(*Person)
+// 	}
 func (q Query) Single(f func(T) (bool, error)) (single T, err error) {
 	if q.err != nil {
 		err = q.err
@@ -472,9 +536,15 @@ func (q Query) Single(f func(T) (bool, error)) (single T, err error) {
 }
 
 // ElementAt returns the element at the specified index i. If i is a negative
-// number ErrNegativeParam, if no element exists at i-th index, ErrNoElement
-// is returned.
-func (q Query) ElementAt(i int) (elem T, err error) {
+// number ErrNegativeParam, if no element exists at i-th index, found will
+// be returned false.
+//
+// Example:
+// 	second, found, err := From(ints).OrderInts().ElementAt(2)
+// 	if err == nil && found {
+//		// use second.(int)
+// 	}
+func (q Query) ElementAt(i int) (elem T, found bool, err error) {
 	if q.err != nil {
 		err = q.err
 		return
@@ -483,61 +553,45 @@ func (q Query) ElementAt(i int) (elem T, err error) {
 		err = ErrNegativeParam
 		return
 	}
-	if len(q.values) < i+1 {
-		err = ErrNoElement
-	} else {
+	if len(q.values) >= i+1 {
 		elem = q.values[i]
-	}
-	return
-}
-
-// ElementAtOrNil returns the element at the specified index i if exists,
-// otherwise returns nil. If i is a negative number, ErrNegativeParam is
-// returned.
-func (q Query) ElementAtOrNil(i int) (elem T, err error) {
-	if q.err != nil {
-		err = q.err
-		return
-	}
-	if i < 0 {
-		err = ErrNegativeParam
-		return
-	}
-	if len(q.values) > i {
-		elem = q.values[i]
+		found = true
 	}
 	return
 }
 
 // First returns the element at first position of the query source if exists.
-// If source is empty, ErrNoElement is returned.
-func (q Query) First() (elem T, err error) {
-	if q.err != nil {
-		err = q.err
-		return
-	}
-	if len(q.values) == 0 {
-		err = ErrNoElement
-	} else {
-		elem = q.values[0]
-	}
-	return
-}
-
-// FirstOrNil returns the element at first position of the query source, if
-// exists. Otherwise returns nil.
-func (q Query) FirstOrNil() (elem T, err error) {
+// If source is empty or such element is not found, found value will be false,
+// otherwise elem is provided.
+//
+// Example:
+// 	first, found, err := From(ints).OrderInts().First()
+// 	if err == nil && found {
+//		// use first.(int)
+// 	}
+func (q Query) First() (elem T, found bool, err error) {
 	if q.err != nil {
 		err = q.err
 		return
 	}
 	if len(q.values) > 0 {
+		found = true
 		elem = q.values[0]
 	}
 	return
 }
 
-func (q Query) firstBy(f func(T) (bool, error)) (elem T, found bool, err error) {
+// FirstBy returns the first element in the query source that satisfies the
+// provided predicate. If source is empty or such element is not found, found
+// value will be false, otherwise elem is provided.
+// Example:
+// 	second, found, err := From(ints).OrderInts().FirstBy(func (i T)(bool, error){
+//		return i.(int) % 2 == 0, nil
+// 	})
+// 	if err == nil && found {
+//		// use first.(int)
+// 	}
+func (q Query) FirstBy(f func(T) (bool, error)) (elem T, found bool, err error) {
 	if q.err != nil {
 		err = q.err
 		return
@@ -561,57 +615,39 @@ func (q Query) firstBy(f func(T) (bool, error)) (elem T, found bool, err error) 
 	return
 }
 
-// FirstBy returns the first element in the query source that satisfies the
-// provided predicate. If source is empty, ErrNoElement is returned.
-func (q Query) FirstBy(f func(T) (bool, error)) (elem T, err error) {
-	var found bool
-	elem, found, err = q.firstBy(f)
-
-	if err == nil && !found {
-		err = ErrNoElement
-	}
-	return
-}
-
-// FirstOrNilBy returns the first element in the query source that satisfies
-// the provided predicate, if exists, otherwise nil.
-func (q Query) FirstOrNilBy(f func(T) (bool, error)) (elem T, err error) {
-	elem, found, err := q.firstBy(f)
-	if !found {
-		elem = nil
-	}
-	return
-}
-
 // Last returns the element at last position of the query source if exists.
-// If source is empty, ErrNoElement is returned.
-func (q Query) Last() (elem T, err error) {
-	if q.err != nil {
-		err = q.err
-		return
-	}
-	if len(q.values) == 0 {
-		err = ErrNoElement
-	} else {
-		elem = q.values[len(q.values)-1]
-	}
-	return
-}
-
-// LastOrNil returns the element at last index of the query source, if exists.
-// Otherwise returns nil.
-func (q Query) LastOrNil() (elem T, err error) {
+// If source is empty or such element is not found, found
+// value will be false, otherwise elem is provided.
+//
+// Example:
+// 	last, found, err := From(ints).OrderInts().Last()
+// 	if err == nil && found {
+//		// use last.(int)
+// 	}
+func (q Query) Last() (elem T, found bool, err error) {
 	if q.err != nil {
 		err = q.err
 		return
 	}
 	if len(q.values) > 0 {
+		found = true
 		elem = q.values[len(q.values)-1]
 	}
 	return
 }
 
-func (q Query) lastBy(f func(T) (bool, error)) (elem T, found bool, err error) {
+// LastBy returns the last element in the query source that satisfies the
+// provided predicate. If source is empty or such element is not found, found
+// value will be false, otherwise elem is provided.
+//
+// Example:
+// 	last, found, err := From(ints).OrderInts().LastBy(func (i T)(bool, error){
+//		return i.(int) % 2 == 0, nil
+// 	})
+// 	if err == nil && found {
+//		// use last.(int)
+// 	}
+func (q Query) LastBy(f func(T) (bool, error)) (elem T, found bool, err error) {
 	if q.err != nil {
 		err = q.err
 		return
@@ -636,29 +672,10 @@ func (q Query) lastBy(f func(T) (bool, error)) (elem T, found bool, err error) {
 	return
 }
 
-// LastBy returns the last element in the query source that satisfies the
-// provided predicate. If source is empty, ErrNoElement is returned.
-func (q Query) LastBy(f func(T) (bool, error)) (elem T, err error) {
-	var found bool
-	elem, found, err = q.lastBy(f)
-
-	if err == nil && !found {
-		err = ErrNoElement
-	}
-	return
-}
-
-// LastOrNilBy returns the last element in the query source that satisfies
-// the provided predicate, if exists, otherwise nil.
-func (q Query) LastOrNilBy(f func(T) (bool, error)) (elem T, err error) {
-	elem, found, err := q.lastBy(f)
-	if !found {
-		elem = nil
-	}
-	return
-}
-
 // Reverse returns a query with a inverted order of the original source
+//
+// Example:
+// 	reversed, err := From([]int{1,2,3,4,5}).Reverse().Results()
 func (q Query) Reverse() (r Query) {
 	if q.err != nil {
 		r.err = q.err
@@ -676,6 +693,12 @@ func (q Query) Reverse() (r Query) {
 
 // Take returns a new query with n first elements are taken from the original
 // sequence.
+//
+// Example:
+// 	arr, err := From([]int{1,2,3,4,5}).Take(3).Results()
+//	if err == nil {
+//		// arr will be 1, 2, 3
+// 	}
 func (q Query) Take(n int) (r Query) {
 	if q.err != nil {
 		r.err = q.err
@@ -694,6 +717,16 @@ func (q Query) Take(n int) (r Query) {
 // TakeWhile returns a new query with elements from the original sequence
 // by testing them with provided predicate f and stops taking them first
 // predicate returns false.
+//
+// Example:
+// 	arr, err := From([]int{40,10,50,60,100})
+// 		.OrderInts()
+//		.TakeWhile(func (i T)(bool, error){
+//			return i.(int) >= 50, nil
+// 		}).Results()
+//	if err == nil {
+//		// arr will be 50, 60, 100
+// 	}
 func (q Query) TakeWhile(f func(T) (bool, error)) (r Query) {
 	n, err := q.findWhileTerminationIndex(f)
 	if err != nil {
@@ -705,6 +738,12 @@ func (q Query) TakeWhile(f func(T) (bool, error)) (r Query) {
 
 // Skip returns a new query with nbypassed
 // from the original sequence and takes rest of the elements.
+//
+// Example:
+// 	arr, err := From([]int{1,2,3,4,5}).Skip(3).Results()
+//	if err == nil {
+//		// arr will be 4, 5
+// 	}
 func (q Query) Skip(n int) (r Query) {
 	if q.err != nil {
 		r.err = q.err
@@ -723,6 +762,16 @@ func (q Query) Skip(n int) (r Query) {
 // SkipWhile returns a new query with original sequence bypassed
 // as long as a provided predicate is true and then takes the
 // remaining elements.
+//
+// Example:
+// 	arr, err := From([]int{40,10,50,60,100})
+// 		.OrderInts()
+//		.SkipWhile(func (i T)(bool, error){
+//			return i.(int) < 50, nil
+// 		}).Results()
+//	if err == nil {
+//		// arr will be 50, 60, 100
+// 	}
 func (q Query) SkipWhile(f func(T) (bool, error)) (r Query) {
 	n, err := q.findWhileTerminationIndex(f)
 	if err != nil {
@@ -760,6 +809,10 @@ func (q Query) findWhileTerminationIndex(f func(T) (bool, error)) (n int, err er
 // OrderInts returns a new query by sorting integers in the original
 // sequence in ascending order. Elements of the original sequence should only be
 // int. Otherwise, ErrTypeMismatch will be returned.
+//
+// Example:
+//	sorted, err := From([]int{6,1,2,-1,10}).OrderInts().Results()
+//	// sorted = {-1, 1, 2, 6, 10}
 func (q Query) OrderInts() (r Query) {
 	if q.err != nil {
 		r.err = q.err
@@ -780,6 +833,10 @@ func (q Query) OrderInts() (r Query) {
 // OrderStrings returns a new query by sorting integers in the original
 // sequence in ascending order. Elements of the original sequence should only be
 // string. Otherwise, ErrTypeMismatch will be returned.
+//
+// Example:
+//	sorted, err := From([]string{"foo", "bar", "", "baz"}).OrderStrings().Results()
+//	// sorted = {"", "bar", "baz", "foo"}
 func (q Query) OrderStrings() (r Query) {
 	if q.err != nil {
 		r.err = q.err
@@ -798,6 +855,10 @@ func (q Query) OrderStrings() (r Query) {
 // OrderFloat64s returns a new query by sorting integers in the original
 // sequence in ascending order. Elements of the original sequence should only be
 // float64. Otherwise, ErrTypeMismatch will be returned.
+//
+// Example:
+//	sorted, err := From([]float64{-1e-9, -1, 1e-9, 1}}).OrderFloat64s().Results()
+//	// sorted = {-1, -1e-9, 1e-9, 1}
 func (q Query) OrderFloat64s() (r Query) {
 	if q.err != nil {
 		r.err = q.err
@@ -817,6 +878,11 @@ func (q Query) OrderFloat64s() (r Query) {
 // in ascending order.
 // The comparer function should return true if the parameter "this" is less
 // than "that".
+//
+// Example:
+//	sorted, err := From(people).OrderBy(func (this T, that T) bool {
+//		return this.(*Person).Age < that.(*Person).Age
+// 	}).Results()
 func (q Query) OrderBy(less func(this T, that T) bool) (r Query) {
 	if q.err != nil {
 		r.err = q.err
@@ -967,6 +1033,10 @@ func (q Query) GroupJoin(innerSlice T,
 
 // Range returns a query with sequence of integral numbers within
 // the specified range. int overflows are not handled.
+//
+// Example:
+//	seq, err := From(people).Range(-2, 5).Results()
+// 	// seq is {-2, -1, 0, 1, 2}
 func Range(start, count int) (q Query) {
 	if count < 0 {
 		q.err = ErrNegativeParam
@@ -986,6 +1056,12 @@ func Range(start, count int) (q Query) {
 // This method has a poor performance due to language limitations.
 // On every element, type assertion is made to find the correct type of the
 // element.
+//
+// Example:
+//	mixedArr = {}interface[]{1, int8(2), uint(3), float64(4.4)}
+//	sum, err := From(mixedArr).Sum() // sum is 10.4
+//	// or
+//	sum, err := From([]int{1,2,3,4,5}]).Sum() // sum is 15.0
 func (q Query) Sum() (sum float64, err error) {
 	if q.err != nil {
 		err = q.err
@@ -1043,6 +1119,12 @@ func sumMixed(in []T) (sum float64, err error) {
 // This method has a poor performance due to language limitations.
 // On every element, type assertion is made to find the correct type of the
 // element.
+//
+// Example:
+//	mixedArr = {}interface[]{1, int8(2), uint(3), float64(4.4)}
+//	avg, err := From(mixedArr).Average() // avg is 2.6
+//	// or
+//	avg, err := From([]int{1,2,3,4,5}]).Average() // avg is 3.0
 func (q Query) Average() (avg float64, err error) {
 	if q.err != nil {
 		err = q.err
@@ -1063,6 +1145,9 @@ func (q Query) Average() (avg float64, err error) {
 // sequence. Elements of the original sequence should only be int or
 // ErrTypeMismatch is returned. If the sequence is empty ErrEmptySequence is
 // returned.
+//
+// Example:
+//	min, err := From([]int{1, -100, 10, 0}).MinInt() // min is -1
 func (q Query) MinInt() (min int, err error) {
 	if q.err != nil {
 		err = q.err
@@ -1082,6 +1167,9 @@ func (q Query) MinInt() (min int, err error) {
 // sequence. Elements of the original sequence should only be uint or
 // ErrTypeMismatch is returned. If the sequence is empty ErrEmptySequence is
 // returned.
+//
+// Example:
+//	min, err := From([]uint{1, -100, 10, 0}).MinUint() // min is -1
 func (q Query) MinUint() (min uint, err error) {
 	if q.err != nil {
 		err = q.err
@@ -1101,6 +1189,9 @@ func (q Query) MinUint() (min uint, err error) {
 // sequence. Elements of the original sequence should only be float64 or
 // ErrTypeMismatch is returned. If the sequence is empty ErrEmptySequence is
 // returned.
+//
+// Example;
+//	min, err := From([]float64{1e-9, 2e10, -1e-10, -1}).MinFloat64() // min is -1.0
 func (q Query) MinFloat64() (min float64, err error) {
 	if q.err != nil {
 		err = q.err
@@ -1120,6 +1211,9 @@ func (q Query) MinFloat64() (min float64, err error) {
 // sequence. Elements of the original sequence should only be int or
 // ErrTypeMismatch is returned. If the sequence is empty ErrEmptySequence is
 // returned.
+//
+// Example:
+//	max, err := From([]int{1, -100, 10, 0}).MaxInt() // max is 10
 func (q Query) MaxInt() (min int, err error) {
 	if q.err != nil {
 		err = q.err
@@ -1139,6 +1233,9 @@ func (q Query) MaxInt() (min int, err error) {
 // sequence. Elements of the original sequence should only be uint or
 // ErrTypeMismatch is returned. If the sequence is empty ErrEmptySequence is
 // returned.
+//
+// Example:
+//	max, err := From([]uint{1, -100, 10, 0}).MaxUint() // max is 10
 func (q Query) MaxUint() (min uint, err error) {
 	if q.err != nil {
 		err = q.err
@@ -1158,6 +1255,9 @@ func (q Query) MaxUint() (min uint, err error) {
 // sequence. Elements of the original sequence should only be float64 or
 // ErrTypeMismatch is returned. If the sequence is empty ErrEmptySequence is
 // returned.
+//
+// Example:
+//	max, err := From([]float64{1e-9, 2e10, -1e-10, -1}).MaxFloat64() // max is 2e10
 func (q Query) MaxFloat64() (min float64, err error) {
 	if q.err != nil {
 		err = q.err
