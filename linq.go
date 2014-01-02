@@ -722,10 +722,10 @@ func (q Query) Take(n int) (r Query) {
 // 	arr, err := From([]int{40,10,50,60,100})
 // 		.OrderInts()
 //		.TakeWhile(func (i T)(bool, error){
-//			return i.(int) >= 50, nil
+//			return i.(int) <= 50, nil
 // 		}).Results()
 //	if err == nil {
-//		// arr will be 50, 60, 100
+//		// arr will be 10, 40, 50
 // 	}
 func (q Query) TakeWhile(f func(T) (bool, error)) (r Query) {
 	n, err := q.findWhileTerminationIndex(f)
