@@ -3,4 +3,5 @@ go: tip
 script: go test -v -cover  ./...
 install:
   - export PATH=$PATH:$HOME/gopath/bin
+  - go get code.google.com/p/go.tools/cmd/cover
   - go get -v github.com/smartystreets/goconvey
