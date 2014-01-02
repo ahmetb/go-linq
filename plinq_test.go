@@ -18,10 +18,35 @@ var (
 	}
 )
 
+func TestResultsParallel(t *testing.T) {
+	Convey("If error exists in given queryable, error is returned", t, func() {
+		q := Query{
+			values: nil,
+			err:    errFoo}
+		_, err := q.AsParallel().Results()
+		So(err, ShouldEqual, errFoo)
+	})
+	Convey("Given no errors exist, non-nil results are returned", t, func() {
+		q := From(arr0)
+		val, err := q.AsParallel().Results()
+		So(err, ShouldEqual, nil)
+		So(val, shouldSlicesResemble, arr0)
+	})
+	Convey("Returned result is isolated (copied) from original query source", t, func() {
+		// Regression for BUG: modifying result slice effects subsequent query methods
+		arr := []int{1, 2, 3, 4, 5}
+		q := From(arr)
+		res, _ := q.AsParallel().Results()
+		res[0] = 100
+		sum, _ := q.Sum()
+		So(sum, ShouldEqual, 15)
+	})
+}
+
 func TestWhereParallel(t *testing.T) {
 	Convey("Chose none of the elements", t, func() {
 		val, _ := From(arr0).AsParallel().Where(alwaysFalse).Results()
-		So(val, ShouldEqual, nil)
+		So(len(val), ShouldEqual, 0)
 	})
 	Convey("A previous error is reflected on the result", t, func() {
 		_, err := From(arr0).Where(erroneusBinaryFunc).AsParallel().Where(alwaysTrue).Results()

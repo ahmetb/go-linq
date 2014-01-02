@@ -27,7 +27,11 @@ type parallelValueResult struct {
 // Example:
 // 	results, err := From(slice).AsParallel().Select(something).Results()
 func (q ParallelQuery) Results() ([]T, error) {
-	return q.values, q.err
+	// we need to copy results for isolating user modification on returned
+	// slice from the current Query instance.
+	res := make([]T, len(q.values))
+	_ = copy(res, q.values)
+	return res, q.err
 }
 
 // AsSequential returns a Query from the same source and the query functions

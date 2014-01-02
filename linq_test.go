@@ -99,19 +99,26 @@ func TestFrom(t *testing.T) {
 
 func TestResults(t *testing.T) {
 	Convey("If error exists in given queryable, error is returned", t, func() {
-		errMsg := "dummy error"
 		q := Query{
 			values: nil,
-			err:    errors.New(errMsg)}
+			err:    errFoo}
 		_, err := q.Results()
-		So(err, ShouldNotEqual, nil)
-		So(err.Error(), ShouldEqual, errMsg)
+		So(err, ShouldEqual, errFoo)
 	})
 	Convey("Given no errors exist, non-nil results are returned", t, func() {
 		q := From(arr0)
 		val, err := q.Results()
 		So(err, ShouldEqual, nil)
 		So(val, shouldSlicesResemble, arr0)
+	})
+	Convey("Returned result is isolated (copied) from original query source", t, func() {
+		// Regression for BUG: modifying result slice effects subsequent query methods
+		arr := []int{1, 2, 3, 4, 5}
+		q := From(arr)
+		res, _ := q.Results()
+		res[0] = 100
+		sum, _ := q.Sum()
+		So(sum, ShouldEqual, 15)
 	})
 }
 
@@ -138,7 +145,7 @@ func TestWhere(t *testing.T) {
 
 	Convey("Chose none of the elements", t, func() {
 		val, _ := From(arr0).Where(alwaysFalse).Results()
-		So(val, ShouldEqual, nil)
+		So(len(val), ShouldEqual, 0)
 	})
 
 	Convey("Chose all elements, as is", t, func() {
