@@ -90,7 +90,11 @@ func From(input T) Query {
 // Example:
 // 	results, err := From(slice).Select(something).Results()
 func (q Query) Results() ([]T, error) {
-	return q.values, q.err
+	// we need to copy results for isolating user modification on returned
+	// slice from the current Query instance.
+	res := make([]T, len(q.values))
+	_ = copy(res, q.values)
+	return res, q.err
 }
 
 // AsParallel returns a ParallelQuery from the same source where the query functions

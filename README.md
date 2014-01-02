@@ -71,6 +71,9 @@ project developed on spare times.
 ## Release Notes
 
 ~~~
+v0.9-rc3.1
+* bugfix: modifying result slice affects subsequent query methods
+
 v0.9-rc3
 * removed FirstOrNil, LastOrNil, ElementAtOrNil methods 
 
