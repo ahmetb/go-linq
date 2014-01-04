@@ -78,7 +78,7 @@
                         </td>
 
                         <td class='code'><code>
-                            results, err := From(students)
+                            results, err := From(students).
                         </code></td>
                     </tr>
 
@@ -90,9 +90,9 @@
                         </td>
 
                         <td class='code'><code>
-                            &nbsp;&nbsp;&nbsp;&nbsp;.Where(func (s T) (bool, error){<br/>&nbsp; &nbsp; 
+                            &nbsp;&nbsp;&nbsp;&nbsp;Where(func (s T) (bool, error){<br/>&nbsp; &nbsp; 
                             &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return s.(*Student).age >= 20, nil<br/>
-                            &nbsp;&nbsp;&nbsp;&nbsp;})
+                            &nbsp;&nbsp;&nbsp;&nbsp;}).
                         </code></td>
                     </tr>
 
@@ -102,9 +102,9 @@
                         </td>
 
                         <td class='code'><code>
-                            &nbsp;&nbsp;&nbsp;&nbsp;.Select(func (s T) (T, error){<br/>
+                            &nbsp;&nbsp;&nbsp;&nbsp;Select(func (s T) (T, error){<br/>
                             &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return s.(*Student).age, nil<br/>
-                            &nbsp;&nbsp;&nbsp;&nbsp;})
+                            &nbsp;&nbsp;&nbsp;&nbsp;}).
                         </code></td>
                     </tr>
                     <tr>
@@ -113,7 +113,7 @@
                         </td>
 
                         <td class='code'><code>
-                            .Average()
+                            Average()
                         </code></td>
                     </tr>
                 </table>
@@ -129,7 +129,7 @@
                         </td>
 
                         <td class='code'><code>
-                            allHasFavicon, err := From(domains)
+                            allHasFavicon, err := From(domains).
                         </code></td>
                     </tr>
 
@@ -139,9 +139,9 @@
                         </td>
 
                         <td class='code'><code>
-                            &nbsp;&nbsp;&nbsp;&nbsp;.Select(func (in T) (T, error){<br/>
+                            &nbsp;&nbsp;&nbsp;&nbsp;Select(func (in T) (T, error){<br/>
                             &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return fmt.Sprintf("http://%s/favicon.ico", in), nil</br>
-                            &nbsp;&nbsp;&nbsp;&nbsp;})
+                            &nbsp;&nbsp;&nbsp;&nbsp;}).
                         </code></td>
                     </tr>
 
@@ -152,7 +152,7 @@
                         </td>
 
                         <td class='code'><code>
-                            &nbsp;&nbsp;&nbsp;&nbsp;.AsParallel()
+                            &nbsp;&nbsp;&nbsp;&nbsp;AsParallel().
                         </code></td>
                     </tr>
 
@@ -162,7 +162,7 @@
                         </td>
 
                         <td class='code'><code>
-                            &nbsp;&nbsp;&nbsp;&nbsp;.All(func (url T) (bool, error){<br/>
+                            &nbsp;&nbsp;&nbsp;&nbsp;All(func (url T) (bool, error){<br/>
                             &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;resp, err := http.Get(url.(string))</br>
                             &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if err != nil {</br>
                             &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return false, err</br>
