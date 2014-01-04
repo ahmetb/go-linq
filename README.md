@@ -1,4 +1,4 @@
-# [go-linq][home] [![travis-ci status](https://api.travis-ci.org/ahmetalpbalkan/go-linq.png)](https://travis-ci.org/ahmetalpbalkan/go-linq)  [![Codebot](https://codebot.io/badge/github.com/ahmetalpbalkan/go-linq.png)](http://codebot.io/doc/pkg/github.com/ahmetalpbalkan/go-linq "Codebot") [![GoDoc](https://godoc.org/github.com/ahmetalpbalkan/go-linq?status.png)](https://godoc.org/github.com/ahmetalpbalkan/go-linq) [![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/ahmetalpbalkan/go-linq/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
+# [go-linq][home] [![travis-ci status](https://api.travis-ci.org/ahmetalpbalkan/go-linq.png)](https://travis-ci.org/ahmetalpbalkan/go-linq) [![GoDoc](https://godoc.org/github.com/ahmetalpbalkan/go-linq?status.png)](https://godoc.org/github.com/ahmetalpbalkan/go-linq) [![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/ahmetalpbalkan/go-linq/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
 
 [home]: http://ahmetalpbalkan.github.io/go-linq/
 
@@ -37,8 +37,8 @@ over18Names, err := From(students)
 
 ## Documentation
 
-* [GoDoc at codebot.io](http://codebot.io/doc/pkg/github.com/ahmetalpbalkan/go-linq)
 * [GoDoc at godoc.org](http://godoc.org/github.com/ahmetalpbalkan/go-linq)
+* [GoDoc at codebot.io](http://codebot.io/doc/pkg/github.com/ahmetalpbalkan/go-linq)
 
 Here is wiki:
 
