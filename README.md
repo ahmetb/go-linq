@@ -16,7 +16,7 @@ A powerful language integrated query library for Go. Inspired by Microsoft's
 
 ## Quick Start
 
-To find names of first 5 students over 18:
+**Example query:** Find names of students over 18:
 
 ```go
 import . "github.com/ahmetalpbalkan/go-linq"
@@ -30,7 +30,6 @@ over18Names, err := From(students)
 	.Where(func (s T) (bool,error){
 		return s.(*Student).age >= 18, nil
 	})
-	.Take(5)
 	.Select(func (s T) (T,error){
 		return s.(*Student).name, nil
 	}).Results()
