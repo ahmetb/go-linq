@@ -60,7 +60,7 @@ for more).
 
 As noted in LICENSE, this library is distributed on an "as is" basis and
 author's employment association with Microsoft does not imply any sort of
-warranty or official representation the company. This is purely a personal sid
+warranty or official representation the company. This is purely a personal side
 project developed on spare times.
 
 ## Authors
