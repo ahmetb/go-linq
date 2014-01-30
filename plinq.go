@@ -269,7 +269,7 @@ func (q ParallelQuery) All(f func(T) (bool, error)) (all bool, err error) {
 	}
 
 	ch := make(chan parallelBinaryResult)
-	for v := range q.values {
+	for _, v := range q.values {
 		go func(f func(T) (bool, error), value T) {
 			ok, e := f(value)
 			ch <- parallelBinaryResult{ok: ok, err: e}
@@ -370,7 +370,7 @@ func (q ParallelQuery) CountBy(f func(T) (bool, error)) (c int, err error) {
 	}
 
 	ch := make(chan parallelBinaryResult)
-	for v := range q.values {
+	for _, v := range q.values {
 		go func(f func(T) (bool, error), value T) {
 			ok, e := f(value)
 			ch <- parallelBinaryResult{ok: ok, err: e}
