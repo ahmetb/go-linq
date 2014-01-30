@@ -70,6 +70,10 @@ project developed on spare times.
 ## Release Notes
 
 ~~~
+
+v0.0-rc3.2
+* bugfix: All() iterating over values instead of indices
+
 v0.9-rc3.1
 * bugfix: modifying result slice affects subsequent query methods
 
