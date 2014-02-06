@@ -1,5 +1,5 @@
 language: go
-go: tip
+go: go1.2
 script: go test -v -cover  ./...
 install:
   - export PATH=$PATH:$HOME/gopath/bin
