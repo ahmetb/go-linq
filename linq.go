@@ -255,7 +255,7 @@ func (q Query) distinct(f func(T, T) (bool, error)) (r Query) {
 // it looks like T, otherwise returns ErrInvalidInput.
 //
 // Example:
-// 	all, err := From(int[]{1,2,3,4,5}).Union(int[]{3,4,5,6}).Results()
+// 	all, err := From([]int{1,2,3,4,5}).Union([]int{3,4,5,6}).Results()
 // 	// all is {1,2,3,4,5,6}
 func (q Query) Union(inputSlice T) (r Query) {
 	if q.err != nil {
@@ -299,7 +299,7 @@ func (q Query) Union(inputSlice T) (r Query) {
 // a type although it looks like T, otherwise returns ErrInvalidInput.
 //
 // Example:
-// 	both, err := From(int[]{1,2,3,4,5}).Intersect(int[]{3,4,5,6}).Results()
+// 	both, err := From([]int{1,2,3,4,5}).Intersect([]int{3,4,5,6}).Results()
 // 	// both is {3,4,5}
 func (q Query) Intersect(inputSlice T) (r Query) {
 	if q.err != nil {
@@ -349,7 +349,7 @@ func (q Query) Intersect(inputSlice T) (r Query) {
 //
 // Example:
 // Example:
-// 	diffAB, err := From(int[]{1,2,3,4,5}).Except(int[]{3,4,5,6}).Results()
+// 	diffAB, err := From([]int{1,2,3,4,5}).Except([]int{3,4,5,6}).Results()
 // 	// diffAB is {1,2}
 func (q Query) Except(inputSlice T) (r Query) {
 	if q.err != nil {
