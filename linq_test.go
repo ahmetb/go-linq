@@ -1112,6 +1112,33 @@ func TestJoins(t *testing.T) {
 	})
 }
 
+func TestGroupBy(t *testing.T) {
+	type Pet struct {
+		Name  string
+		Owner string
+	}
+
+	barley := Pet{Name: "Barley", Owner: "Damon Zhao"}
+	boots := Pet{Name: "Boots", Owner: "Damon Zhao"}
+	whiskers := Pet{Name: "Whiskers", Owner: "A-limon"}
+	daisy := Pet{Name: "Daisy", Owner: "A-limon"}
+	sasha := Pet{Name: "Sasha", Owner: "Bob"}
+
+	pets := []Pet{barley, boots, whiskers, daisy, sasha}
+
+	groupByExpected := map[T][]T{
+		"Damon Zhao": []T{barley.Name, boots.Name},
+		"A-limon":    []T{whiskers.Name, daisy.Name},
+		"Bob":        []T{sasha.Name},
+	}
+
+	c.Convey("Pets group by owner", t, func() {
+		res, err := From(pets).GroupBy(func(pet T) T { return pet.(Pet).Owner }, func(pet T) T { return pet.(Pet).Name })
+		c.So(err, c.ShouldEqual, nil)
+		c.So(res, c.ShouldResemble, groupByExpected)
+	})
+}
+
 func TestRange(t *testing.T) {
 	c.Convey("count < 0", t, func() {
 		_, err := Range(1, -1).Results()
