@@ -1113,6 +1113,12 @@ func TestJoins(t *testing.T) {
 }
 
 func TestGroupBy(t *testing.T) {
+	c.Convey("Group empty slice into empty map", t, func() {
+		res, err := From(empty).GroupBy(func(foo T) T { return foo }, func(foo T) T { return foo })
+		c.So(err, c.ShouldEqual, nil)
+		c.So(res, c.ShouldResemble, make(map[T][]T))
+	})
+
 	type Pet struct {
 		Name  string
 		Owner string
