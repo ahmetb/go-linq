@@ -1035,6 +1035,21 @@ func (q Query) GroupJoin(innerSlice T,
 	return
 }
 
+// GroupBy returns a map with your specific key and value.
+//
+// keySelector extracts a key from slice for map key
+//
+// valueSelector extracts a key from slice for map value
+func (q Query) GroupBy(keySelector func(T) T, valueSelector func(T) T) (map[T][]T, error) {
+	var results = make(map[T][]T)
+	var collection = q.values
+	for _, c := range collection {
+		key := keySelector(c)
+		results[key] = append(results[key], valueSelector(c))
+	}
+	return results, nil
+}
+
 // Range returns a query with sequence of integral numbers within
 // the specified range. int overflows are not handled.
 //
