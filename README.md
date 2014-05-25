@@ -71,7 +71,10 @@ project developed on spare times.
 
 ~~~
 
-v0.0-rc3.2
+v0.9-rc4
+* GroupBy()
+
+v0.9-rc3.2
 * bugfix: All() iterating over values instead of indices
 
 v0.9-rc3.1
