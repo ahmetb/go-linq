@@ -1080,7 +1080,7 @@ func Range(start, count int) (q Query) {
 //	mixedArr = {}interface[]{1, int8(2), uint(3), float64(4.4)}
 //	sum, err := From(mixedArr).Sum() // sum is 10.4
 //	// or
-//	sum, err := From([]int{1,2,3,4,5}]).Sum() // sum is 15.0
+//	sum, err := From([]int{1,2,3,4,5}).Sum() // sum is 15.0
 func (q Query) Sum() (sum float64, err error) {
 	if q.err != nil {
 		err = q.err
@@ -1143,7 +1143,7 @@ func sumMixed(in []T) (sum float64, err error) {
 //	mixedArr = {}interface[]{1, int8(2), uint(3), float64(4.4)}
 //	avg, err := From(mixedArr).Average() // avg is 2.6
 //	// or
-//	avg, err := From([]int{1,2,3,4,5}]).Average() // avg is 3.0
+//	avg, err := From([]int{1,2,3,4,5}).Average() // avg is 3.0
 func (q Query) Average() (avg float64, err error) {
 	if q.err != nil {
 		err = q.err
