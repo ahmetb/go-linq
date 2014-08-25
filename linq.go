@@ -184,8 +184,8 @@ func (q Query) Distinct() (r Query) {
 // distinct) and at best N (all elements are the same).
 //
 // Example:
-// 	distinctFirstNames, err := From(people).DistinctBy(func (p T) (bool, error){
-//		return p.(*Person).FirstName
+// 	distinctFirstNames, err := From(people).DistinctBy(func (p1, p2 T) (bool, error){
+//		return  p.(*Person).FirstName == p2.(*Person).FirstName, nil
 // 	}).Results()
 func (q Query) DistinctBy(f func(T, T) (bool, error)) (r Query) {
 	if f == nil {
