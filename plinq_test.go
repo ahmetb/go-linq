@@ -167,6 +167,122 @@ func TestSelectParallel(t *testing.T) {
 	})
 }
 
+func TestSelectManyParallel(t *testing.T) {
+	children := func(i T, x int) (T, error) {
+		return i.(bar).foos, nil
+	}
+	erroneusFunc := func(i T, x int) (T, error) {
+		return nil, errFoo
+	}
+
+	c.Convey("Previous error is reflected on result", t, func() {
+		_, err := From(barArr).AsParallel().Where(erroneusBinaryFunc).SelectMany(children).Results()
+		c.So(err, c.ShouldNotEqual, nil)
+	})
+
+	c.Convey("Nil func returns error", t, func() {
+		_, err := From(barArr).AsParallel().SelectMany(nil).Results()
+		c.So(err, c.ShouldEqual, ErrNilFunc)
+	})
+
+	c.Convey("Error returned from provided func", t, func() {
+		val, err := From(barArr).AsParallel().SelectMany(erroneusFunc).Results()
+		c.So(err, c.ShouldNotEqual, nil)
+
+		c.Convey("Erroneus function is in chain with as-is select", func() {
+			_, err = From(barArr).AsParallel().SelectMany(children).SelectMany(erroneusFunc).Results()
+			c.So(err, c.ShouldNotEqual, nil)
+		})
+		c.Convey("Erroneus function is in chain but not called", func() {
+			val, err = From(barArr).AsParallel().Where(alwaysFalse).SelectMany(erroneusFunc).Results()
+			c.So(err, c.ShouldEqual, nil)
+			c.So(len(val), c.ShouldEqual, 0)
+		})
+
+	})
+
+	c.Convey("Select empty as is", t, func() {
+		val, err := From(fooEmpty).AsParallel().SelectMany(children).Results()
+		c.So(err, c.ShouldEqual, nil)
+		c.So(val, shouldSlicesResemble, empty)
+	})
+
+	c.Convey("Select all elements as is", t, func() {
+		val, err := From(barArr).AsParallel().SelectMany(children).Results()
+		c.So(err, c.ShouldEqual, nil)
+		c.So(val, shouldSlicesResemble, fooArr)
+	})
+}
+
+func TestSelectManyByParallel(t *testing.T) {
+	children := func(b T, x int) (T, error) {
+		return b.(bar).foos, nil
+	}
+	barStr := func(b T, f T) (T, error) {
+		return fooBar{f.(foo).str, b.(bar).str}, nil
+	}
+	erroneusFunc := func(b T, x int) (T, error) {
+		return nil, errFoo
+	}
+	erroneusSelectFunc := func(b T, f T) (T, error) {
+		return nil, errFoo
+	}
+
+	c.Convey("Previous error is reflected on result", t, func() {
+		_, err := From(barArr).AsParallel().Where(erroneusBinaryFunc).SelectManyBy(children, barStr).Results()
+		c.So(err, c.ShouldNotEqual, nil)
+	})
+
+	c.Convey("Nil transform func returns error", t, func() {
+		_, err := From(barArr).AsParallel().SelectManyBy(nil, barStr).Results()
+		c.So(err, c.ShouldEqual, ErrNilFunc)
+	})
+
+	c.Convey("Nil resultSelect func returns error", t, func() {
+		_, err := From(barArr).AsParallel().SelectManyBy(children, nil).Results()
+		c.So(err, c.ShouldEqual, ErrNilFunc)
+	})
+
+	c.Convey("Both nil func returns error", t, func() {
+		_, err := From(barArr).AsParallel().SelectManyBy(nil, nil).Results()
+		c.So(err, c.ShouldEqual, ErrNilFunc)
+	})
+
+	c.Convey("Error returned from provided func", t, func() {
+		val, err := From(barArr).AsParallel().SelectManyBy(erroneusFunc, barStr).Results()
+		c.So(err, c.ShouldNotEqual, nil)
+
+		val, err = From(barArr).AsParallel().SelectManyBy(children, erroneusSelectFunc).Results()
+		c.So(err, c.ShouldNotEqual, nil)
+
+		val, err = From(barArr).AsParallel().SelectManyBy(erroneusFunc, erroneusSelectFunc).Results()
+		c.So(err, c.ShouldNotEqual, nil)
+
+		c.Convey("Erroneus function is in chain with as-is select", func() {
+			_, err = From(barArr).AsParallel().SelectManyBy(children, barStr).SelectManyBy(erroneusFunc, erroneusSelectFunc).Results()
+			c.So(err, c.ShouldNotEqual, nil)
+		})
+		c.Convey("Erroneus function is in chain but not called", func() {
+			val, err = From(barArr).AsParallel().Where(alwaysFalse).SelectManyBy(erroneusFunc, erroneusSelectFunc).Results()
+			c.So(err, c.ShouldEqual, nil)
+			c.So(len(val), c.ShouldEqual, 0)
+		})
+
+	})
+
+	c.Convey("Select empty as is", t, func() {
+		val, err := From(fooEmpty).AsParallel().SelectManyBy(children, barStr).Results()
+		c.So(err, c.ShouldEqual, nil)
+		c.So(val, shouldSlicesResemble, empty)
+	})
+
+	c.Convey("Select all elements as is", t, func() {
+		val, err := From(barArr).AsParallel().SelectManyBy(children, barStr).Results()
+		c.So(err, c.ShouldEqual, nil)
+		c.So(val, shouldSlicesResemble, fooBarArr)
+	})
+}
+
 func TestAnyWithParallel(t *testing.T) {
 	c.Convey("Previous error is reflected on result", t, func() {
 		_, err := From(arr0).Where(erroneusBinaryFunc).AsParallel().AnyWith(alwaysTrueDelayed)

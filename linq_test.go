@@ -226,6 +226,138 @@ func TestSelect(t *testing.T) {
 	})
 }
 
+type bar struct {
+	str  string
+	foos []foo
+}
+type fooBar struct {
+	fooStr string
+	barStr string
+}
+
+var (
+	fooArr    = []foo{foo{"A", 0}, foo{"B", 1}, foo{"C", -1}}
+	barArr    = []bar{bar{"a", []foo{foo{"A", 0}, foo{"B", 1}}}, bar{"b", []foo{foo{"C", -1}}}}
+	fooEmpty  = []bar{bar{"c", nil}}
+	fooBarArr = []fooBar{fooBar{"A", "a"}, fooBar{"B", "a"}, fooBar{"C", "b"}}
+)
+
+func TestSelectMany(t *testing.T) {
+	children := func(i T, x int) (T, error) {
+		return i.(bar).foos, nil
+	}
+	erroneusFunc := func(i T, x int) (T, error) {
+		return nil, errFoo
+	}
+
+	c.Convey("Previous error is reflected on result", t, func() {
+		_, err := From(barArr).Where(erroneusBinaryFunc).SelectMany(children).Results()
+		c.So(err, c.ShouldNotEqual, nil)
+	})
+
+	c.Convey("Nil func returns error", t, func() {
+		_, err := From(barArr).SelectMany(nil).Results()
+		c.So(err, c.ShouldEqual, ErrNilFunc)
+	})
+
+	c.Convey("Error returned from provided func", t, func() {
+		val, err := From(barArr).SelectMany(erroneusFunc).Results()
+		c.So(err, c.ShouldNotEqual, nil)
+
+		c.Convey("Erroneus function is in chain with as-is select", func() {
+			_, err = From(barArr).SelectMany(children).SelectMany(erroneusFunc).Results()
+			c.So(err, c.ShouldNotEqual, nil)
+		})
+		c.Convey("Erroneus function is in chain but not called", func() {
+			val, err = From(barArr).Where(alwaysFalse).SelectMany(erroneusFunc).Results()
+			c.So(err, c.ShouldEqual, nil)
+			c.So(len(val), c.ShouldEqual, 0)
+		})
+
+	})
+
+	c.Convey("Select empty as is", t, func() {
+		val, err := From(fooEmpty).SelectMany(children).Results()
+		c.So(err, c.ShouldEqual, nil)
+		c.So(val, shouldSlicesResemble, empty)
+	})
+
+	c.Convey("Select all elements as is", t, func() {
+		val, err := From(barArr).SelectMany(children).Results()
+		c.So(err, c.ShouldEqual, nil)
+		c.So(val, shouldSlicesResemble, fooArr)
+	})
+}
+
+func TestSelectManyBy(t *testing.T) {
+	children := func(b T, x int) (T, error) {
+		return b.(bar).foos, nil
+	}
+	barStr := func(b T, f T) (T, error) {
+		return fooBar{f.(foo).str, b.(bar).str}, nil
+	}
+	erroneusFunc := func(b T, x int) (T, error) {
+		return nil, errFoo
+	}
+	erroneusSelectFunc := func(b T, f T) (T, error) {
+		return nil, errFoo
+	}
+
+	c.Convey("Previous error is reflected on result", t, func() {
+		_, err := From(barArr).Where(erroneusBinaryFunc).SelectManyBy(children, barStr).Results()
+		c.So(err, c.ShouldNotEqual, nil)
+	})
+
+	c.Convey("Nil transform func returns error", t, func() {
+		_, err := From(barArr).SelectManyBy(nil, barStr).Results()
+		c.So(err, c.ShouldEqual, ErrNilFunc)
+	})
+
+	c.Convey("Nil resultSelect func returns error", t, func() {
+		_, err := From(barArr).SelectManyBy(children, nil).Results()
+		c.So(err, c.ShouldEqual, ErrNilFunc)
+	})
+
+	c.Convey("Both nil func returns error", t, func() {
+		_, err := From(barArr).SelectManyBy(nil, nil).Results()
+		c.So(err, c.ShouldEqual, ErrNilFunc)
+	})
+
+	c.Convey("Error returned from provided func", t, func() {
+		val, err := From(barArr).SelectManyBy(erroneusFunc, barStr).Results()
+		c.So(err, c.ShouldNotEqual, nil)
+
+		val, err = From(barArr).SelectManyBy(children, erroneusSelectFunc).Results()
+		c.So(err, c.ShouldNotEqual, nil)
+
+		val, err = From(barArr).SelectManyBy(erroneusFunc, erroneusSelectFunc).Results()
+		c.So(err, c.ShouldNotEqual, nil)
+
+		c.Convey("Erroneus function is in chain with as-is select", func() {
+			_, err = From(barArr).SelectManyBy(children, barStr).SelectManyBy(erroneusFunc, erroneusSelectFunc).Results()
+			c.So(err, c.ShouldNotEqual, nil)
+		})
+		c.Convey("Erroneus function is in chain but not called", func() {
+			val, err = From(barArr).Where(alwaysFalse).SelectManyBy(erroneusFunc, erroneusSelectFunc).Results()
+			c.So(err, c.ShouldEqual, nil)
+			c.So(len(val), c.ShouldEqual, 0)
+		})
+
+	})
+
+	c.Convey("Select empty as is", t, func() {
+		val, err := From(fooEmpty).SelectManyBy(children, barStr).Results()
+		c.So(err, c.ShouldEqual, nil)
+		c.So(val, shouldSlicesResemble, empty)
+	})
+
+	c.Convey("Select all elements as is", t, func() {
+		val, err := From(barArr).SelectManyBy(children, barStr).Results()
+		c.So(err, c.ShouldEqual, nil)
+		c.So(val, shouldSlicesResemble, fooBarArr)
+	})
+}
+
 func TestDistinct(t *testing.T) {
 	c.Convey("Empty slice", t, func() {
 		res, err := From(empty).Distinct().Results()

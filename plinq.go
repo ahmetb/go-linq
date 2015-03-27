@@ -21,6 +21,12 @@ type parallelValueResult struct {
 	index int
 }
 
+type parallelArrayValueResult struct {
+	values []T
+	err    error
+	index  int
+}
+
 // Results evaluates the query and returns the results as T slice.
 // An error occurred in during evaluation of the query will be returned.
 //
@@ -194,6 +200,83 @@ func (q ParallelQuery) Select(f func(T) (T, error)) (r ParallelQuery) {
 			return
 		}
 		r.values[out.index] = out.val
+	}
+	return
+}
+
+// SelectMany returns flattens the resulting sequences into one sequence.
+//
+// Example:
+// 	names, err := From(parents).AsParallel().SelectMany(func (p T, idx int) (T, error) {
+//		return p.(*Parent).Children, nil
+// 	}).Results()
+func (q ParallelQuery) SelectMany(f func(T, int) (T, error)) (r ParallelQuery) {
+	return q.SelectManyBy(f, func(p T, c T) (T, error) {
+		return c, nil
+	})
+}
+
+// SelectMany returns flattens the resulting sequences into one sequence.
+//
+// resultSelector takes parent element and child element as inputs
+// and returns a value which will be an element in the resulting query.
+//
+// Example:
+// 	names, err := From(parents).AsParallel().SelectManyBy(func (p T, idx int) (T, error) {
+//		return p.(*Parent).Children, nil
+// 	}, func (p T, c T) (T, error) {
+//              return p.(*Parent).Name + ":" + c.(*Child).Name, nil
+//      }).Results()
+func (q ParallelQuery) SelectManyBy(f func(T, int) (T, error),
+	resultSelector func(T, T) (T, error)) (r ParallelQuery) {
+
+	r = q.copyMeta()
+	if r.err != nil {
+		return r
+	}
+	if f == nil || resultSelector == nil {
+		r.err = ErrNilFunc
+		return
+	}
+
+	ch := make(chan *parallelArrayValueResult)
+	arrValues := make([][]T, len(q.values))
+	for i, v := range q.values {
+		go func(ind int, f func(T, int) (T, error), in T) {
+			out := parallelArrayValueResult{index: ind}
+			val, err := f(in, ind)
+			if err != nil {
+				out.err = err
+			} else {
+				innerCollection, ok := takeSliceArg(val)
+				if !ok {
+					out.err = ErrInvalidInput
+				}
+				for _, v := range innerCollection {
+					res, err := resultSelector(in, v)
+					if err != nil {
+						out.err = err
+					} else {
+						out.values = append(out.values, res)
+					}
+				}
+			}
+			ch <- &out
+		}(i, f, v)
+	}
+
+	for i := 0; i < len(q.values); i++ {
+		out := <-ch
+		if out.err != nil {
+			r.err = out.err
+			return
+		}
+		arrValues[out.index] = out.values
+	}
+	for _, arr := range arrValues {
+		for _, v := range arr {
+			r.values = append(r.values, v)
+		}
 	}
 	return
 }
