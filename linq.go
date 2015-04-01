@@ -168,6 +168,64 @@ func (q Query) Select(f func(T) (T, error)) (r Query) {
 	return
 }
 
+// SelectMany returns flattens the resulting sequences into one sequence.
+//
+// Example:
+// 	names, err := From(parents).SelectMany(func (p T, idx int) (T, error) {
+//		return p.(*Parent).Children, nil
+// 	}).Results()
+func (q Query) SelectMany(f func(T, int) (T, error)) (r Query) {
+	return q.SelectManyBy(f, func(p T, c T) (T, error) {
+		return c, nil
+	})
+}
+
+// SelectMany returns flattens the resulting sequences into one sequence.
+//
+// resultSelector takes parent element and child element as inputs
+// and returns a value which will be an element in the resulting query.
+//
+// Example:
+// 	names, err := From(parents).SelectManyBy(func (p T, idx int) (T, error) {
+//		return p.(*Parent).Children, nil
+// 	}, func (p T, c T) (T, error) {
+//              return p.(*Parent).Name + ":" + c.(*Child).Name, nil
+//      }).Results()
+func (q Query) SelectManyBy(f func(T, int) (T, error),
+	resultSelector func(T, T) (T, error)) (r Query) {
+
+	if q.err != nil {
+		r.err = q.err
+		return r
+	}
+	if f == nil || resultSelector == nil {
+		r.err = ErrNilFunc
+		return
+	}
+
+	for i, p := range q.values {
+		val, err := f(p, i)
+		if err != nil {
+			r.err = err
+			return r
+		}
+		innerCollection, ok := takeSliceArg(val)
+		if !ok {
+			r.err = ErrInvalidInput
+			return r
+		}
+		for _, c := range innerCollection {
+			res, err := resultSelector(p, c)
+			if err != nil {
+				r.err = err
+				return r
+			}
+			r.values = append(r.values, res)
+		}
+	}
+	return
+}
+
 // Distinct returns distinct elements from the provided source using default
 // equality comparer, ==. This is a set operation and returns an unordered
 // sequence.
