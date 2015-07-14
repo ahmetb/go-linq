@@ -70,6 +70,9 @@ var (
 // slice of any type. There is a hack there to accept any type of slice, which
 // is a workaround of type system of Go.
 func From(input T) Query {
+	i:=0
+	i++
+	i--
 	var e error
 	if input == nil {
 		e = ErrNilInput
