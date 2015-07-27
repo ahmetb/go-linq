@@ -1363,15 +1363,15 @@ func TestAverage(t *testing.T) {
 	})
 }
 
-func TestZip(t *testing.T){
-	convertRoman := func(n, m T) (T, error){
+func TestZip(t *testing.T) {
+	convertRoman := func(n, m T) (T, error) {
 		return n.(string) + " - " + m.(string), nil
 	}
-	erroneusFunc := func(i,j T) (T, error) {
+	erroneusFunc := func(i, j T) (T, error) {
 		return nil, errFoo
 	}
 	c.Convey("Previous error is reflected on result", t, func() {
-		_, err := From(arr0).Where(erroneusBinaryFunc).Zip([]string {"one", "two", "three", "four", "five"}, convertRoman).Results()
+		_, err := From(arr0).Where(erroneusBinaryFunc).Zip([]string{"one", "two", "three", "four", "five"}, convertRoman).Results()
 		c.So(err, c.ShouldNotEqual, nil)
 	})
 	c.Convey("Given a nil function, ErrNilFunc is returned", t, func() {
@@ -1383,27 +1383,26 @@ func TestZip(t *testing.T){
 		c.So(err, c.ShouldEqual, ErrInvalidInput)
 	})
 
-
-	c.Convey("Testing the zipping functionality", t, func(){
-		c.Convey("The zipping function returns an error", func(){
-			result, err := From([]string {"i", "ii", "iii", "iv", "v"}).Zip([]string {"one", "two", "three", "four", "five"}, erroneusFunc).Results()
+	c.Convey("Testing the zipping functionality", t, func() {
+		c.Convey("The zipping function returns an error", func() {
+			result, err := From([]string{"i", "ii", "iii", "iv", "v"}).Zip([]string{"one", "two", "three", "four", "five"}, erroneusFunc).Results()
 			c.So(err, c.ShouldNotEqual, nil)
 			c.So(len(result), c.ShouldEqual, 0)
 		})
-		c.Convey("The sequences have the same length", func(){
-			result, err := From([]string {"i", "ii", "iii", "iv", "v"}).Zip([]string {"one", "two", "three", "four", "five"}, convertRoman).Results()
+		c.Convey("The sequences have the same length", func() {
+			result, err := From([]string{"i", "ii", "iii", "iv", "v"}).Zip([]string{"one", "two", "three", "four", "five"}, convertRoman).Results()
 			c.So(err, c.ShouldEqual, nil)
 			c.So(len(result), c.ShouldEqual, 5)
 			c.So(result, shouldSlicesResemble, []string{"i - one", "ii - two", "iii - three", "iv - four", "v - five"})
 		})
-		c.Convey("The sequences have different lengths", func(){
-			result, err := From([]string {"i", "ii", "iii", "iv"}).Zip([]string {"one", "two", "three", "four", "five"}, convertRoman).Results()
+		c.Convey("The sequences have different lengths", func() {
+			result, err := From([]string{"i", "ii", "iii", "iv"}).Zip([]string{"one", "two", "three", "four", "five"}, convertRoman).Results()
 			c.So(err, c.ShouldEqual, nil)
 			c.So(len(result), c.ShouldEqual, 4)
 			c.So(result, shouldSlicesResemble, []string{"i - one", "ii - two", "iii - three", "iv - four"})
 		})
-		c.Convey("One of the sequences has 0 length", func(){
-			result, err := From([]string {"i", "ii", "iii", "iv"}).Zip([]string {}, convertRoman).Results()
+		c.Convey("One of the sequences has 0 length", func() {
+			result, err := From([]string{"i", "ii", "iii", "iv"}).Zip([]string{}, convertRoman).Results()
 			c.So(err, c.ShouldEqual, nil)
 			c.So(len(result), c.ShouldEqual, 0)
 			c.So(result, shouldSlicesResemble, []string{})

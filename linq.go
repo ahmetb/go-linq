@@ -7,7 +7,6 @@ package linq
 import (
 	"errors"
 	"sort"
-	"math"
 )
 
 // T is an alias for interface{} to make your LINQ code shorter.
@@ -1219,16 +1218,17 @@ func (q Query) Average() (avg float64, err error) {
 	return
 }
 
-// Zip returns a query with the result of the "zipping" function
-// provided
+// Zip returns a query with the result of the "zipping" function provided. If the two
+// collections have different lengths, the length of the resulting collection is equal
+// to that of the shorter of the two.
 //
 // Example:
-// convertRoman:= func(n, m T) (T, error){
-// return n.(string) + " - " + m.(string), nil
-// }
-//	result, err := From([]string {"i", "ii", "iii", "iv", "v"})
-// .Zip([]string {"one", "two", "three", "four", "five"}, convertRoman)
-// .Results()
+//
+//		convertRoman := func(n, m T) (T, error){
+// 			return n.(string) + " - " + m.(string), nil
+// 		}
+// 		result, err := From([]string {"i", "ii", "iii", "iv", "v"})
+// 				.Zip([]string {"one", "two", "three", "four", "five"}, convertRoman).Results()
 func (q Query) Zip(second T, f func(T, T) (T, error)) (r Query) {
 	if q.err != nil {
 		r.err = q.err
@@ -1243,7 +1243,10 @@ func (q Query) Zip(second T, f func(T, T) (T, error)) (r Query) {
 		r.err = q2.err
 		return r
 	}
-	maxIterationCount := int (math.Min(float64(len(q.values)), float64(len(q2.values))))
+	maxIterationCount := len(q.values)
+	if maxIterationCount > len(q2.values) {
+		maxIterationCount = len(q2.values)
+	}
 	for i := 0; i < maxIterationCount; i++ {
 		result, err := f(q.values[i], q2.values[i])
 		if err != nil {
