@@ -1218,6 +1218,46 @@ func (q Query) Average() (avg float64, err error) {
 	return
 }
 
+// Zip returns a query with the result of the "zipping" function provided. If the two
+// collections have different lengths, the length of the resulting collection is equal
+// to that of the shorter of the two.
+//
+// Example:
+//
+//		convertRoman := func(n, m T) (T, error){
+// 			return n.(string) + " - " + m.(string), nil
+// 		}
+// 		result, err := From([]string {"i", "ii", "iii", "iv", "v"})
+// 				.Zip([]string {"one", "two", "three", "four", "five"}, convertRoman).Results()
+func (q Query) Zip(second T, f func(T, T) (T, error)) (r Query) {
+	if q.err != nil {
+		r.err = q.err
+		return r
+	}
+	if f == nil {
+		r.err = ErrNilFunc
+		return
+	}
+	q2 := From(second)
+	if q2.err != nil {
+		r.err = q2.err
+		return r
+	}
+	maxIterationCount := len(q.values)
+	if maxIterationCount > len(q2.values) {
+		maxIterationCount = len(q2.values)
+	}
+	for i := 0; i < maxIterationCount; i++ {
+		result, err := f(q.values[i], q2.values[i])
+		if err != nil {
+			r.err = err
+			return r
+		}
+		r.values = append(r.values, result)
+	}
+	return
+}
+
 // MinInt returns the element with smallest value in the leftmost of the
 // sequence. Elements of the original sequence should only be int or
 // ErrTypeMismatch is returned. If the sequence is empty ErrEmptySequence is
