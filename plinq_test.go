@@ -412,3 +412,59 @@ func TestCountParallel(t *testing.T) {
 		c.So(cnt, c.ShouldEqual, len(arr0))
 	})
 }
+
+func TestZipParallel(t *testing.T) {
+	convertRoman := func(n, m T) (T, error) {
+		return n.(string) + " - " + m.(string), nil
+	}
+	erroneousFunc := func(i, j T) (T, error) {
+		return nil, errFoo
+	}
+	allFunc := func(t T) (bool, error) {
+		return t == nil, nil
+	}
+
+	second := []string{"one", "two", "three", "four", "five"}
+
+	c.Convey("Previous error is reflected on result", t, func() {
+		_, err := From(arr0).Where(erroneusBinaryFunc).AsParallel().Zip(second, convertRoman).Results()
+		c.So(err, c.ShouldNotEqual, nil)
+	})
+
+	c.Convey("Nil func returns error", t, func() {
+		_, err := From(arr0).AsParallel().Zip(second, nil).Results()
+		c.So(err, c.ShouldEqual, ErrNilFunc)
+	})
+
+	c.Convey("Given a nil sequence, ErrInvalidInput is returned", t, func() {
+		_, err := From(arr1).AsParallel().Zip(nil, convertRoman).Results()
+		c.So(err, c.ShouldEqual, ErrInvalidInput)
+	})
+
+	c.Convey("Testing the zipping functionality", t, func() {
+		c.Convey("The zipping function returns an error", func() {
+			result, err := From([]string{"i", "ii", "iii", "iv", "v"}).AsParallel().Zip([]string{"one", "two", "three", "four", "five"}, erroneousFunc).Results()
+			c.So(err, c.ShouldNotEqual, nil)
+			all, _ := From(result).All(allFunc)
+			c.So(all, c.ShouldEqual, true)
+		})
+		c.Convey("The sequences have the same length", func() {
+			result, err := From([]string{"i", "ii", "iii", "iv", "v"}).AsParallel().Zip([]string{"one", "two", "three", "four", "five"}, convertRoman).Results()
+			c.So(err, c.ShouldEqual, nil)
+			c.So(len(result), c.ShouldEqual, 5)
+			c.So(result, shouldSlicesResemble, []string{"i - one", "ii - two", "iii - three", "iv - four", "v - five"})
+		})
+		c.Convey("The sequences have different lengths", func() {
+			result, err := From([]string{"i", "ii", "iii", "iv"}).AsParallel().Zip([]string{"one", "two", "three", "four", "five"}, convertRoman).Results()
+			c.So(err, c.ShouldEqual, nil)
+			c.So(len(result), c.ShouldEqual, 4)
+			c.So(result, shouldSlicesResemble, []string{"i - one", "ii - two", "iii - three", "iv - four"})
+		})
+		c.Convey("One of the sequences has 0 length", func() {
+			result, err := From([]string{"i", "ii", "iii", "iv"}).AsParallel().Zip([]string{}, convertRoman).Results()
+			c.So(err, c.ShouldEqual, nil)
+			c.So(len(result), c.ShouldEqual, 0)
+			c.So(result, shouldSlicesResemble, []string{})
+		})
+	})
+}
