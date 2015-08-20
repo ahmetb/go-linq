@@ -20,7 +20,7 @@ var (
 	arr0  = []int{1, 2, 3, 1, 2}
 	arr1  = []string{"foo", "bar", "baz"}
 	arr2  = []T{nil, "foo", 3.14, true, false}
-	arr3  = []foo{foo{"A", 0}, foo{"B", 1}, foo{"C", -1}}
+	arr3  = []foo{{"A", 0}, {"B", 1}, {"C", -1}}
 	arr4  = []T{&foo{"C", 0xffff}, nil, &foo{"D", 0x7fff}, byte(12), nil}
 )
 
@@ -236,10 +236,10 @@ type fooBar struct {
 }
 
 var (
-	fooArr    = []foo{foo{"A", 0}, foo{"B", 1}, foo{"C", -1}}
-	barArr    = []bar{bar{"a", []foo{foo{"A", 0}, foo{"B", 1}}}, bar{"b", []foo{foo{"C", -1}}}}
-	fooEmpty  = []bar{bar{"c", nil}}
-	fooBarArr = []fooBar{fooBar{"A", "a"}, fooBar{"B", "a"}, fooBar{"C", "b"}}
+	fooArr    = []foo{{"A", 0}, {"B", 1}, {"C", -1}}
+	barArr    = []bar{{"a", []foo{{"A", 0}, {"B", 1}}}, {"b", []foo{{"C", -1}}}}
+	fooEmpty  = []bar{{"c", nil}}
+	fooBarArr = []fooBar{{"A", "a"}, {"B", "a"}, {"C", "b"}}
 )
 
 func TestSelectMany(t *testing.T) {
@@ -366,7 +366,7 @@ func TestDistinct(t *testing.T) {
 	})
 
 	allSameInt := []int{1, 1, 1, 1, 1, 1, 1, 1, 1}
-	allSameStruct := []foo{foo{"A", -1}, foo{"A", -1}, foo{"A", -1}}
+	allSameStruct := []foo{{"A", -1}, {"A", -1}, {"A", -1}}
 	allNil := []T{nil, nil, nil, nil, nil, nil, nil, nil, nil}
 
 	c.Convey("With default equality comparer ==", t, func() {
@@ -443,8 +443,8 @@ func TestDistinct(t *testing.T) {
 			c.So(res, shouldSlicesResemble, arr)
 		})
 		c.Convey("Ensure leftmost appearance is returned in multiple occurrence cases", func() {
-			arr := []*foo{&foo{"A", 0}, &foo{"B", 0}, &foo{"A", 0}, &foo{"C", 0},
-				&foo{"A", 0}, &foo{"B", 0}}
+			arr := []*foo{{"A", 0}, {"B", 0}, {"A", 0}, {"C", 0},
+				{"A", 0}, {"B", 0}}
 			res, _ := From(arr).DistinctBy(fooPtrComparer).Results()
 			c.So(len(res), c.ShouldEqual, 3)
 			c.So(res[0], c.ShouldEqual, arr[0]) // A
@@ -472,8 +472,8 @@ func TestUnion(t *testing.T) {
 	uniqueArr0 := []int{1, 2, 3, 4, 5}
 	uniqueArr1 := []string{"a", "b", "c"}
 	allSameArr := []uint{1, 1, 1, 1}
-	sameStruct0 := []foo{foo{"A", 0}, foo{"B", 0}}
-	sameStruct1 := []foo{foo{"B", 0}, foo{"A", 0}}
+	sameStruct0 := []foo{{"A", 0}, {"B", 0}}
+	sameStruct1 := []foo{{"B", 0}, {"A", 0}}
 	c.Convey("Previous error is reflected on result", t, func() {
 		_, err := From(uniqueArr0).Where(erroneusBinaryFunc).Union(uniqueArr0).Results()
 		c.So(err, c.ShouldNotEqual, nil)
@@ -1111,8 +1111,8 @@ func TestOrder(t *testing.T) {
 }
 
 func TestOrderBy(t *testing.T) {
-	unsorted := []*foo{&foo{"A", 5}, &foo{"B", 1}, &foo{"C", 3}}
-	sorted := []*foo{&foo{"B", 1}, &foo{"C", 3}, &foo{"A", 5}}
+	unsorted := []*foo{{"A", 5}, {"B", 1}, {"C", 3}}
+	sorted := []*foo{{"B", 1}, {"C", 3}, {"A", 5}}
 	sortByNum := func(this T, that T) bool {
 		_this := this.(*foo)
 		_that := that.(*foo)
@@ -1265,9 +1265,9 @@ func TestGroupBy(t *testing.T) {
 	pets := []Pet{barley, boots, whiskers, daisy, sasha}
 
 	groupByExpected := map[T][]T{
-		"Damon Zhao": []T{barley.Name, boots.Name},
-		"A-limon":    []T{whiskers.Name, daisy.Name},
-		"Bob":        []T{sasha.Name},
+		"Damon Zhao": {barley.Name, boots.Name},
+		"A-limon":    {whiskers.Name, daisy.Name},
+		"Bob":        {sasha.Name},
 	}
 
 	c.Convey("Pets group by owner", t, func() {
