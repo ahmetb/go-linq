@@ -472,3 +472,60 @@ func (q ParallelQuery) CountBy(f func(T) (bool, error)) (c int, err error) {
 	}
 	return
 }
+
+// Zip returns a parallel query with the result of the "zipping" function provided. If the two
+// collections have different lengths, the length of the resulting collection is equal
+// to that of the shorter of the two. The zipping is performed in parallel.
+//
+// Example:
+//
+//		convertRoman := func(n, m T) (T, error){
+// 			return n.(string) + " - " + m.(string), nil
+// 		}
+// 		result, err := From([]string {"i", "ii", "iii", "iv", "v"}).AsParallel()
+// 				.Zip([]string {"one", "two", "three", "four", "five"}, convertRoman).Results()
+func (q ParallelQuery) Zip(second T, f func(T, T) (T, error)) (r ParallelQuery) {
+	r = q.copyMeta()
+	if r.err != nil {
+		return r
+	}
+	if f == nil {
+		r.err = ErrNilFunc
+		return
+	}
+
+	r2 := From(second).AsParallel()
+	if r2.err != nil {
+		r.err = r2.err
+		return r
+	}
+
+	maxIterationCount := len(q.values)
+	if maxIterationCount > len(r2.values) {
+		maxIterationCount = len(r2.values)
+	}
+	ch := make(chan *parallelValueResult)
+	r.values = make([]T, maxIterationCount)
+	for i := 0; i < maxIterationCount; i++ {
+		go func(ind int, f func(T, T) (T, error), in T, in2 T) {
+			out := parallelValueResult{index: ind}
+			val, err := f(in, in2)
+			if err != nil {
+				out.err = err
+			} else {
+				out.val = val
+			}
+			ch <- &out
+		}(i, f, q.values[i], r2.values[i])
+	}
+
+	for i := 0; i < maxIterationCount; i++ {
+		out := <-ch
+		if out.err != nil {
+			r.err = out.err
+			return
+		}
+		r.values[out.index] = out.val
+	}
+	return
+}
