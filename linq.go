@@ -180,7 +180,7 @@ func (q Query) SelectMany(f func(T, int) (T, error)) (r Query) {
 	})
 }
 
-// SelectMany returns flattens the resulting sequences into one sequence.
+// SelectManyBy returns flattens the resulting sequences into one sequence.
 //
 // resultSelector takes parent element and child element as inputs
 // and returns a value which will be an element in the resulting query.
@@ -284,7 +284,7 @@ func (q Query) distinct(f func(T, T) (bool, error)) (r Query) {
 		// is O(N) where all elements are the same
 		// pick lefthand side value of the comparison in the result
 		l := len(q.values)
-		results := make([]T, 0)
+		var results []T
 		included := make([]bool, l)
 		for i := 0; i < l; i++ {
 			if included[i] {
@@ -1068,7 +1068,7 @@ func (q Query) GroupJoin(innerSlice T,
 	var results = make(map[T][]T) // outer --> inner...
 	for _, outer := range outerCollection {
 		outerKey := outerKeySelector(outer)
-		bucket := make([]T, 0)
+		var bucket []T
 		results[outer] = bucket
 		for _, inner := range innerCollection {
 			innerKey, ok := innerKeyLookup[inner]
