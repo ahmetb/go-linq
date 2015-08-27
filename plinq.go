@@ -216,7 +216,7 @@ func (q ParallelQuery) SelectMany(f func(T, int) (T, error)) (r ParallelQuery) {
 	})
 }
 
-// SelectMany returns flattens the resulting sequences into one sequence.
+// SelectManyBy returns flattens the resulting sequences into one sequence.
 //
 // resultSelector takes parent element and child element as inputs
 // and returns a value which will be an element in the resulting query.
