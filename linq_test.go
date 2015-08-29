@@ -59,6 +59,41 @@ func shouldSlicesResemble(actual interface{}, expected ...interface{}) string {
 	return ""
 }
 
+func shouldSetsResemble(actual interface{}, expected ...interface{}) string {
+	expectedSlice, ok := takeSliceArg(expected[0])
+	if !ok {
+		return "Cannot cast expected slice to []T"
+	}
+	actualSlice, ok := takeSliceArg(actual)
+	if !ok {
+		return "Cannot cast actual slice to []T"
+	}
+
+	if len(expectedSlice) != len(actualSlice) {
+		return fmt.Sprintf("Expected: '%v'\nActual:   '%v'\n(Should resemble: set slices have different lengths.)", expectedSlice, actualSlice)
+	}
+
+	expectedElems := make(map[interface{}]int)
+	for _, v := range expectedSlice {
+		val := fmt.Sprintf("%#v", v)
+		expectedElems[val]++
+	}
+
+	actualElems := make(map[interface{}]int)
+	for _, v := range actualSlice {
+		val := fmt.Sprintf("%#v", v)
+		actualElems[val]++
+	}
+
+	for k, eC := range expectedElems {
+		aC := actualElems[k]
+		if eC != aC {
+			return fmt.Sprintf("element '%#v' expected %d times, got: %d.", k, eC, aC)
+		}
+	}
+	return ""
+}
+
 func TestFrom(t *testing.T) {
 	c.Convey("When passed nil value, error returned", t, func() {
 		c.So(From(nil).err, c.ShouldNotEqual, nil)
@@ -488,19 +523,19 @@ func TestUnion(t *testing.T) {
 	})
 	c.Convey("Empty ∪ empty", t, func() {
 		res, _ := From(empty).Union(empty).Results()
-		c.So(res, shouldSlicesResemble, empty)
+		c.So(res, shouldSetsResemble, empty)
 	})
 	c.Convey("Empty ∪ non-empty", t, func() {
 		res, _ := From(empty).Union(uniqueArr0).Results()
-		c.So(res, shouldSlicesResemble, uniqueArr0)
+		c.So(res, shouldSetsResemble, uniqueArr0)
 	})
 	c.Convey("Non-empty ∪ empty", t, func() {
 		res, _ := From(uniqueArr0).Union(empty).Results()
-		c.So(res, shouldSlicesResemble, uniqueArr0)
+		c.So(res, shouldSetsResemble, uniqueArr0)
 	})
 	c.Convey("(Unique slice) ∪ (itself)", t, func() {
 		res, _ := From(uniqueArr0).Union(uniqueArr0).Results()
-		c.So(res, shouldSlicesResemble, uniqueArr0)
+		c.So(res, shouldSetsResemble, uniqueArr0)
 	})
 	c.Convey("(All same slice) ∪ (itself)", t, func() {
 		res, _ := From(allSameArr).Union(allSameArr).Results()
@@ -533,19 +568,19 @@ func TestIntersect(t *testing.T) {
 	})
 	c.Convey("Empty ∩ empty", t, func() {
 		res, _ := From(empty).Intersect(empty).Results()
-		c.So(res, shouldSlicesResemble, empty)
+		c.So(res, shouldSetsResemble, empty)
 	})
 	c.Convey("Empty ∩ non-empty", t, func() {
 		res, _ := From(empty).Intersect(uniqueArr).Results()
-		c.So(res, shouldSlicesResemble, empty)
+		c.So(res, shouldSetsResemble, empty)
 	})
 	c.Convey("Non-empty ∩ empty", t, func() {
 		res, _ := From(uniqueArr).Intersect(empty).Results()
-		c.So(res, shouldSlicesResemble, empty)
+		c.So(res, shouldSetsResemble, empty)
 	})
 	c.Convey("(Unique set) ∩ (itself)", t, func() {
 		res, _ := From(uniqueArr).Intersect(uniqueArr).Results()
-		c.So(res, shouldSlicesResemble, uniqueArr)
+		c.So(res, shouldSetsResemble, uniqueArr)
 	})
 	c.Convey("(All same slice) ∩ (itself)", t, func() {
 		res, _ := From(allSameArr).Intersect(allSameArr).Results()
@@ -553,7 +588,7 @@ func TestIntersect(t *testing.T) {
 	})
 	c.Convey("There is some intersection", t, func() {
 		res, _ := From([]T{1, 2, 3, 4, 5}).Intersect([]T{3, 4, 5, 6, 7}).Results()
-		c.So(res, shouldSlicesResemble, []T{3, 4, 5})
+		c.So(res, shouldSetsResemble, []T{3, 4, 5})
 	})
 }
 
@@ -574,19 +609,19 @@ func TestExcept(t *testing.T) {
 	})
 	c.Convey("Empty ∖ empty", t, func() {
 		res, _ := From(empty).Except(empty).Results()
-		c.So(res, shouldSlicesResemble, empty)
+		c.So(res, shouldSetsResemble, empty)
 	})
 	c.Convey("Empty ∖ non-empty", t, func() {
 		res, _ := From(empty).Except(uniqueArr).Results()
-		c.So(res, shouldSlicesResemble, empty)
+		c.So(res, shouldSetsResemble, empty)
 	})
 	c.Convey("Non-empty ∖ empty", t, func() {
 		res, _ := From(uniqueArr).Except(empty).Results()
-		c.So(res, shouldSlicesResemble, uniqueArr)
+		c.So(res, shouldSetsResemble, uniqueArr)
 	})
 	c.Convey("(Unique set) ∖ (itself)", t, func() {
 		res, _ := From(uniqueArr).Except(uniqueArr).Results()
-		c.So(res, shouldSlicesResemble, empty)
+		c.So(res, shouldSetsResemble, empty)
 	})
 	c.Convey("(All same slice) ∖ (itself)", t, func() {
 		res, _ := From(allSameArr).Except(allSameArr).Results()
@@ -594,7 +629,7 @@ func TestExcept(t *testing.T) {
 	})
 	c.Convey("There is some intersection", t, func() {
 		res, _ := From([]int{1, 2, 3, 4, 5}).Except([]int{3, 4, 5, 6, 7}).Results()
-		c.So(res, shouldSlicesResemble, []int{1, 2})
+		c.So(res, shouldSetsResemble, []int{1, 2})
 	})
 }
 
@@ -1239,7 +1274,7 @@ func TestJoins(t *testing.T) {
 					return ResultGroup{outer.(Person).Name, inners}
 				}).Results()
 			c.So(err, c.ShouldEqual, nil)
-			c.So(res, shouldSlicesResemble, groupJoinExpected)
+			c.So(res, shouldSetsResemble, groupJoinExpected)
 		})
 	})
 }
