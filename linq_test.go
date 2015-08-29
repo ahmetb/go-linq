@@ -88,7 +88,7 @@ func shouldSetsResemble(actual interface{}, expected ...interface{}) string {
 	for k, eC := range expectedElems {
 		aC := actualElems[k]
 		if eC != aC {
-			return fmt.Sprintf("element '%#v' expected %d times, got: %d.", k, eC, aC)
+			return fmt.Sprintf("Slices don't resemble. element '%#v' expected %d times, got: %d.\nGot: %#v", k, eC, aC, actualSlice)
 		}
 	}
 	return ""
@@ -1212,7 +1212,7 @@ func TestJoins(t *testing.T) {
 		ResultGroup{magnus.Name, []T{daisy}},
 		ResultGroup{terry.Name, []T{barley, boots}},
 		ResultGroup{charlotte.Name, []T{whiskers}},
-		ResultGroup{ahmet.Name, []T{}}}
+		ResultGroup{ahmet.Name, nil}}
 
 	c.Convey("Equi-join", t, func() {
 		c.Convey("Errors from the previous of the chain are carried on", func() {
@@ -1242,7 +1242,7 @@ func TestJoins(t *testing.T) {
 					return ResultPair{outer.(Person).Name, inner.(Pet).Name}
 				}).Results()
 			c.So(err, c.ShouldEqual, nil)
-			c.So(res, shouldSlicesResemble, equiJoinExpected)
+			c.So(res, shouldSetsResemble, equiJoinExpected)
 		})
 	})
 
