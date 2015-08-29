@@ -1,11 +1,11 @@
 sudo: false
 language: go
-go: go1.2
+go: go1.5
 script:
   - test -z "$(gofmt -s -l -w . | tee /dev/stderr)"
   - go test -v -cover  ./...
 install:
   - export PATH=$PATH:$HOME/gopath/bin
-  - go get -v code.google.com/p/go.tools/cmd/cover
+  - go get -v golang.org/x/tools/cmd/cover
   - go get -t github.com/smartystreets/goconvey
   - go get github.com/jacobsa/oglematchers
