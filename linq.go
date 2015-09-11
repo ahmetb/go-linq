@@ -1156,31 +1156,32 @@ func sumMixed(in []T) (sum float64, err error) {
 		v := in[i]
 		// current optimizations:
 		// 1. start from more commonly used types so it terminates early
-		if f, ok := v.(int); ok {
-			sum += float64(f)
-		} else if f, ok := v.(uint); ok {
-			sum += float64(f)
-		} else if f, ok := v.(float64); ok {
-			sum += float64(f)
-		} else if f, ok := v.(int32); ok {
-			sum += float64(f)
-		} else if f, ok := v.(int64); ok {
-			sum += float64(f)
-		} else if f, ok := v.(float32); ok {
-			sum += float64(f)
-		} else if f, ok := v.(int8); ok {
-			sum += float64(f)
-		} else if f, ok := v.(int16); ok {
-			sum += float64(f)
-		} else if f, ok := v.(uint64); ok {
-			sum += float64(f)
-		} else if f, ok := v.(uint32); ok {
-			sum += float64(f)
-		} else if f, ok := v.(uint16); ok {
-			sum += float64(f)
-		} else if f, ok := v.(uint8); ok {
-			sum += float64(f)
-		} else {
+		switch v := v.(type) {
+		case int:
+			sum += float64(int(v))
+		case uint:
+			sum += float64(uint(v))
+		case float64:
+			sum += float64(v)
+		case int32:
+			sum += float64(int32(v))
+		case int64:
+			sum += float64(int64(v))
+		case float32:
+			sum += float64(float32(v))
+		case int8:
+			sum += float64(int8(v))
+		case int16:
+			sum += float64(int16(v))
+		case uint64:
+			sum += float64(uint64(v))
+		case uint32:
+			sum += float64(uint32(v))
+		case uint16:
+			sum += float64(uint16(v))
+		case uint8:
+			sum += float64(uint8(v))
+		default:
 			err = ErrNan
 			return
 		}
