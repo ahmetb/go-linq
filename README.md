@@ -1,4 +1,4 @@
-# [go-linq][home] [![travis-ci status](https://api.travis-ci.org/ahmetalpbalkan/go-linq.png)](https://travis-ci.org/ahmetalpbalkan/go-linq) [![GoDoc](https://godoc.org/github.com/ahmetalpbalkan/go-linq?status.png)](https://godoc.org/github.com/ahmetalpbalkan/go-linq) 
+# [go-linq][home] [![travis-ci status](https://api.travis-ci.org/ahmetalpbalkan/go-linq.svg)](https://travis-ci.org/ahmetalpbalkan/go-linq) [![GoDoc](https://godoc.org/github.com/ahmetalpbalkan/go-linq?status.svg)](https://godoc.org/github.com/ahmetalpbalkan/go-linq) 
 
 [home]: http://ahmetalpbalkan.github.io/go-linq/
 
