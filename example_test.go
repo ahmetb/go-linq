@@ -218,9 +218,3 @@ func ExampleQuery_ToSlice() {
 	// Output:
 	// [1 2 3 4 5 6 7 8 9 10]
 }
-
-type Book struct {
-	id      int
-	title   string
-	authors []string
-}
