@@ -1,25 +1,32 @@
-# go2linq [![GoDoc](https://godoc.org/github.com/ahmetalpbalkan/go-linq?status.svg)](https://godoc.org/github.com/ahmetalpbalkan/go-linq) [![Build Status](https://travis-ci.org/ahmetalpbalkan/go-linq.svg?branch=master)](https://travis-ci.org/ahmetalpbalkan/go-linq) [![Coverage Status](https://coveralls.io/repos/github/ahmetalpbalkan/go-linq/badge.svg?branch=master)](https://coveralls.io/github/ahmetalpbalkan/go-linq?branch=master) [![Go Report Card](https://goreportcard.com/badge/github.com/ahmetalpbalkan/go-linq)](https://goreportcard.com/report/github.com/ahmetalpbalkan/go-linq)
+# go-linq [![GoDoc](https://godoc.org/github.com/ahmetalpbalkan/go-linq?status.svg)](https://godoc.org/github.com/ahmetalpbalkan/go-linq) [![Build Status](https://travis-ci.org/ahmetalpbalkan/go-linq.svg?branch=master)](https://travis-ci.org/ahmetalpbalkan/go-linq) [![Coverage Status](https://coveralls.io/repos/github/ahmetalpbalkan/go-linq/badge.svg?branch=master)](https://coveralls.io/github/ahmetalpbalkan/go-linq?branch=master) [![Go Report Card](https://goreportcard.com/badge/github.com/ahmetalpbalkan/go-linq)](https://goreportcard.com/report/github.com/ahmetalpbalkan/go-linq)
 A powerful language integrated query (LINQ) library for Go.
 * Written in vanilla Go!
 * Safe for concurrent use
-* Complete lazy evaluation
-* Supports arrays, slices, maps, strings, channels and
-custom collections (collection needs to implement Iterable interface
-and element - Comparable interface)
+* Complete lazy evaluation with iterator pattern
+* Supports arrays, slices, maps, strings, channels and custom collections
+(collection needs to implement `Iterable` interface and element - `Comparable`
+interface)
 
 ## Installation
 
     $ go get github.com/ahmetalpbalkan/go-linq
 
+> **warning****warning** `go-linq` has recently introduced _breaking API changes_
+> with v2.0.0. See [release notes](#release-notes) for details. v2.0.0 comes with
+> a refined interface, dramatically increased performance and memory efficiency,
+> and new features such as lazy evaluation ([read more](http://kalan.rocks/2016/07/16/manipulating-data-with-iterators-in-go/)).
+>
+> The old version is still available in `archive/0.9` branch and tagged as `0.9`
+> as well. If you are using `go-linq`, )please vendor a copy of it in your
+> source tree to avoid getting broken by upstream changes.
+
 ## Quickstart
 
-Usage is as easy as chaining methods like
+Usage is as easy as chaining methods like:
 
 `From(slice)` `.Where(predicate)` `.Select(selector)` `.Union(data)` 
 
-Just keep writing.
-
-**Example:** Find all owners of cars manufactured from 2015
+**Example: Find all owners of cars manufactured from 2015**
 ```go
 import . "github.com/ahmetalpbalkan/go-linq"
 	
@@ -37,7 +44,7 @@ From(cars).Where(func(c interface{}) bool {
 }).ToSlice(&owners)
 ```
 
-**Example:** Find an author that has written the most books
+**Example: Find the author who has written the most books**
 ```go
 import . "github.com/ahmetalpbalkan/go-linq"
 	
@@ -47,32 +54,38 @@ type Book struct {
 	authors []string
 }
 
-author := From(books).SelectMany( //make a flat array of authors
+author := From(books).SelectMany( // make a flat array of authors
 	func(book interface{}) Query {
 		return From(book.(Book).authors)
-	}).GroupBy( //group by author
+	}).GroupBy( // group by author
 	func(author interface{}) interface{} {
-		return author //author as key
+		return author // author as key
 	}, func(author interface{}) interface{} {
-		return author //author as value
-	}).OrderByDescending( //sort groups by its length
+		return author // author as value
+	}).OrderByDescending( // sort groups by its length
 	func(group interface{}) interface{} {
 		return len(group.(Group).Group)
-	}).Select( //get authors out of groups
+	}).Select( // get authors out of groups
 	func(group interface{}) interface{} {
 		return group.(Group).Key
-	}).First() //take the first author
+	}).First() // take the first author
 ```
 
-**More examples** can be found in [documentation](https://godoc.org/github.com/ahmetalpbalkan/go-linq)
+**More examples** can be found in [documentation](https://godoc.org/github.com/ahmetalpbalkan/go-linq).
 
 ## Release Notes
 ~~~
 
-v2.0
-* **Important:** This release is a breaking change
-* total code rewrite with greater performance
-* lots of new methods introduced
+v2.0.0 (2016-09-02)
+* IMPORTANT: This release is a BREAKING CHANGE. The old version
+  is archived at the 'archive/0.9' branch or the 0.9 tags.
+* A COMPLETE REWRITE of go-linq with better performance and memory
+  efficiency. (thanks @kalaninja!)
+* API has significantly changed. Most notably:
+  - linq.T removed in favor of interface{}
+  - library methods no longer return errors 
+  - PLINQ removed for now (see channels support)
+  - support for channels, custom collections and comparables
 
 v0.9-rc4
 * GroupBy()
