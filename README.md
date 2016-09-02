@@ -1,75 +1,78 @@
-# [go-linq][home] [![travis-ci status](https://api.travis-ci.org/ahmetalpbalkan/go-linq.svg)](https://travis-ci.org/ahmetalpbalkan/go-linq) [![GoDoc](https://godoc.org/github.com/ahmetalpbalkan/go-linq?status.svg)](https://godoc.org/github.com/ahmetalpbalkan/go-linq) 
-
-[home]: http://ahmetalpbalkan.github.io/go-linq/
-
-A powerful language integrated query library for Go. Inspired by Microsoft's
-[LINQ](http://msdn.microsoft.com/en-us/library/bb397926.aspx).
-
-* **No dependencies:** written in vanilla Go!
-* **Tested:** 100.0% code coverage on all stable [releases](https://github.com/ahmetalpbalkan/go-linq/releases).
-* **Backwards compatibility:** Your integration with the library will not be broken
-  except major releases.
+# go2linq [![GoDoc](https://godoc.org/github.com/ahmetalpbalkan/go-linq?status.svg)](https://godoc.org/github.com/ahmetalpbalkan/go-linq) [![Build Status](https://travis-ci.org/ahmetalpbalkan/go-linq.svg?branch=master)](https://travis-ci.org/ahmetalpbalkan/go-linq) [![Coverage Status](https://coveralls.io/repos/github/ahmetalpbalkan/go-linq/badge.svg?branch=master)](https://coveralls.io/github/ahmetalpbalkan/go-linq?branch=master) [![Go Report Card](https://goreportcard.com/badge/github.com/ahmetalpbalkan/go-linq)](https://goreportcard.com/report/github.com/ahmetalpbalkan/go-linq)
+A powerful language integrated query (LINQ) library for Go.
+* Written in vanilla Go!
+* Safe for concurrent use
+* Complete lazy evaluation
+* Supports arrays, slices, maps, strings, channels and
+custom collections (collection needs to implement Iterable interface
+and element - Comparable interface)
 
 ## Installation
 
     $ go get github.com/ahmetalpbalkan/go-linq
 
-## Quick Start
+## Quickstart
 
-**Example query:** Find names of students over 18:
+Usage is as easy as chaining methods like
 
+`From(slice)` `.Where(predicate)` `.Select(selector)` `.Union(data)` 
+
+Just keep writing.
+
+**Example:** Find all owners of cars manufactured from 2015
 ```go
 import . "github.com/ahmetalpbalkan/go-linq"
 	
-type Student struct {
-    id, age int
-    name string
+type Car struct {
+    id, year int
+    owner, model string
 }
 
-over18Names, err := From(students)
-	.Where(func (s T) (bool,error){
-		return s.(*Student).age >= 18, nil
-	})
-	.Select(func (s T) (T,error){
-		return s.(*Student).name, nil
-	}).Results()
+owners := []string{}
+
+From(cars).Where(func(c interface{}) bool {
+	return c.(Car).year >= 2015
+}).Select(func(c interface{}) interface{} {
+	return c.(Car).owner
+}).ToSlice(&owners)
 ```
 
-## Documentation
+**Example:** Find an author that has written the most books
+```go
+import . "github.com/ahmetalpbalkan/go-linq"
+	
+type Book struct {
+	id      int
+	title   string
+	authors []string
+}
 
-* [GoDoc at godoc.org](http://godoc.org/github.com/ahmetalpbalkan/go-linq)
-* [GoDoc at codebot.io](http://codebot.io/doc/pkg/github.com/ahmetalpbalkan/go-linq)
+author := From(books).SelectMany( //make a flat array of authors
+	func(book interface{}) Query {
+		return From(book.(Book).authors)
+	}).GroupBy( //group by author
+	func(author interface{}) interface{} {
+		return author //author as key
+	}, func(author interface{}) interface{} {
+		return author //author as value
+	}).OrderByDescending( //sort groups by its length
+	func(group interface{}) interface{} {
+		return len(group.(Group).Group)
+	}).Select( //get authors out of groups
+	func(group interface{}) interface{} {
+		return group.(Group).Key
+	}).First() //take the first author
+```
 
-Here is wiki:
-
-1. [Install & Import](https://github.com/ahmetalpbalkan/go-linq/wiki/Install-&-Import)
-2. [Quickstart (Crash Course)](https://github.com/ahmetalpbalkan/go-linq/wiki/Quickstart)
-3. [Parallel LINQ][plinq]
-4. [Table of Query Functions](https://github.com/ahmetalpbalkan/go-linq/wiki/Query-Functions)
-5. [Remarks & Notes](https://github.com/ahmetalpbalkan/go-linq/wiki/Remarks-%26-notes)
-6. [FAQ](https://github.com/ahmetalpbalkan/go-linq/wiki/FAQ)
-
-[plinq]: https://github.com/ahmetalpbalkan/go-linq/wiki/Parallel-LINQ-(PLINQ)
-
-## License
-
-This software is distributed under Apache 2.0 License (see [LICENSE](LICENSE)
-for more).
-
-## Disclaimer
-
-As noted in LICENSE, this library is distributed on an "as is" basis and
-author's employment association with Microsoft does not imply any sort of
-warranty or official representation the company. This is purely a personal side
-project developed on spare times.
-
-## Authors
-
-[Ahmet Alp Balkan](http://ahmetalpbalkan.com) – [@ahmetalpbalkan](https://twitter.com/ahmetalpbalkan)
+**More examples** can be found in [documentation](https://godoc.org/github.com/ahmetalpbalkan/go-linq)
 
 ## Release Notes
-
 ~~~
+
+v2.0
+* **Important:** This release is a breaking change
+* total code rewrite with greater performance
+* lots of new methods introduced
 
 v0.9-rc4
 * GroupBy()

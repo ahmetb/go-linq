@@ -1,0 +1,39 @@
+package linq
+
+import (
+	"reflect"
+	"testing"
+)
+
+func TestGroupBy(t *testing.T) {
+	input := []int{1, 2, 3, 4, 5, 6, 7, 8, 9}
+	wantEven := []interface{}{2, 4, 6, 8}
+	wantOdd := []interface{}{1, 3, 5, 7, 9}
+
+	q := From(input).GroupBy(
+		func(i interface{}) interface{} { return i.(int) % 2 },
+		func(i interface{}) interface{} { return i.(int) },
+	)
+
+	next := q.Iterate()
+	eq := true
+	for item, ok := next(); ok; item, ok = next() {
+		group := item.(Group)
+		switch group.Key.(int) {
+		case 0:
+			if !reflect.DeepEqual(group.Group, wantEven) {
+				eq = false
+			}
+		case 1:
+			if !reflect.DeepEqual(group.Group, wantOdd) {
+				eq = false
+			}
+		default:
+			eq = false
+		}
+	}
+
+	if !eq {
+		t.Errorf("From(%v).GroupBy()=%v", input, toSlice(q))
+	}
+}

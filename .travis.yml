@@ -1,13 +1,20 @@
 sudo: false
+
 language: go
-go: go1.6
-install:
-  - go get -v golang.org/x/tools/cmd/cover
-  - go get -t github.com/smartystreets/goconvey
-  - go get github.com/jacobsa/oglematchers
+go:
+  - 1.6.2
+  - tip
+
+before_install:
+  - go get github.com/mattn/goveralls
+  - go get golang.org/x/tools/cmd/cover
   - go get -u github.com/golang/lint/golint
+  
 script:
-  - test -z "$(gofmt -s -l -w . | tee /dev/stderr)"
-  - test -z "$(golint . | tee /dev/stderr)"
-  - go vet -v .
-  - go test -v -cover  ./...
+  - go vet -x ./...
+  - golint ./...
+  - go test -v  ./...
+  - go test -covermode=count -coverprofile=profile.cov
+
+after_script:
+  - goveralls -coverprofile=profile.cov -service=travis-ci
