@@ -1,7 +1,3 @@
-// Package linq provides methods for querying and manipulating
-// slices, arrays, maps, strings, channel  and collections.
-//
-// Author: Alexander Kalankhodzhaev (kalan) and Ahmet Alp Balkan
 package linq
 
 import "reflect"
