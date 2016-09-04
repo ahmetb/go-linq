@@ -1,220 +1,213 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <meta charset="utf-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-        <title>go-linq: LINQ query functions over slices for Golang</title>
-        <meta name="viewport" content="width=device-width">
-        <link href="//netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" rel="stylesheet">
-        <link rel="stylesheet" href="css/main.css">
-        <link href='//fonts.googleapis.com/css?family=Roboto:300' rel='stylesheet' type='text/css'>
-        <meta name="author" content="Ahmet Alp Balkan">
 
-        <script type="text/javascript" src="//use.typekit.net/wnk8juw.js"></script>
-        <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
-    </head>
-    <body>
-        <header>
-            <h1>go-linq</h1>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>go-linq: LINQ query functions over slices for Golang</title>
+    <meta name="viewport" content="width=device-width">
+    <link href="//netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/main.css">
+    <link href='//fonts.googleapis.com/css?family=Roboto:300' rel='stylesheet' type='text/css'>
+    <meta name="author" content="Ahmet Alp Balkan">
 
-            <h2>.NET's Language Integrated Query (LINQ) library for Go</h2>
-            
+    <script type="text/javascript" src="//use.typekit.net/wnk8juw.js"></script>
+    <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
+</head>
+
+<body>
+    <header>
+        <h1>go-linq</h1>
+
+        <h2>.NET's Language Integrated Query (LINQ) library for Go</h2>
+
+        <p>
+            Query and manipulate Go slices and collections using SQL-like methods.
+            <br/>Written in pure Go with no dependencies, tested with 100% code coverage.
+        </p>
+
+        <div class='promo'>
             <p>
-                Query and manipulate Go slices and collections using SQL-like methods.
-                <br/>Written in pure Go with no dependencies, tested with 100% code coverage.
+                <iframe src="http://ghbtns.com/github-btn.html?user=ahmetalpbalkan&repo=go-linq&type=watch&count=true&size=large" allowtransparency="true"
+                    frameborder="0" scrolling="0" width="142px" height="30px" style='margin-left:30px'></iframe>
             </p>
 
-            <div class='promo'>
-                <p><iframe src="http://ghbtns.com/github-btn.html?user=ahmetalpbalkan&repo=go-linq&type=watch&count=true&size=large" allowtransparency="true" frameborder="0" scrolling="0" width="142px" height="30px" style='margin-left:30px'></iframe></p>
+            <p>
+                <a class='btn btn-default btn-lg' href='https://github.com/ahmetalpbalkan/go-linq'>Fork it!</a>
+                <a class='btn btn-default btn-lg' href='https://github.com/ahmetalpbalkan/go-linq/wiki'>Wiki</a>
+                <a class='btn btn-default btn-lg' href='http://godoc.org/github.com/ahmetalpbalkan/go-linq'>GoDoc</a>
+            </p>
 
+    </header>
+
+    <section class='features'>
+        <div class='inner row'>
+            <aside class='col-md-4'>
+                <h3>Bring your type</h3>
                 <p>
-                    <a class='btn btn-default btn-lg' href='https://github.com/ahmetalpbalkan/go-linq'>Fork it!</a>
-                    <a class='btn btn-default btn-lg' href='https://github.com/ahmetalpbalkan/go-linq/wiki'>Wiki</a>
-                    <a class='btn btn-default btn-lg' href='http://godoc.org/github.com/ahmetalpbalkan/go-linq'>GoDoc</a>
+                    There are no generics in Go, but
+                    <nobr>go-linq</nobr> supports arrays, slices, maps, strings and channels out-of-the-box, or any collection
+                    that implements <code>.Comparable</code>.
                 </p>
+            </aside>
 
-        </header>
+            <aside class='col-md-4'>
+                <h3>Method syntax</h3>
+                <p style='text-align: center;'>
+                    <code>From(slice)</code> <code>.Where(predicate)</code> <code>.Select(selector)</code> <code>.ToSlice(&result)</code>
+                    <br/> Easy as that. Just keep writing your queries.
+                </p>
+            </aside>
 
-        <section class='features'>
-            <div class='inner row'>
-                <aside class='col-md-4'>
-                    <h3>Bring your type</h3>
-                    <p>
-                        There are no generics in Go, but <nobr>go-linq</nobr>'s
-                        magical hacks let you use your types with no
-                        trouble.
-                    </p>
-                </aside>
+            <aside class='col-md-4'>
+                <h3>Concurrency</h3>
+                <p>
+                    Your queries can share data between goroutines by calling <code>.FromChannel()</code> and <code>.ToChannel()</code>                    methods.
+                </p>
+            </aside>
+        </div>
+    </section>
 
-                <aside class='col-md-4'>
-                    <h3>Method syntax</h3>
-                    <p style='text-align: center;'>
-                        <code>From(slice)</code> <code>.Where(wat)</code> <code>.Select(dat)</code>
-                        <code>.Results()</code>
-                        <br/>
+    <section class='demo hidden-xs'>
+        <h2>Basic</h2>
+        <p>Find average age of students over 20.</p>
+        <div class='inner row'>
+            <table>
+                <tr>
+                    <td class='docs'>
+                        Import your <code>[]Student</code>.
+                    </td>
 
-                        Easy as that. Just keep writing your queries.
-                    </p>
-                </aside>
-
-                <aside class='col-md-4'>
-                    <h3>Parallel LINQ</h3>
-                    <p>
-                        Your queries executed concurrently using goroutines
-                        under the hood by just calling <code>.AsParallel()</code>.
-                    </p>
-                </aside>
-            </div>
-        </section>
-
-        <section class='demo hidden-xs'>
-            <h2>Basic</h2>
-            <p>Find average age of students over 20.</p>
-            <div class='inner row'>
-                <table>
-                    <tr>
-                        <td class='docs'>
-                            Import your <code>[]*Student</code>.
-                        </td>
-
-                        <td class='code'><code>
-                            results, err := From(students).
+                    <td class='code'><code>
+                            results := From(students).
                         </code></td>
-                    </tr>
+                </tr>
 
-                    <tr>
-                        <td class='docs'>
-                            Find those over 20. Note <code>T</code> is an alias for <code>
-                                interface{}</code>. So we make type assertion to
-                                our input type.
-                        </td>
+                <tr>
+                    <td class='docs'>
+                        Find those over 20.<br/> So we make type assertion to our input type.
+                    </td>
 
-                        <td class='code'><code>
-                            &nbsp;&nbsp;&nbsp;&nbsp;Where(func (s T) (bool, error){<br/>&nbsp; &nbsp; 
-                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return s.(*Student).age >= 20, nil<br/>
+                    <td class='code'><code>
+                            &nbsp;&nbsp;&nbsp;&nbsp;Where(func (s interface{}) bool {<br/> 
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return s.(Student).age >= 20<br/>
                             &nbsp;&nbsp;&nbsp;&nbsp;}).
                         </code></td>
-                    </tr>
+                </tr>
 
-                    <tr>
-                        <td class='docs'>
-                            Select their ages.
-                        </td>
+                <tr>
+                    <td class='docs'>
+                        Select their ages.
+                    </td>
 
-                        <td class='code'><code>
-                            &nbsp;&nbsp;&nbsp;&nbsp;Select(func (s T) (T, error){<br/>
-                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return s.(*Student).age, nil<br/>
+                    <td class='code'><code>
+                            &nbsp;&nbsp;&nbsp;&nbsp;Select(func (s interface{}) interface{} {<br/>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return s.(Student).age<br/>
                             &nbsp;&nbsp;&nbsp;&nbsp;}).
                         </code></td>
-                    </tr>
-                    <tr>
-                        <td class='docs'>
-                            Find the average.
-                        </td>
+                </tr>
+                <tr>
+                    <td class='docs'>
+                        Find the average.
+                    </td>
 
-                        <td class='code'><code>
+                    <td class='code'><code>
                             Average()
                         </code></td>
-                    </tr>
-                </table>
-            </div>
+                </tr>
+            </table>
+        </div>
 
-            <h2>Concurrent</h2>
-            <div class='inner row'>
-                <p>Check if all given websites have a favicon.ico.</p>
-                <table>
-                    <tr>
-                        <td class='docs'>
-                            &nbsp;
-                        </td>
+        <h2>Concurrent</h2>
+        <div class='inner row'>
+            <p>Count websites that have a favicon.ico.</p>
+            <table>
+                <tr>
+                    <td class='docs'>
+                        &nbsp;
+                    </td>
 
-                        <td class='code'><code>
-                            allHasFavicon, err := From(domains).
+                    <td class='code'><code>
+                            urls := make(chan interface{})<br/>
+                            results := make(chan interface{})
                         </code></td>
-                    </tr>
+                </tr>
 
-                    <tr>
-                        <td class='docs'>
-                            Convert domain names to full URLs.
-                        </td>
+                <tr>
+                    <td class='docs'>
+                        Convert domain names to full URLs.
+                    </td>
 
-                        <td class='code'><code>
-                            &nbsp;&nbsp;&nbsp;&nbsp;Select(func (in T) (T, error){<br/>
-                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return fmt.Sprintf("http://%s/favicon.ico", in), nil</br>
-                            &nbsp;&nbsp;&nbsp;&nbsp;}).
+                    <td class='code'><code>
+                            &nbsp;&nbsp;&nbsp;&nbsp;go func(domains []string) {<br/>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;From(domains).Select(func(d interface{}) interface{} {</br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return fmt.Sprintf("http://%s/favicon.ico", d)</br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}).ToChannel(urls)</br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;}(domains)
                         </code></td>
-                    </tr>
+                </tr>
 
+                <tr>
+                    <td class='docs'>
+                        Let's run the following in parallel.<br/>Request favicon for each domain.
+                    </td>
 
-                    <tr>
-                        <td class='docs'>
-                            Let's run the following in parallel.
-                        </td>
-
-                        <td class='code'><code>
-                            &nbsp;&nbsp;&nbsp;&nbsp;AsParallel().
-                        </code></td>
-                    </tr>
-
-                    <tr>
-                        <td class='docs'>
-                            Find if all have the favicon.
-                        </td>
-
-                        <td class='code'><code>
-                            &nbsp;&nbsp;&nbsp;&nbsp;All(func (url T) (bool, error){<br/>
-                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;resp, err := http.Get(url.(string))</br>
-                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if err != nil {</br>
-                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return false, err</br>
+                    <td class='code'><code>
+                            &nbsp;&nbsp;&nbsp;&nbsp;go func() {<br/>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;defer close(results)</br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;var wg sync.WaitGroup</br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;for url := range urls {</br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;wg.Add(1)</br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;go func(url string) {</br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;defer wg.Done()</br>                            
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;resp, _ := http.Get(url)</br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;results <- resp.StatusCode</br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}(url.(string))</br>
                             &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}</br>
-                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return resp.Status/100 == 2, nil</br>
-                            &nbsp;&nbsp;&nbsp;&nbsp;}
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;wg.Wait()</br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;}()
                         </code></td>
-                    </tr>
-                </table>
-        </section>
+                </tr>
 
-        <section class='about'>
+                <tr>
+                    <td class='docs'>
+                        Count websites.
+                    </td>
 
-            <h2>About</h2>
-                <div class='inner'>
-                <p>
-                    If you have suggestions or improvements, feel free to contact or
-                    submit a pull request. All contributions are welcomed.
-                </p>
+                    <td class='code'><code>
+                            &nbsp;&nbsp;&nbsp;&nbsp;FromChannel(results).CountWith(func(r interface{}) bool {<br/>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return r.(int) == 200<br/>
+                            &nbsp;&nbsp;&nbsp;&nbsp;})
+                        </code></td>
+                </tr>
+            </table>
+    </section>
 
-                <p>
-                    This is my first significant project ever in Go. So I probably
-                    get many practices wrong. Feel free to review and 
-                    <a href='mailto:ahmetalpbalkan+golinq@gmail.com'>let me know</a>!
-                    <br/>&nbsp;
-                </p>
+    <section class='about'>
 
-                <p>
-                    This library is brought you by <a href='https://twitter.com/ahmetalpbalkan'>
-                    @ahmetalpbalkan</a>.
-                </p>
-                <p>
-                    <a href='http://ahmetalpbalkan.com'><img src='img/me.png' width='150' height='150'
-                        alt="Ahmet Alp Balkan, 2013"/></a>
-                </p>
+        <h2>About</h2>
+        <div class='inner'>
+            <p>
+                If you have suggestions or improvements, feel free to contact or submit a pull request. All contributions are welcomed.
+            </p>
 
-                <div class='promo'>
-                    <p>
-                        master: <a href="https://travis-ci.org/ahmetalpbalkan/go-linq"><img src="https://api.travis-ci.org/ahmetalpbalkan/go-linq.png" alt="travis-ci status" style="max-width:100%;"></a>
-                        &mdash;
-                        dev: <a href="https://travis-ci.org/ahmetalpbalkan/go-linq"><img src="https://api.travis-ci.org/ahmetalpbalkan/go-linq.png?branch=dev" alt="travis-ci status" style="max-width:100%;"></a>
-                    </p>
-                </div>
-                
-            </div>
-        </section>
+            <p>
+                This library is brought you by <a href='http://kalan.rocks/'>Alexander (kalan) Kalankhodzhaev</a> 
+                and <a href='https://twitter.com/ahmetalpbalkan'>@ahmetalpbalkan</a>.
+            </p>
+            <p>
+                <a href='http://kalan.rocks/'><img src='img/kalan.png' width='150' height='150' alt="Alexander (kalan) Kalankhodzhaev, 2016" /></a>
+                <a href='http://ahmetalpbalkan.com'><img src='img/ahmet.png' width='150' height='150' alt="Ahmet Alp Balkan, 2013" /></a>
+            </p>
 
-        <footer>
-            Lovingly made in Seattle.
-        </footer>
+        </div>
+    </section>
 
-        <script>
+    <footer>
+        Lovingly made in Moscow and Seattle.
+    </footer>
+
+    <script>
           (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
           (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
           m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
@@ -222,5 +215,6 @@
           ga('create', 'UA-45321252-3', 'ahmetalpbalkan.github.io');
           ga('send', 'pageview');
         </script>
-    </body>
+</body>
+
 </html>
