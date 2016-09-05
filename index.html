@@ -33,8 +33,7 @@
             </p>
 
             <p>
-                <a class='btn btn-default btn-lg' href='https://github.com/ahmetalpbalkan/go-linq'>Fork it!</a>
-                <a class='btn btn-default btn-lg' href='https://github.com/ahmetalpbalkan/go-linq/wiki'>Wiki</a>
+                <a class='btn btn-default btn-lg' href='https://github.com/ahmetalpbalkan/go-linq'>Fork it!</a>                
                 <a class='btn btn-default btn-lg' href='http://godoc.org/github.com/ahmetalpbalkan/go-linq'>GoDoc</a>
             </p>
 
@@ -89,9 +88,9 @@
                     </td>
 
                     <td class='code'><code>
-                            &nbsp;&nbsp;&nbsp;&nbsp;Where(func (s interface{}) bool {<br/> 
-                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return s.(Student).age >= 20<br/>
-                            &nbsp;&nbsp;&nbsp;&nbsp;}).
+                            Where(func (s interface{}) bool {<br/> 
+                            &nbsp;&nbsp;&nbsp;&nbsp;return s.(Student).age >= 20<br/>
+                            }).
                         </code></td>
                 </tr>
 
@@ -101,9 +100,9 @@
                     </td>
 
                     <td class='code'><code>
-                            &nbsp;&nbsp;&nbsp;&nbsp;Select(func (s interface{}) interface{} {<br/>
-                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return s.(Student).age<br/>
-                            &nbsp;&nbsp;&nbsp;&nbsp;}).
+                            Select(func (s interface{}) interface{} {<br/>
+                            &nbsp;&nbsp;&nbsp;&nbsp;return s.(Student).age<br/>
+                            }).
                         </code></td>
                 </tr>
                 <tr>
@@ -139,11 +138,11 @@
                     </td>
 
                     <td class='code'><code>
-                            &nbsp;&nbsp;&nbsp;&nbsp;go func(domains []string) {<br/>
-                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;From(domains).Select(func(d interface{}) interface{} {</br>
-                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return fmt.Sprintf("http://%s/favicon.ico", d)</br>
-                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}).ToChannel(urls)</br>
-                            &nbsp;&nbsp;&nbsp;&nbsp;}(domains)
+                            go func(domains []string) {<br/>
+                            &nbsp;&nbsp;&nbsp;&nbsp;From(domains).Select(func(d interface{}) interface{} {</br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return fmt.Sprintf("http://%s/favicon.ico", d)</br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;}).ToChannel(urls)</br>
+                            }(domains)
                         </code></td>
                 </tr>
 
@@ -153,19 +152,19 @@
                     </td>
 
                     <td class='code'><code>
-                            &nbsp;&nbsp;&nbsp;&nbsp;go func() {<br/>
-                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;defer close(results)</br>
-                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;var wg sync.WaitGroup</br>
-                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;for url := range urls {</br>
-                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;wg.Add(1)</br>
-                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;go func(url string) {</br>
-                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;defer wg.Done()</br>                            
-                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;resp, _ := http.Get(url)</br>
-                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;results <- resp.StatusCode</br>
-                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}(url.(string))</br>
-                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}</br>
-                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;wg.Wait()</br>
-                            &nbsp;&nbsp;&nbsp;&nbsp;}()
+                            go func() {<br/>
+                            &nbsp;&nbsp;&nbsp;&nbsp;defer close(results)</br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;var wg sync.WaitGroup</br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;for url := range urls {</br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;wg.Add(1)</br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;go func(url string) {</br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;defer wg.Done()</br>                            
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;resp, _ := http.Get(url)</br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;results <- resp.StatusCode</br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}(url.(string))</br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;}</br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;wg.Wait()</br>
+                            }()
                         </code></td>
                 </tr>
 
@@ -175,9 +174,9 @@
                     </td>
 
                     <td class='code'><code>
-                            &nbsp;&nbsp;&nbsp;&nbsp;FromChannel(results).CountWith(func(r interface{}) bool {<br/>
-                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return r.(int) == 200<br/>
-                            &nbsp;&nbsp;&nbsp;&nbsp;})
+                            FromChannel(results).CountWith(func(r interface{}) bool {<br/>
+                            &nbsp;&nbsp;&nbsp;&nbsp;return r.(int) == 200<br/>
+                            })
                         </code></td>
                 </tr>
             </table>
