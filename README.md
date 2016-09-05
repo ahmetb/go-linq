@@ -11,13 +11,13 @@ interface)
 
     $ go get github.com/ahmetalpbalkan/go-linq
 
-> **warning****warning** `go-linq` has recently introduced _breaking API changes_
+> :warning: :warning: `go-linq` has recently introduced _breaking API changes_
 > with v2.0.0. See [release notes](#release-notes) for details. v2.0.0 comes with
 > a refined interface, dramatically increased performance and memory efficiency,
 > and new features such as lazy evaluation ([read more](http://kalan.rocks/2016/07/16/manipulating-data-with-iterators-in-go/)).
 >
 > The old version is still available in `archive/0.9` branch and tagged as `0.9`
-> as well. If you are using `go-linq`, )please vendor a copy of it in your
+> as well. If you are using `go-linq`, please vendor a copy of it in your
 > source tree to avoid getting broken by upstream changes.
 
 ## Quickstart
