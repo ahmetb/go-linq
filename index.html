@@ -33,10 +33,10 @@
             </p>
 
             <p>
-                <a class='btn btn-default btn-lg' href='https://github.com/ahmetalpbalkan/go-linq'>Fork it!</a>                
+                <a class='btn btn-default btn-lg' href='https://github.com/ahmetalpbalkan/go-linq'>Fork it!</a>
                 <a class='btn btn-default btn-lg' href='http://godoc.org/github.com/ahmetalpbalkan/go-linq'>GoDoc</a>
             </p>
-
+        </div>
     </header>
 
     <section class='features'>
@@ -180,10 +180,61 @@
                         </code></td>
                 </tr>
             </table>
+        </div>
+
+        <h2>Custom query method</h2>
+        <div class='inner row'>
+            <p>Implement a custom method that leaves only values greater than the specified threshold.</p>
+            <table>
+                <tr>
+                    <td class='docs'>
+                        Define your own alias.
+                    </td>
+
+                    <td class='code'><code>
+                            type MyQuery Query
+                        </code></td>
+                </tr>
+
+                <tr>
+                    <td class='docs'>
+                        <br/>Use your alias as a receiver.<br/> Produce a new Query that iterates over a receiver and applies
+                        a custom logic.
+                    </td>
+
+                    <td class='code'><code>
+                            func (q MyQuery) MoreThan(threshold int) Query {<br/>
+                            &nbsp;&nbsp;&nbsp;&nbsp;return Query{<br/>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Iterate: func() Iterator {<br/>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;next := q.Iterate()<br/>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return func() (item interface{}, ok bool) {<br/>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;for item, ok = next(); ok; item, ok = next() {<br/>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if item.(int) > threshold {<br/>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return<br/>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return<br/>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;},<br/>
+                            &nbsp;&nbsp;&nbsp;&nbsp;}<br/>
+                            }
+                        </code></td>
+                </tr>
+
+                <tr>
+                    <td class='docs'>
+                        Run it.
+                    </td>
+
+                    <td class='code'><code>
+                            MyQuery(Range(1, 10)).MoreThan(5)
+                        </code></td>
+                </tr>
+            </table>
+        </div>
     </section>
 
     <section class='about'>
-
         <h2>About</h2>
         <div class='inner'>
             <p>
@@ -191,14 +242,13 @@
             </p>
 
             <p>
-                This library is brought you by <a href='http://kalan.rocks/'>Alexander (kalan) Kalankhodzhaev</a> 
-                and <a href='https://twitter.com/ahmetalpbalkan'>@ahmetalpbalkan</a>.
+                This library is brought you by <a href='http://kalan.rocks/'>Alexander (kalan) Kalankhodzhaev</a> and
+                <a href='https://twitter.com/ahmetalpbalkan'>@ahmetalpbalkan</a>.
             </p>
             <p>
                 <a href='http://kalan.rocks/'><img src='img/kalan.png' width='150' height='150' alt="Alexander (kalan) Kalankhodzhaev, 2016" /></a>
                 <a href='http://ahmetalpbalkan.com'><img src='img/ahmet.png' width='150' height='150' alt="Ahmet Alp Balkan, 2013" /></a>
             </p>
-
         </div>
     </section>
 
@@ -213,7 +263,7 @@
           })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
           ga('create', 'UA-45321252-3', 'ahmetalpbalkan.github.io');
           ga('send', 'pageview');
-        </script>
+    </script>
 </body>
 
 </html>
