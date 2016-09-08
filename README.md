@@ -71,6 +71,31 @@ author := From(books).SelectMany( // make a flat array of authors
 	}).First() // take the first author
 ```
 
+**Example: Implement a custom method that leaves only values greater than the specified threshold**
+```go
+type MyQuery Query
+
+func (q MyQuery) GreaterThan(threshold int) Query {
+	return Query{
+		Iterate: func() Iterator {
+			next := q.Iterate()
+
+			return func() (item interface{}, ok bool) {
+				for item, ok = next(); ok; item, ok = next() {
+					if item.(int) > threshold {
+						return
+					}
+				}
+
+				return
+			}
+		},
+	}
+}
+
+result := MyQuery(Range(1,10)).GreaterThan(5).Results()
+```
+
 **More examples** can be found in [documentation](https://godoc.org/github.com/ahmetalpbalkan/go-linq).
 
 ## Release Notes
