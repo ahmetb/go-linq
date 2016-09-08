@@ -75,7 +75,7 @@ author := From(books).SelectMany( // make a flat array of authors
 ```go
 type MyQuery Query
 
-func (q MyQuery) MoreThan(threshold int) Query {
+func (q MyQuery) GreaterThan(threshold int) Query {
 	return Query{
 		Iterate: func() Iterator {
 			next := q.Iterate()
@@ -93,7 +93,7 @@ func (q MyQuery) MoreThan(threshold int) Query {
 	}
 }
 
-result := MyQuery(Range(1, 10)).MoreThan(5).Results()
+result := MyQuery(Range(1,10)).GreaterThan(5).Results()
 ```
 
 **More examples** can be found in [documentation](https://godoc.org/github.com/ahmetalpbalkan/go-linq).
