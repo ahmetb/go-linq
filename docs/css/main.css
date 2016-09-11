@@ -1,0 +1,158 @@
+
+body {
+    margin: 0;
+    padding: 0;
+    background-color: #fbfcfc;
+
+    font-family: 'proxima-nova', sans-serif;
+    font-weight: 300;
+}
+
+h1, h2, h3, h4 {
+    font-weight: 200;
+}
+
+h1, h2, h3, h4 {
+    font-family: 'museo', serif;
+}
+
+p {
+    line-height: 160%;
+    font-weight: 200;
+    font-size: 130%;
+}
+
+header {
+    text-align: center;
+    padding: 2em 10em 5em 10em;
+
+    background-color: #355c7d;
+    color: #fbfcfc;
+}
+
+    header > h1 {
+        font-size: 420%;
+        margin-bottom: 1em;
+    }
+
+    header > h2 {
+        margin-bottom: 1em;
+    }
+
+    header a {
+        color: #1abc9c;
+    }
+    header a:hover {
+        color: #16a085;
+    }
+
+.promo {
+    clear:both;
+    text-align: center;
+    margin-top: 3em;
+}
+    .promo p {
+        margin-top: 1em;
+        font-size: 120%;
+    }
+
+body > section {
+    text-align: center;
+    padding: 1em 0 2em 0;
+    color: white;
+}
+
+section.features {
+    background-color: #8e6e85;
+}
+
+    section.features .inner {
+        width: 70%;
+        margin: 0 auto;
+    }
+
+    section.features h3 {
+        font-size: 180%;
+        margin-top: 2em;
+        margin-bottom: 1.5em;
+    }
+
+    section.features aside {
+        text-align: center;
+        padding: 0 2%;
+        padding-bottom: 1em;
+    }
+
+section.demo {
+    background-color: rgb(192,108,132);
+    padding-bottom: 4em;
+}
+
+    section.demo .inner {
+        width: 70%;
+        margin: 0 auto;
+    }
+
+    section.demo h2 {
+        margin-top: 2em;
+    }
+
+    table {
+        margin-top: 2em;
+        border: 0;
+        width: 100%;
+    }
+
+    table td {
+        vertical-align: top;
+        text-align: left;
+        padding-bottom: .5em;
+    }
+
+        td.docs {
+            width: 40%;
+            text-align: justify;
+            padding-right: 2%;
+        }
+
+        td.code {
+            width: 60%;
+        }
+
+
+
+section.about {
+    background-color: #16a085;
+    padding: 4em 0 8em 0;
+    color: #ecf0f1;
+}
+    section.about .inner {
+        width: 60%;
+    }
+
+    section.about h2 {
+        color: white;
+        margin-bottom: 2em;
+    }
+
+    section.about a:not(.btn) {
+        color: #2c3e50;
+    }
+    section.about a:not(.btn):hover {
+        color: #bdc3c7;
+    }
+
+    section.about .inner {
+        width: 60%;
+        margin: 0 auto;
+    }
+
+footer {
+    background-color: #16a085;
+    color: #1abc9c;
+    font-size: 80%;
+    text-align: center;
+    width: 100%;
+    clear: both;
+    padding-bottom: 1em;
+}
