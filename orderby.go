@@ -173,6 +173,10 @@ func (q Query) sort(orders []order) (r []interface{}) {
 		r = append(r, item)
 	}
 
+	if len(r) == 0 {
+		return
+	}
+
 	for i, j := range orders {
 		orders[i].compare = getComparer(j.selector(r[0]))
 	}
