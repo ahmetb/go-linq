@@ -345,6 +345,7 @@ func (q Query) ToChannel(result chan<- interface{}) {
 // ToMap iterates over a collection and populates result map with elements.
 // Collection elements have to be of KeyValue type to use this method.
 // To populate a map with elements of different type use ToMapBy method.
+// ToMap doesn't empty the result map before populating it.
 func (q Query) ToMap(result interface{}) {
 	q.ToMapBy(
 		result,
@@ -356,10 +357,11 @@ func (q Query) ToMap(result interface{}) {
 		})
 }
 
-// ToMapBy iterates over a collection and populates result map with elements.
+// ToMapBy iterates over a collection and populates the result map with elements.
 // Functions keySelector and valueSelector are executed for each element of the collection
 // to generate key and value for the map. Generated key and value types must be assignable
 // to the map's key and value types.
+// ToMapBy doesn't empty the result map before populating it.
 func (q Query) ToMapBy(
 	result interface{},
 	keySelector func(interface{}) interface{},
@@ -379,8 +381,9 @@ func (q Query) ToMapBy(
 	res.Elem().Set(m)
 }
 
-// ToSlice iterates over a collection and populates result slice with elements.
+// ToSlice iterates over a collection and populates the result slice with elements.
 // Collection elements must be assignable to the slice's element type.
+// ToSlice doesn't empty the result slice before populating it.
 func (q Query) ToSlice(result interface{}) {
 	res := reflect.ValueOf(result)
 	slice := reflect.Indirect(res)
