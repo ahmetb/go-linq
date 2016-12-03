@@ -2,6 +2,17 @@ package linq
 
 import "testing"
 
+func TestEmpty(t *testing.T) {
+	q := From([]string{}).OrderBy(func(in interface{}) interface{} {
+		return 0
+	})
+
+	_, ok := q.Iterate()()
+	if ok {
+		t.Errorf("Iterator for empty collection must return ok=false")
+	}
+}
+
 func TestOrderBy(t *testing.T) {
 	slice := make([]foo, 100)
 
