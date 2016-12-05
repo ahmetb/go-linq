@@ -1,6 +1,7 @@
 package linq
 
 import "testing"
+import "strings"
 
 func TestAggregate(t *testing.T) {
 	tests := []struct {
@@ -36,6 +37,27 @@ func TestAggregateWithSeed(t *testing.T) {
 			}
 			return i
 		})
+
+	if r != want {
+		t.Errorf("From(%v).AggregateWithSeed()=%v expected %v", input, r, want)
+	}
+}
+
+func TestAggregateWithSeedBy(t *testing.T) {
+	input := []string{"apple", "mango", "orange", "passionfruit", "grape"}
+	want := "PASSIONFRUIT"
+
+	r := From(input).AggregateWithSeedBy("banana",
+		func(r interface{}, i interface{}) interface{} {
+			if len(r.(string)) > len(i.(string)) {
+				return r
+			}
+			return i
+		},
+		func(r interface{}) interface{} {
+			return strings.ToUpper(r.(string))
+		},
+	)
 
 	if r != want {
 		t.Errorf("From(%v).AggregateWithSeed()=%v expected %v", input, r, want)

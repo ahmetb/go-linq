@@ -95,12 +95,53 @@ func (q MyQuery) GreaterThan(threshold int) Query {
 
 result := MyQuery(Range(1,10)).GreaterThan(5).Results()
 ```
+## Generic functions
+
+All we know that Go doesn't implement generics. On the other hand, Go offer a nice collection of reflection functions
+that can be used to emulate some generic behaviors. 
+Although there are some [performance loss](../master/benchmark_test.go) when using reflection to parse the functions 
+and parameters types, the use of generic functions will bring you more code readability removing the type casting.
+All the generic functions have a T suffix (eg. WhereT, SelectT, etc.).
+
+**Example: Implement "MapReduce" in a slice of string sentences to list the top 5 most used words using *generic functions***
+```go
+var results []string
+From(sentences).
+	//Split the sentences in a slice of words
+	SelectManyT(func(sentence string) Query {
+		return From(strings.Split(sentence, " "))
+	}).
+	//Grouping the words
+	GroupByT(
+		func(word string) string { return word },
+		func(word string) string { return word },
+	).
+	//Ordering by word counts
+	OrderByDescendingT(func(wordGroup Group) int {
+		return len(wordGroup.Group)
+	}).
+	//Then order by word
+	ThenByT(func(wordGroup Group) string {
+		return wordGroup.Key.(string)
+	}).
+	//Take the top 5
+	Take(5).
+	//Project the words using the index as rank
+	SelectIndexedT(func(index int, wordGroup Group) string {
+		return fmt.Sprintf("Rank: #%d, Word: %s, Counts: %d", index+1, wordGroup.Key, len(wordGroup.Group))
+	}).
+	ToSlice(&results)
+```
 
 **More examples** can be found in [documentation](https://godoc.org/github.com/ahmetalpbalkan/go-linq).
 
 ## Release Notes
 ~~~
-
+v3.0.0 (2016-10-19)
+* Generic methods
+  - Added generic methods support to all functions
+  - Totally backward compatible with v2.0.0 functions
+* AggregateWithSeedBy()
 v2.0.0 (2016-09-02)
 * IMPORTANT: This release is a BREAKING CHANGE. The old version
   is archived at the 'archive/0.9' branch or the 0.9 tags.

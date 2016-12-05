@@ -103,7 +103,7 @@ func (q Query) SelectManyBy(
 					}
 				}
 
-				item = resultSelector(outer, item)
+				item = resultSelector(item, outer)
 				return
 			}
 		},
@@ -143,7 +143,7 @@ func (q Query) SelectManyByIndexed(selector func(int, interface{}) Query,
 					}
 				}
 
-				item = resultSelector(outer, item)
+				item = resultSelector(item, outer)
 				return
 			}
 		},

@@ -60,12 +60,12 @@ func TestSelectManyBy(t *testing.T) {
 		{[][]int{{1, 2, 3}, {4, 5, 6, 7}}, func(i interface{}) Query {
 			return From(i)
 		}, func(x interface{}, y interface{}) interface{} {
-			return y.(int) + 1
+			return x.(int) + 1
 		}, []interface{}{2, 3, 4, 5, 6, 7, 8}},
 		{[]string{"str", "ing"}, func(i interface{}) Query {
 			return FromString(i.(string))
 		}, func(x interface{}, y interface{}) interface{} {
-			return string(y.(rune)) + "_"
+			return string(x.(rune)) + "_"
 		}, []interface{}{"s_", "t_", "r_", "i_", "n_", "g_"}},
 	}
 
@@ -89,7 +89,7 @@ func TestSelectManyIndexedBy(t *testing.T) {
 			}
 			return From(x)
 		}, func(x interface{}, y interface{}) interface{} {
-			return y.(int) + 1
+			return x.(int) + 1
 		}, []interface{}{11, 21, 31, 5, 6, 7, 8}},
 		{[]string{"st", "ng"}, func(i int, x interface{}) Query {
 			if i == 0 {
@@ -97,7 +97,7 @@ func TestSelectManyIndexedBy(t *testing.T) {
 			}
 			return FromString("i" + x.(string))
 		}, func(x interface{}, y interface{}) interface{} {
-			return string(y.(rune)) + "_"
+			return string(x.(rune)) + "_"
 		}, []interface{}{"s_", "t_", "r_", "i_", "n_", "g_"}},
 	}
 
