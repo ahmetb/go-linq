@@ -546,17 +546,42 @@ func (q Query) ToMapByT(result interface{}, keySelectorFn interface{}, valueSele
 	q.ToMapBy(result, keySelectorFunc, valueSelectorFunc)
 }
 
-// ToSlice iterates over a collection and populates the result slice with elements.
+// ToSlice iterates over a collection, copy to result slice the collection elements,
+// appends items if initial capacity is not enough and returns subslice if initial capacity is excessive.
 // Collection elements must be assignable to the slice's element type.
-// ToSlice doesn't empty the result slice before populating it.
 func (q Query) ToSlice(result interface{}) {
 	res := reflect.ValueOf(result)
 	slice := reflect.Indirect(res)
 	next := q.Iterate()
-
+	index := 0
 	for item, ok := next(); ok; item, ok = next() {
-		slice = reflect.Append(slice, reflect.ValueOf(item))
+		if index >= slice.Len() {
+			slice = grow(slice, 1)
+		}
+		slice.Index(index).Set(reflect.ValueOf(item))
+		index++
 	}
 
-	res.Elem().Set(slice)
+	res.Elem().Set(slice.Slice(0, index))
+}
+
+// grow grows the slice s so that it can hold extra more values, allocating
+// more capacity if needed.
+func grow(s reflect.Value, extra uint) reflect.Value {
+	len := s.Len()
+	newLen := len + int(extra)
+	cap := s.Cap()
+	if newLen <= cap {
+		return s.Slice(0, newLen)
+	}
+	if cap == 0 {
+		cap = int(extra)
+	} else {
+		for cap < newLen {
+			cap *= 2
+		}
+	}
+	newSlice := reflect.MakeSlice(s.Type(), newLen, cap)
+	reflect.Copy(newSlice, s)
+	return newSlice
 }
