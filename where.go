@@ -24,7 +24,6 @@ func (q Query) Where(predicate func(interface{}) bool) Query {
 // NOTE: Where method has better performance than WhereT
 //
 // predicateFn is of a type "func(TSource)bool"
-//
 func (q Query) WhereT(predicateFn interface{}) Query {
 
 	predicateGenericFunc, err := newGenericFunc(
@@ -73,7 +72,6 @@ func (q Query) WhereIndexed(predicate func(int, interface{}) bool) Query {
 // NOTE: WhereIndexed method has better performance than WhereIndexedT
 //
 // predicateFn is of a type "func(int,TSource)bool"
-//
 func (q Query) WhereIndexedT(predicateFn interface{}) Query {
 
 	predicateGenericFunc, err := newGenericFunc(

@@ -71,7 +71,6 @@ func (q Query) IntersectBy(
 // NOTE: IntersectBy method has better performance than IntersectByT
 //
 // selectorFn is of a type "func(TSource) TSource"
-//
 func (q Query) IntersectByT(q2 Query, selectorFn interface{}) Query {
 
 	selectorGenericFunc, err := newGenericFunc(

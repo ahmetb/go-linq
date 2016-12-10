@@ -35,29 +35,7 @@ func TestOrderBy(t *testing.T) {
 	}
 }
 
-func TestOrderByT(t *testing.T) {
-	slice := make([]foo, 100)
-
-	for i := len(slice) - 1; i >= 0; i-- {
-		slice[i].f1 = i
-	}
-
-	q := From(slice).OrderByT(func(i interface{}) interface{} {
-		return i.(foo).f1
-	})
-
-	j := 0
-	next := q.Iterate()
-	for item, ok := next(); ok; item, ok = next() {
-		if item.(foo).f1 != j {
-			t.Errorf("OrderBy()[%v]=%v expected %v", j, item, foo{f1: j})
-		}
-
-		j++
-	}
-}
-
-func TestOrderByT_PanicWhenFunctionIsNotValid(t *testing.T) {
+func TestOrderByT_PanicWhenSelectorFnIsInvalid(t *testing.T) {
 	defer func() {
 		r := recover()
 		t.Log(r)
@@ -92,29 +70,7 @@ func TestOrderByDescending(t *testing.T) {
 	}
 }
 
-func TestOrderByDescendingT(t *testing.T) {
-	slice := make([]foo, 100)
-
-	for i := 0; i < len(slice); i++ {
-		slice[i].f1 = i
-	}
-
-	q := From(slice).OrderByDescendingT(func(i foo) int {
-		return i.f1
-	})
-
-	j := len(slice) - 1
-	next := q.Iterate()
-	for item, ok := next(); ok; item, ok = next() {
-		if item.(foo).f1 != j {
-			t.Errorf("OrderByDescendingT()[%v]=%v expected %v", j, item, foo{f1: j})
-		}
-
-		j--
-	}
-}
-
-func TestOrderByDescendingT_PanicWhenFunctionIsNotValid(t *testing.T) {
+func TestOrderByDescendingT_PanicWhenSelectorFnIsInvalid(t *testing.T) {
 	defer func() {
 		r := recover()
 		t.Log(r)
@@ -149,29 +105,7 @@ func TestThenBy(t *testing.T) {
 	}
 }
 
-func TestThenByT(t *testing.T) {
-	slice := make([]foo, 1000)
-
-	for i := len(slice) - 1; i >= 0; i-- {
-		slice[i].f1 = i
-		slice[i].f2 = i%2 == 0
-	}
-
-	q := From(slice).OrderByT(func(i foo) bool {
-		return i.f2
-	}).ThenByT(func(i foo) int {
-		return i.f1
-	})
-
-	next := q.Iterate()
-	for item, ok := next(); ok; item, ok = next() {
-		if item.(foo).f2 != (item.(foo).f1%2 == 0) {
-			t.Errorf("OrderBy().ThenBy()=%v", item)
-		}
-	}
-}
-
-func TestThenByT_PanicWhenFunctionIsNotValid(t *testing.T) {
+func TestThenByT_PanicWhenSelectorFnIsInvalid(t *testing.T) {
 	defer func() {
 		r := recover()
 		t.Log(r)
@@ -208,29 +142,7 @@ func TestThenByDescending(t *testing.T) {
 	}
 }
 
-func TestThenByDescendingT(t *testing.T) {
-	slice := make([]foo, 1000)
-
-	for i := len(slice) - 1; i >= 0; i-- {
-		slice[i].f1 = i
-		slice[i].f2 = i%2 == 0
-	}
-
-	q := From(slice).OrderByT(func(i foo) bool {
-		return i.f2
-	}).ThenByDescendingT(func(i foo) int {
-		return i.f1
-	})
-
-	next := q.Iterate()
-	for item, ok := next(); ok; item, ok = next() {
-		if item.(foo).f2 != (item.(foo).f1%2 == 0) {
-			t.Errorf("OrderByT().ThenByDescendingT()=%v", item)
-		}
-	}
-}
-
-func TestThenByDescendingT_PanicWhenFunctionIsNotValid(t *testing.T) {
+func TestThenByDescendingT_PanicWhenSelectorFnIsInvalid(t *testing.T) {
 	defer func() {
 		r := recover()
 		t.Log(r)
@@ -267,29 +179,7 @@ func TestSort(t *testing.T) {
 	}
 }
 
-func TestSortT(t *testing.T) {
-	slice := make([]foo, 100)
-
-	for i := len(slice) - 1; i >= 0; i-- {
-		slice[i].f1 = i
-	}
-
-	q := From(slice).SortT(func(i, j foo) bool {
-		return i.f1 < j.f1
-	})
-
-	j := 0
-	next := q.Iterate()
-	for item, ok := next(); ok; item, ok = next() {
-		if item.(foo).f1 != j {
-			t.Errorf("Sort()[%v]=%v expected %v", j, item, foo{f1: j})
-		}
-
-		j++
-	}
-}
-
-func TestSortT_PanicWhenFunctionIsNotValid(t *testing.T) {
+func TestSortT_PanicWhenLessFnIsInvalid(t *testing.T) {
 	defer func() {
 		r := recover()
 		t.Log(r)

@@ -54,7 +54,6 @@ func (q Query) TakeWhile(predicate func(interface{}) bool) Query {
 // NOTE: TakeWhile method has better performance than TakeWhileT
 //
 // predicateFn is of a type "func(TSource)bool"
-//
 func (q Query) TakeWhileT(predicateFn interface{}) Query {
 
 	predicateGenericFunc, err := newGenericFunc(
@@ -111,7 +110,6 @@ func (q Query) TakeWhileIndexed(predicate func(int, interface{}) bool) Query {
 // NOTE: TakeWhileIndexed method has better performance than TakeWhileIndexedT
 //
 // predicateFn is of a type "func(int,TSource)bool"
-//
 func (q Query) TakeWhileIndexedT(predicateFn interface{}) Query {
 
 	whereFunc, err := newGenericFunc(

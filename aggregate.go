@@ -31,7 +31,6 @@ func (q Query) Aggregate(
 // NOTE: Aggregate method has better performance than AggregateT
 //
 // f is of type: func(TSource, TSource) TSource
-//
 func (q Query) AggregateT(f interface{}) interface{} {
 
 	fGenericFunc, err := newGenericFunc(
@@ -80,7 +79,6 @@ func (q Query) AggregateWithSeed(
 // NOTE: AggregateWithSeed method has better performance than AggregateWithSeedT
 //
 // f is of a type "func(TAccumulate, TSource) TAccumulate"
-//
 func (q Query) AggregateWithSeedT(seed interface{}, f interface{}) interface{} {
 
 	fGenericFunc, err := newGenericFunc(
@@ -109,7 +107,6 @@ func (q Query) AggregateWithSeedT(seed interface{}, f interface{}) interface{} {
 // as the initial aggregate value. The result of func replaces the previous aggregated value.
 //
 // The final result of func is passed to resultSelector to obtain the final result of Aggregate.
-//
 func (q Query) AggregateWithSeedBy(
 	seed interface{},
 	f func(interface{}, interface{}) interface{},
@@ -133,7 +130,6 @@ func (q Query) AggregateWithSeedBy(
 // f is of a type "func(TAccumulate, TSource) TAccumulate"
 //
 // resultSelectorFn is of type "func(TAccumulate) TResult"
-//
 func (q Query) AggregateWithSeedByT(
 	seed interface{},
 	f interface{},

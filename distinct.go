@@ -79,7 +79,6 @@ func (q Query) DistinctBy(selector func(interface{}) interface{}) Query {
 // NOTE: DistinctBy method has better performance than DistinctByT
 //
 // selectorFn is of type "func(TSource) TSource".
-//
 func (q Query) DistinctByT(selectorFn interface{}) Query {
 	selectorFunc, ok := selectorFn.(func(interface{}) interface{})
 	if !ok {

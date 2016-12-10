@@ -64,7 +64,6 @@ func (q Query) Join(
 // innerKeySelectorFn is of a type "func(TInner) TKey"
 //
 // resultSelectorFn is of a type "func(TOuter,TInner) TResult"
-//
 func (q Query) JoinT(inner Query,
 	outerKeySelectorFn interface{},
 	innerKeySelectorFn interface{},

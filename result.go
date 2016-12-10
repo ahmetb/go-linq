@@ -23,7 +23,6 @@ func (q Query) All(predicate func(interface{}) bool) bool {
 // NOTE: All method has better performance than AllT
 //
 // predicateFn is of a type "func(TSource) bool"
-//
 func (q Query) AllT(predicateFn interface{}) bool {
 
 	predicateGenericFunc, err := newGenericFunc(
@@ -64,7 +63,6 @@ func (q Query) AnyWith(predicate func(interface{}) bool) bool {
 // NOTE: AnyWith method has better performance than AnyWithT
 //
 // predicateFn is of a type "func(TSource) bool"
-//
 func (q Query) AnyWithT(predicateFn interface{}) bool {
 
 	predicateGenericFunc, err := newGenericFunc(
@@ -168,7 +166,6 @@ func (q Query) CountWith(predicate func(interface{}) bool) (r int) {
 // NOTE: CountWith method has better performance than CountWithT
 //
 // predicateFn is of a type "func(TSource) bool"
-//
 func (q Query) CountWithT(predicateFn interface{}) int {
 
 	predicateGenericFunc, err := newGenericFunc(
@@ -211,7 +208,6 @@ func (q Query) FirstWith(predicate func(interface{}) bool) interface{} {
 // NOTE: FirstWith method has better performance than FirstWithT
 //
 // predicateFn is of a type "func(TSource) bool"
-//
 func (q Query) FirstWithT(predicateFn interface{}) interface{} {
 
 	predicateGenericFunc, err := newGenericFunc(
@@ -259,7 +255,6 @@ func (q Query) LastWith(predicate func(interface{}) bool) (r interface{}) {
 // NOTE: LastWith method has better performance than LastWithT
 //
 // predicateFn is of a type "func(TSource) bool"
-//
 func (q Query) LastWithT(predicateFn interface{}) interface{} {
 
 	predicateGenericFunc, err := newGenericFunc(
@@ -386,7 +381,6 @@ func (q Query) SingleWith(predicate func(interface{}) bool) (r interface{}) {
 // NOTE: SingleWith method has better performance than SingleWithT
 //
 // predicateFn is of a type "func(TSource) bool"
-//
 func (q Query) SingleWithT(predicateFn interface{}) interface{} {
 
 	predicateGenericFunc, err := newGenericFunc(
@@ -525,7 +519,6 @@ func (q Query) ToMapBy(
 // keySelectorFn is of a type "func(TSource)TKey"
 //
 // valueSelectorFn is of a type "func(TSource)TValue"
-//
 func (q Query) ToMapByT(result interface{}, keySelectorFn interface{}, valueSelectorFn interface{}) {
 
 	keySelectorGenericFunc, err := newGenericFunc(

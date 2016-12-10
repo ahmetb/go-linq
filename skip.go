@@ -59,7 +59,6 @@ func (q Query) SkipWhile(predicate func(interface{}) bool) Query {
 // NOTE: SkipWhile method has better performance than SkipWhileT
 //
 // predicateFn is of a type "func(TSource)bool"
-//
 func (q Query) SkipWhileT(predicateFn interface{}) Query {
 
 	predicateGenericFunc, err := newGenericFunc(
@@ -118,7 +117,6 @@ func (q Query) SkipWhileIndexed(predicate func(int, interface{}) bool) Query {
 // NOTE: SkipWhileIndexed method has better performance than SkipWhileIndexedT
 //
 // predicateFn is of a type "func(int,TSource)bool"
-//
 func (q Query) SkipWhileIndexedT(predicateFn interface{}) Query {
 
 	predicateGenericFunc, err := newGenericFunc(

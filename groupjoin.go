@@ -62,7 +62,6 @@ func (q Query) GroupJoin(
 // innerKeySelectorFn is of a type "func(TInner) TKey"
 //
 // resultSelectorFn: is of a type "func(TOuter, inners []TInner) TResult"
-//
 func (q Query) GroupJoinT(inner Query, outerKeySelectorFn interface{}, innerKeySelectorFn interface{}, resultSelectorFn interface{}) Query {
 
 	outerKeySelectorGenericFunc, err := newGenericFunc(

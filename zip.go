@@ -39,7 +39,6 @@ func (q Query) Zip(
 // NOTE: Zip method has better performance than ZipT
 //
 // resultSelectorFn is of a type "func(TFirst,TSecond)TResult"
-//
 func (q Query) ZipT(q2 Query, resultSelectorFn interface{}) Query {
 
 	resultSelectorFunc, ok := resultSelectorFn.(func(interface{}, interface{}) interface{})

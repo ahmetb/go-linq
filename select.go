@@ -36,7 +36,6 @@ func (q Query) Select(selector func(interface{}) interface{}) Query {
 // NOTE: Select method has better performance than SelectT
 //
 // selectorFn is of a type "func(TSource)TResult"
-//
 func (q Query) SelectT(selectorFn interface{}) Query {
 
 	selectGenericFunc, err := newGenericFunc(
@@ -98,7 +97,6 @@ func (q Query) SelectIndexed(selector func(int, interface{}) interface{}) Query 
 // NOTE: SelectIndexed method has better performance than SelectIndexedT
 //
 // selectorFn is of a type "func(int,TSource)TResult"
-//
 func (q Query) SelectIndexedT(selectorFn interface{}) Query {
 
 	selectGenericFunc, err := newGenericFunc(

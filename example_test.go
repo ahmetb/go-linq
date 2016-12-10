@@ -1517,7 +1517,6 @@ func ExampleQuery_AggregateWithSeedT() {
 	fmt.Printf("The fruit with the longest name is %s.", longestName)
 
 	// Output:
-	//
 	// The fruit with the longest name is passionfruit.
 
 }
@@ -1650,8 +1649,8 @@ func ExampleQuery_CountWithT() {
 	//There are 2 unvaccinated animals.
 }
 
-// The following code example demonstrates how to
-// use DistinctByT to return distinct elements from a slice of structs.
+// The following code example demonstrates how to use DistinctByT
+// to return distinct elements from a slice of structs.
 func ExampleQuery_DistinctByT() {
 	type Product struct {
 		Name string
@@ -1845,7 +1844,8 @@ func ExampleQuery_GroupJoinT() {
 }
 
 // The following code example demonstrates how to use IntersectByT
-// to return the elements that appear in each of two slices of products with same Code.
+// to return the elements that appear in each of two slices of products
+// with same Code.
 func ExampleQuery_IntersectByT() {
 	type Product struct {
 		Name string
@@ -1942,7 +1942,8 @@ func ExampleQuery_LastWithT() {
 
 }
 
-// The following code example demonstrates how to use OrderByDescendingT to order an slice.
+// The following code example demonstrates how to use OrderByDescendingT
+// to order an slice.
 func ExampleQuery_OrderByDescendingT() {
 	type Player struct {
 		Name   string
@@ -2034,7 +2035,8 @@ func ExampleQuery_SelectT() {
 }
 
 // The following code example demonstrates how to use SelectIndexedT
-// to determine if the value in a slice of int match their position in the slice.
+// to determine if the value in a slice of int match their position
+// in the slice.
 func ExampleQuery_SelectIndexedT() {
 	numbers := []int{5, 4, 1, 3, 9, 8, 6, 7, 2, 0}
 
@@ -2116,7 +2118,8 @@ func ExampleQuery_SelectManyByT() {
 }
 
 // The following code example demonstrates how to use SelectManyT
-// to perform a projection over a list of sentences and rank the top 5 most used words
+// to perform a projection over a list of sentences and rank the
+// top 5 most used words
 func ExampleQuery_SelectManyT() {
 	sentences := []string{
 		"the quick brown fox jumps over the lazy dog",
@@ -2168,7 +2171,8 @@ func ExampleQuery_SelectManyT() {
 }
 
 // The following code example demonstrates how to use SelectManyIndexedT
-// to perform a one-to-many projection over an slice of log files and print out their contents.
+// to perform a one-to-many projection over an slice of log files and
+// print out their contents.
 func ExampleQuery_SelectManyIndexedT() {
 	type LogFile struct {
 		Name  string
@@ -2224,7 +2228,8 @@ func ExampleQuery_SelectManyIndexedT() {
 }
 
 // The following code example demonstrates how to use SelectManyByIndexedT
-// to perform a one-to-many projection over an array and use the index of each outer element.
+// to perform a one-to-many projection over an array and use the index of
+// each outer element.
 func ExampleQuery_SelectManyByIndexedT() {
 	type Pet struct {
 		Name string
@@ -2367,7 +2372,7 @@ func ExampleQuery_SortT() {
 }
 
 // The following code example demonstrates how to use TakeWhileT
-//  to return elements from the start of a slice.
+// to return elements from the start of a slice.
 func ExampleQuery_TakeWhileT() {
 	fruits := []string{"apple", "banana", "mango", "orange", "passionfruit", "grape"}
 
@@ -2385,8 +2390,8 @@ func ExampleQuery_TakeWhileT() {
 }
 
 // The following code example demonstrates how to use TakeWhileIndexedT
-// to return elements from the start of a slice as long as
-// a condition that uses the element's index is true.
+// to return elements from the start of a slice as long asa condition
+// that uses the element's index is true.
 func ExampleQuery_TakeWhileIndexedT() {
 
 	fruits := []string{"apple", "passionfruit", "banana", "mango",

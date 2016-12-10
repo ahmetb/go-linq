@@ -63,7 +63,6 @@ func (q Query) ExceptBy(
 // NOTE: ExceptBy method has better performance than ExceptByT
 //
 // selectorFn is of a type "func(TSource) TSource"
-//
 func (q Query) ExceptByT(q2 Query, selectorFn interface{}) Query {
 
 	selectorGenericFunc, err := newGenericFunc(

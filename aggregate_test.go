@@ -26,29 +26,7 @@ func TestAggregate(t *testing.T) {
 	}
 }
 
-func TestAggregateT(t *testing.T) {
-	tests := []struct {
-		input     interface{}
-		predicate interface{}
-		want      interface{}
-	}{
-		{[]string{"apple", "mango", "orange", "passionfruit", "grape"}, func(r string, i string) string {
-			if len(r) > len(i) {
-				return r
-			}
-			return i
-		}, "passionfruit"},
-	}
-
-	for _, test := range tests {
-		r := From(test.input).AggregateT(test.predicate)
-		if r != test.want {
-			t.Errorf("From(%v).AggregateT()=%v expected %v", test.input, r, test.want)
-		}
-	}
-}
-
-func TestAggregateT_PanicWhenFunctionIsNotValid(t *testing.T) {
+func TestAggregateT_PanicWhenFunctionIsInvalid(t *testing.T) {
 	defer func() {
 		r := recover()
 		t.Log(r)
@@ -83,29 +61,7 @@ func TestAggregateWithSeed(t *testing.T) {
 	}
 }
 
-func TestAggregateWithSeedT(t *testing.T) {
-	tests := []struct {
-		input     interface{}
-		predicate interface{}
-		want      interface{}
-	}{
-		{[]string{"apple", "mango", "orange", "grape"}, func(r string, i string) string {
-			if len(r) > len(i) {
-				return r
-			}
-			return i
-		}, "passionfruit"},
-	}
-
-	for _, test := range tests {
-		r := From(test.input).AggregateWithSeedT(test.want, test.predicate)
-		if r != test.want {
-			t.Errorf("From(%v).AggregateWithSeedT()=%v expected %v", test.input, r, test.want)
-		}
-	}
-}
-
-func TestAggregateWithSeedT_PanicWhenFunctionIsNotValid(t *testing.T) {
+func TestAggregateWithSeedT_PanicWhenFunctionIsInvalid(t *testing.T) {
 	defer func() {
 		r := recover()
 		t.Log(r)
@@ -123,7 +79,6 @@ func TestAggregateWithSeedT_PanicWhenFunctionIsNotValid(t *testing.T) {
 	})
 
 }
-
 
 func TestAggregateWithSeedBy(t *testing.T) {
 	input := []string{"apple", "mango", "orange", "passionfruit", "grape"}
@@ -146,31 +101,7 @@ func TestAggregateWithSeedBy(t *testing.T) {
 	}
 }
 
-func TestAggregateWithSeedByT(t *testing.T) {
-
-	input := []string{"apple", "mango", "orange", "passionfruit", "grape"}
-
-	want := "PASSIONFRUIT"
-
-	r := From(input).AggregateWithSeedByT("banana",
-		func(r string, i string) string {
-			if len(r) > len(i) {
-				return r
-			}
-			return i
-		},
-		func(r string) string {
-			return strings.ToUpper(r)
-		},
-	)
-
-	if r != want {
-		t.Errorf("From(%v).AggregateWithSeedT()=%v expected %v", input, r, want)
-	}
-
-}
-
-func TestAggregateWithSeedByT_PanicWhenFunctionIsNotValid(t *testing.T) {
+func TestAggregateWithSeedByT_PanicWhenFunctionIsInvalid(t *testing.T) {
 	defer func() {
 		r := recover()
 		t.Log(r)
@@ -194,7 +125,7 @@ func TestAggregateWithSeedByT_PanicWhenFunctionIsNotValid(t *testing.T) {
 
 }
 
-func TestAggregateWithSeedByT_PanicWhenResultSelectorIsNotValid(t *testing.T) {
+func TestAggregateWithSeedByT_PanicWhenResultSelectorFnIsInvalid(t *testing.T) {
 	defer func() {
 		r := recover()
 		t.Log(r)
@@ -217,4 +148,3 @@ func TestAggregateWithSeedByT_PanicWhenResultSelectorIsNotValid(t *testing.T) {
 	)
 
 }
-
