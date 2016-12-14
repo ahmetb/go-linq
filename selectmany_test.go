@@ -26,6 +26,12 @@ func TestSelectMany(t *testing.T) {
 	}
 }
 
+func TestSelectManyT_PanicWhenSelectorFnIsInvalid(t *testing.T) {
+	mustPanicWithError(t, "SelectManyT: parameter [selectorFn] has a invalid function signature. Expected: 'func(T)linq.Query', actual: 'func(int)int'", func() {
+		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).SelectManyT(func(item int) int { return item + 2 })
+	})
+}
+
 func TestSelectManyIndexed(t *testing.T) {
 	tests := []struct {
 		input    interface{}
@@ -48,6 +54,12 @@ func TestSelectManyIndexed(t *testing.T) {
 			t.Errorf("From(%v).SelectManyIndexed()=%v expected %v", test.input, toSlice(q), test.output)
 		}
 	}
+}
+
+func TestSelectManyIndexedT_PanicWhenSelectorFnIsInvalid(t *testing.T) {
+	mustPanicWithError(t, "SelectManyIndexedT: parameter [selectorFn] has a invalid function signature. Expected: 'func(int,T)linq.Query', actual: 'func(int)int'", func() {
+		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).SelectManyIndexedT(func(item int) int { return item + 2 })
+	})
 }
 
 func TestSelectManyBy(t *testing.T) {
@@ -74,6 +86,21 @@ func TestSelectManyBy(t *testing.T) {
 			t.Errorf("From(%v).SelectManyBy()=%v expected %v", test.input, toSlice(q), test.output)
 		}
 	}
+}
+
+func TestSelectManyByT_PanicWhenSelectorFnIsInvalid(t *testing.T) {
+	mustPanicWithError(t, "SelectManyByT: parameter [selectorFn] has a invalid function signature. Expected: 'func(T)linq.Query', actual: 'func(int)interface {}'", func() {
+		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).SelectManyByT(func(item int) interface{} { return item + 2 }, 2)
+	})
+}
+
+func TestSelectManyByT_PanicWhenResultSelectorFnIsInvalid(t *testing.T) {
+	mustPanicWithError(t, "SelectManyByT: parameter [resultSelectorFn] has a invalid function signature. Expected: 'func(T,T)T', actual: 'func()'", func() {
+		From([][]int{{1, 1, 1, 2}, {1, 2, 3, 4, 2}}).SelectManyByT(
+			func(item interface{}) Query { return From(item) },
+			func() {},
+		)
+	})
 }
 
 func TestSelectManyIndexedBy(t *testing.T) {
@@ -106,4 +133,22 @@ func TestSelectManyIndexedBy(t *testing.T) {
 			t.Errorf("From(%v).SelectManyIndexedBy()=%v expected %v", test.input, toSlice(q), test.output)
 		}
 	}
+}
+
+func TestSelectManyIndexedByT_PanicWhenSelectorFnIsInvalid(t *testing.T) {
+	mustPanicWithError(t, "SelectManyByIndexedT: parameter [selectorFn] has a invalid function signature. Expected: 'func(int,T)linq.Query', actual: 'func(int)interface {}'", func() {
+		From([][]int{{1, 1, 1, 2}, {1, 2, 3, 4, 2}}).SelectManyByIndexedT(
+			func(item int) interface{} { return item + 2 },
+			2,
+		)
+	})
+}
+
+func TestSelectManyIndexedByT_PanicWhenResultSelectorFnIsInvalid(t *testing.T) {
+	mustPanicWithError(t, "SelectManyByIndexedT: parameter [resultSelectorFn] has a invalid function signature. Expected: 'func(T,T)T', actual: 'func()'", func() {
+		From([][]int{{1, 1, 1, 2}, {1, 2, 3, 4, 2}}).SelectManyByIndexedT(
+			func(index int, item interface{}) Query { return From(item) },
+			func() {},
+		)
+	})
 }

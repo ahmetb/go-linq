@@ -26,6 +26,17 @@ func TestAggregate(t *testing.T) {
 	}
 }
 
+func TestAggregateT_PanicWhenFunctionIsInvalid(t *testing.T) {
+	mustPanicWithError(t, "AggregateT: parameter [f] has a invalid function signature. Expected: 'func(T,T)T', actual: 'func(int,string,string)string'", func() {
+		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).AggregateT(func(x int, r string, i string) string {
+			if len(r) > len(i) {
+				return r
+			}
+			return i
+		})
+	})
+}
+
 func TestAggregateWithSeed(t *testing.T) {
 	input := []string{"apple", "mango", "orange", "banana", "grape"}
 	want := "passionfruit"
@@ -41,6 +52,17 @@ func TestAggregateWithSeed(t *testing.T) {
 	if r != want {
 		t.Errorf("From(%v).AggregateWithSeed()=%v expected %v", input, r, want)
 	}
+}
+
+func TestAggregateWithSeedT_PanicWhenFunctionIsInvalid(t *testing.T) {
+	mustPanicWithError(t, "AggregateWithSeed: parameter [f] has a invalid function signature. Expected: 'func(T,T)T', actual: 'func(int,string,string)string'", func() {
+		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).AggregateWithSeedT(3, func(x int, r string, i string) string {
+			if len(r) > len(i) {
+				return r
+			}
+			return i
+		})
+	})
 }
 
 func TestAggregateWithSeedBy(t *testing.T) {
@@ -62,4 +84,36 @@ func TestAggregateWithSeedBy(t *testing.T) {
 	if r != want {
 		t.Errorf("From(%v).AggregateWithSeed()=%v expected %v", input, r, want)
 	}
+}
+
+func TestAggregateWithSeedByT_PanicWhenFunctionIsInvalid(t *testing.T) {
+	mustPanicWithError(t, "AggregateWithSeedByT: parameter [f] has a invalid function signature. Expected: 'func(T,T)T', actual: 'func(int,string,string)string'", func() {
+		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).AggregateWithSeedByT(3,
+			func(x int, r string, i string) string {
+				if len(r) > len(i) {
+					return r
+				}
+				return i
+			},
+			func(r string) string {
+				return r
+			},
+		)
+	})
+}
+
+func TestAggregateWithSeedByT_PanicWhenResultSelectorFnIsInvalid(t *testing.T) {
+	mustPanicWithError(t, "AggregateWithSeedByT: parameter [resultSelectorFn] has a invalid function signature. Expected: 'func(T)T', actual: 'func(string,int)string'", func() {
+		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).AggregateWithSeedByT(3,
+			func(x int, r int) int {
+				if x > r {
+					return x
+				}
+				return r
+			},
+			func(r string, t int) string {
+				return r
+			},
+		)
+	})
 }

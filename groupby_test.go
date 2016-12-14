@@ -37,3 +37,23 @@ func TestGroupBy(t *testing.T) {
 		t.Errorf("From(%v).GroupBy()=%v", input, toSlice(q))
 	}
 }
+
+func TestGroupByT_PanicWhenKeySelectorFnIsInvalid(t *testing.T) {
+	mustPanicWithError(t, "GroupByT: parameter [keySelectorFn] has a invalid function signature. Expected: 'func(T)T', actual: 'func(int,int)bool'", func() {
+		var r []int
+		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).GroupByT(
+			func(i, j int) bool { return true },
+			func(i int) int { return i },
+		).ToSlice(&r)
+	})
+}
+
+func TestGroupByT_PanicWhenElementSelectorFnIsInvalid(t *testing.T) {
+	mustPanicWithError(t, "GroupByT: parameter [elementSelectorFn] has a invalid function signature. Expected: 'func(T)T', actual: 'func(int,int)int'", func() {
+		var r []int
+		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).GroupByT(
+			func(i int) bool { return true },
+			func(i, j int) int { return i },
+		).ToSlice(&r)
+	})
+}

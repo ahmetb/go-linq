@@ -25,6 +25,12 @@ func TestAll(t *testing.T) {
 	}
 }
 
+func TestAllT_PanicWhenPredicateFnIsInvalid(t *testing.T) {
+	mustPanicWithError(t, "AllT: parameter [predicateFn] has a invalid function signature. Expected: 'func(T)bool', actual: 'func(int)int'", func() {
+		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).AllT(func(item int) int { return item + 2 })
+	})
+}
+
 func TestAny(t *testing.T) {
 	tests := []struct {
 		input interface{}
@@ -60,6 +66,12 @@ func TestAnyWith(t *testing.T) {
 			t.Errorf("From(%v).Any()=%v expected %v", test.input, r, test.want)
 		}
 	}
+}
+
+func TestAnyWithT_PanicWhenPredicateFnIsInvalid(t *testing.T) {
+	mustPanicWithError(t, "AnyWithT: parameter [predicateFn] has a invalid function signature. Expected: 'func(T)bool', actual: 'func(int)int'", func() {
+		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).AnyWithT(func(item int) int { return item + 2 })
+	})
 }
 
 func TestAverage(t *testing.T) {
@@ -138,6 +150,12 @@ func TestCountWith(t *testing.T) {
 	}
 }
 
+func TestCountWithT_PanicWhenPredicateFnIsInvalid(t *testing.T) {
+	mustPanicWithError(t, "CountWithT: parameter [predicateFn] has a invalid function signature. Expected: 'func(T)bool', actual: 'func(int)int'", func() {
+		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).CountWithT(func(item int) int { return item + 2 })
+	})
+}
+
 func TestFirst(t *testing.T) {
 	tests := []struct {
 		input interface{}
@@ -172,6 +190,12 @@ func TestFirstWith(t *testing.T) {
 	}
 }
 
+func TestFirstWithT_PanicWhenPredicateFnIsInvalid(t *testing.T) {
+	mustPanicWithError(t, "FirstWithT: parameter [predicateFn] has a invalid function signature. Expected: 'func(T)bool', actual: 'func(int)int'", func() {
+		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).FirstWithT(func(item int) int { return item + 2 })
+	})
+}
+
 func TestLast(t *testing.T) {
 	tests := []struct {
 		input interface{}
@@ -204,6 +228,12 @@ func TestLastWith(t *testing.T) {
 			t.Errorf("From(%v).LastWith()=%v expected %v", test.input, r, test.want)
 		}
 	}
+}
+
+func TestLastWithT_PanicWhenPredicateFnIsInvalid(t *testing.T) {
+	mustPanicWithError(t, "LastWithT: parameter [predicateFn] has a invalid function signature. Expected: 'func(T)bool', actual: 'func(int)int'", func() {
+		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).LastWithT(func(item int) int { return item + 2 })
+	})
 }
 
 func TestMax(t *testing.T) {
@@ -302,6 +332,12 @@ func TestSingleWith(t *testing.T) {
 			t.Errorf("From(%v).SingleWith()=%v expected %v", test.input, r, test.want)
 		}
 	}
+}
+
+func TestSingleWithT_PanicWhenPredicateFnIsInvalid(t *testing.T) {
+	mustPanicWithError(t, "SingleWithT: parameter [predicateFn] has a invalid function signature. Expected: 'func(T)bool', actual: 'func(int)int'", func() {
+		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).SingleWithT(func(item int) int { return item + 2 })
+	})
 }
 
 func TestSumInts(t *testing.T) {
@@ -405,6 +441,28 @@ func TestToMapBy(t *testing.T) {
 	if !reflect.DeepEqual(result, input) {
 		t.Errorf("From(%v).ToMapBy()=%v expected %v", input, result, input)
 	}
+}
+
+func TestToMapByT_PanicWhenKeySelectorFnIsInvalid(t *testing.T) {
+	mustPanicWithError(t, "ToMapByT: parameter [keySelectorFn] has a invalid function signature. Expected: 'func(T)T', actual: 'func(int,int)int'", func() {
+		result := make(map[int]bool)
+		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).ToMapByT(
+			&result,
+			func(item, j int) int { return item + 2 },
+			func(item int) int { return item + 2 },
+		)
+	})
+}
+
+func TestToMapByT_PanicWhenValueSelectorFnIsInvalid(t *testing.T) {
+	mustPanicWithError(t, "ToMapByT: parameter [valueSelectorFn] has a invalid function signature. Expected: 'func(T)T', actual: 'func(int,int)int'", func() {
+		result := make(map[int]bool)
+		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).ToMapByT(
+			&result,
+			func(item int) int { return item + 2 },
+			func(item, j int) int { return item + 2 },
+		)
+	})
 }
 
 func TestToSlice(t *testing.T) {

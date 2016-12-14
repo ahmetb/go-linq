@@ -43,6 +43,27 @@ func (q Query) OrderBy(
 	}
 }
 
+// OrderByT is the typed version of OrderBy.
+//
+// NOTE: OrderBy method has better performance than OrderByT
+//
+// selectorFn is of a type "func(TSource) TKey"
+func (q Query) OrderByT(selectorFn interface{}) OrderedQuery {
+	selectorGenericFunc, err := newGenericFunc(
+		"OrderByT", "selectorFn", selectorFn,
+		simpleParamValidator(newElemTypeSlice(new(genericType)), newElemTypeSlice(new(genericType))),
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	selectorFunc := func(item interface{}) interface{} {
+		return selectorGenericFunc.Call(item)
+	}
+
+	return q.OrderBy(selectorFunc)
+}
+
 // OrderByDescending sorts the elements of a collection in descending order.
 // Elements are sorted according to a key.
 func (q Query) OrderByDescending(
@@ -68,6 +89,27 @@ func (q Query) OrderByDescending(
 			},
 		},
 	}
+}
+
+// OrderByDescendingT is the typed version of OrderByDescending.
+//
+// NOTE: OrderByDescending method has better performance than OrderByDescendingT
+//
+// selectorFn is of a type "func(TSource) TKey"
+func (q Query) OrderByDescendingT(selectorFn interface{}) OrderedQuery {
+	selectorGenericFunc, err := newGenericFunc(
+		"OrderByDescendingT", "selectorFn", selectorFn,
+		simpleParamValidator(newElemTypeSlice(new(genericType)), newElemTypeSlice(new(genericType))),
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	selectorFunc := func(item interface{}) interface{} {
+		return selectorGenericFunc.Call(item)
+	}
+
+	return q.OrderByDescending(selectorFunc)
 }
 
 // ThenBy performs a subsequent ordering of the elements in a collection
@@ -98,6 +140,27 @@ func (oq OrderedQuery) ThenBy(
 	}
 }
 
+// ThenByT is the typed version of ThenBy.
+//
+// NOTE: ThenBy method has better performance than ThenByT
+//
+// selectorFn is of a type "func(TSource) TKey"
+func (oq OrderedQuery) ThenByT(selectorFn interface{}) OrderedQuery {
+	selectorGenericFunc, err := newGenericFunc(
+		"ThenByT", "selectorFn", selectorFn,
+		simpleParamValidator(newElemTypeSlice(new(genericType)), newElemTypeSlice(new(genericType))),
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	selectorFunc := func(item interface{}) interface{} {
+		return selectorGenericFunc.Call(item)
+	}
+
+	return oq.ThenBy(selectorFunc)
+}
+
 // ThenByDescending performs a subsequent ordering of the elements in a collection
 // in descending order. This method enables you to specify multiple sort criteria
 // by applying any number of ThenBy or ThenByDescending methods.
@@ -126,6 +189,29 @@ func (oq OrderedQuery) ThenByDescending(
 	}
 }
 
+// ThenByDescendingT is the typed version of ThenByDescending.
+//
+// NOTE: ThenByDescending method has better performance than ThenByDescendingT
+//
+// selectorFn is of a type "func(TSource) TKey"
+func (oq OrderedQuery) ThenByDescendingT(selectorFn interface{}) OrderedQuery {
+	selectorFunc, ok := selectorFn.(func(interface{}) interface{})
+	if !ok {
+		selectorGenericFunc, err := newGenericFunc(
+			"ThenByDescending", "selectorFn", selectorFn,
+			simpleParamValidator(newElemTypeSlice(new(genericType)), newElemTypeSlice(new(genericType))),
+		)
+		if err != nil {
+			panic(err)
+		}
+
+		selectorFunc = func(item interface{}) interface{} {
+			return selectorGenericFunc.Call(item)
+		}
+	}
+	return oq.ThenByDescending(selectorFunc)
+}
+
 // Sort returns a new query by sorting elements with provided less function
 // in ascending order. The comparer function should return true if the parameter i
 // is less than j. While this method is uglier than chaining OrderBy, OrderByDescending,
@@ -148,6 +234,27 @@ func (q Query) Sort(less func(i, j interface{}) bool) Query {
 			}
 		},
 	}
+}
+
+// SortT is the typed version of Sort.
+//
+// NOTE: Sort method has better performance than SortT
+//
+// lessFn is of a type "func(TSource,TSource) bool"
+func (q Query) SortT(lessFn interface{}) Query {
+	lessGenericFunc, err := newGenericFunc(
+		"SortT", "lessFn", lessFn,
+		simpleParamValidator(newElemTypeSlice(new(genericType), new(genericType)), newElemTypeSlice(new(bool))),
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	lessFunc := func(i, j interface{}) bool {
+		return lessGenericFunc.Call(i, j).(bool)
+	}
+
+	return q.Sort(lessFunc)
 }
 
 type sorter struct {

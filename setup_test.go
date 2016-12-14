@@ -1,5 +1,9 @@
 package linq
 
+import "testing"
+
+import "fmt"
+
 type foo struct {
 	f1 int
 	f2 bool
@@ -65,4 +69,15 @@ func validateQuery(q Query, output []interface{}) bool {
 	_, ok := next()
 	_, ok2 := next()
 	return !(ok || ok2)
+}
+
+func mustPanicWithError(t *testing.T, expectedErr string, f func()) {
+	defer func() {
+		r := recover()
+		err := fmt.Sprintf("%s", r)
+		if err != expectedErr {
+			t.Fatalf("got=[%v] expected=[%v]", err, expectedErr)
+		}
+	}()
+	f()
 }

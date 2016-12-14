@@ -7,7 +7,6 @@ import (
 )
 
 func TestNewGenericFunc(t *testing.T) {
-
 	tests := []struct {
 		methodName     string
 		paramName      string
@@ -128,5 +127,4 @@ func TestCall(t *testing.T) {
 			}
 		}()
 	}
-
 }
