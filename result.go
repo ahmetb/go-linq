@@ -546,11 +546,15 @@ func (q Query) ToMapByT(result interface{}, keySelectorFn interface{}, valueSele
 	q.ToMapBy(result, keySelectorFunc, valueSelectorFunc)
 }
 
-// ToSlice iterates over a collection, copy to result slice the collection elements,
-// appends items if initial capacity is not enough and returns subslice if initial capacity is excessive.
-// Collection elements must be assignable to the slice's element type.
-func (q Query) ToSlice(result interface{}) {
-	res := reflect.ValueOf(result)
+// ToSlice iterates over a collection and saves the results in the slice pointed
+// by v. It starts saving elements starting from index 0, therefore it will
+// overwrite the slice.
+//
+// If the slice pointed by v has sufficient capacity, v will be pointed to a
+// resliced slice. If it does not, a new underlying array will be allocated and
+// v will point to it.
+func (q Query) ToSlice(v interface{}) {
+	res := reflect.ValueOf(v)
 	slice := reflect.Indirect(res)
 	next := q.Iterate()
 	index := 0

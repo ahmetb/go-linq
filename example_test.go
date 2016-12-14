@@ -1339,7 +1339,7 @@ func ExampleQuery_ToMapBy() {
 
 // The following code example demonstrates how to use ToSlice to populate a slice.
 func ExampleQuery_ToSlice() {
-	result := []int{}
+	var result []int
 	Range(1, 10).ToSlice(&result)
 
 	fmt.Println(result)
