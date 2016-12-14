@@ -382,7 +382,6 @@ func (q Query) SingleWith(predicate func(interface{}) bool) (r interface{}) {
 //
 // predicateFn is of a type "func(TSource) bool"
 func (q Query) SingleWithT(predicateFn interface{}) interface{} {
-
 	predicateGenericFunc, err := newGenericFunc(
 		"SingleWithT", "predicateFn", predicateFn,
 		simpleParamValidator(newElemTypeSlice(new(genericType)), newElemTypeSlice(new(bool))),
@@ -520,7 +519,6 @@ func (q Query) ToMapBy(
 //
 // valueSelectorFn is of a type "func(TSource)TValue"
 func (q Query) ToMapByT(result interface{}, keySelectorFn interface{}, valueSelectorFn interface{}) {
-
 	keySelectorGenericFunc, err := newGenericFunc(
 		"ToMapByT", "keySelectorFn", keySelectorFn,
 		simpleParamValidator(newElemTypeSlice(new(genericType)), newElemTypeSlice(new(genericType))),

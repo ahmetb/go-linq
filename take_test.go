@@ -44,16 +44,9 @@ func TestTakeWhile(t *testing.T) {
 }
 
 func TestTakeWhileT_PanicWhenPredicateFnIsInvalid(t *testing.T) {
-	defer func() {
-		r := recover()
-		t.Log(r)
-		if r == nil {
-			t.Error("This execution should panic", r)
-		}
-
-	}()
-
-	From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).TakeWhileT(func(item int) int { return item + 2 })
+	mustPanicWithError(t, "TakeWhileT: parameter [predicateFn] has a invalid function signature. Expected: 'func(T)bool', actual: 'func(int)int'", func() {
+		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).TakeWhileT(func(item int) int { return item + 2 })
+	})
 }
 
 func TestTakeWhileIndexed(t *testing.T) {
@@ -81,14 +74,7 @@ func TestTakeWhileIndexed(t *testing.T) {
 }
 
 func TestTakeWhileIndexedT_PanicWhenPredicateFnIsInvalid(t *testing.T) {
-	defer func() {
-		r := recover()
-		t.Log(r)
-		if r == nil {
-			t.Error("This execution should panic", r)
-		}
-
-	}()
-
-	From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).TakeWhileIndexedT(func(item int) int { return item + 2 })
+	mustPanicWithError(t, "TakeWhileIndexedT: parameter [predicateFn] has a invalid function signature. Expected: 'func(int,T)bool', actual: 'func(int)int'", func() {
+		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).TakeWhileIndexedT(func(item int) int { return item + 2 })
+	})
 }

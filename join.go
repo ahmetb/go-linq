@@ -69,7 +69,6 @@ func (q Query) JoinT(inner Query,
 	innerKeySelectorFn interface{},
 	resultSelectorFn interface{},
 ) Query {
-
 	outerKeySelectorGenericFunc, err := newGenericFunc(
 		"JoinT", "outerKeySelectorFn", outerKeySelectorFn,
 		simpleParamValidator(newElemTypeSlice(new(genericType)), newElemTypeSlice(new(genericType))),

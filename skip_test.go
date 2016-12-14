@@ -48,16 +48,9 @@ func TestSkipWhile(t *testing.T) {
 }
 
 func TestSkipWhileT_PanicWhenPredicateFnIsInvalid(t *testing.T) {
-	defer func() {
-		r := recover()
-		t.Log(r)
-		if r == nil {
-			t.Error("This execution should panic", r)
-		}
-
-	}()
-
-	From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).SkipWhileT(func(item int, x int) bool { return item == 1 })
+	mustPanicWithError(t, "SkipWhileT: parameter [predicateFn] has a invalid function signature. Expected: 'func(T)bool', actual: 'func(int,int)bool'", func() {
+		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).SkipWhileT(func(item int, x int) bool { return item == 1 })
+	})
 }
 
 func TestSkipWhileIndexed(t *testing.T) {
@@ -88,14 +81,7 @@ func TestSkipWhileIndexed(t *testing.T) {
 }
 
 func TestSkipWhileIndexedT_PanicWhenPredicateFnIsInvalid(t *testing.T) {
-	defer func() {
-		r := recover()
-		t.Log(r)
-		if r == nil {
-			t.Error("This execution should panic", r)
-		}
-
-	}()
-
-	From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).SkipWhileIndexedT(func(item int, x int, y int) bool { return item == 1 })
+	mustPanicWithError(t, "SkipWhileIndexedT: parameter [predicateFn] has a invalid function signature. Expected: 'func(int,T)bool', actual: 'func(int,int,int)bool'", func() {
+		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).SkipWhileIndexedT(func(item int, x int, y int) bool { return item == 1 })
+	})
 }

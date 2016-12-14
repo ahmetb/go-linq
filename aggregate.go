@@ -80,7 +80,6 @@ func (q Query) AggregateWithSeed(
 //
 // f is of a type "func(TAccumulate, TSource) TAccumulate"
 func (q Query) AggregateWithSeedT(seed interface{}, f interface{}) interface{} {
-
 	fGenericFunc, err := newGenericFunc(
 		"AggregateWithSeed", "f", f,
 		simpleParamValidator(newElemTypeSlice(new(genericType), new(genericType)), newElemTypeSlice(new(genericType))),
@@ -130,12 +129,7 @@ func (q Query) AggregateWithSeedBy(
 // f is of a type "func(TAccumulate, TSource) TAccumulate"
 //
 // resultSelectorFn is of type "func(TAccumulate) TResult"
-func (q Query) AggregateWithSeedByT(
-	seed interface{},
-	f interface{},
-	resultSelectorFn interface{},
-) interface{} {
-
+func (q Query) AggregateWithSeedByT(seed interface{}, f interface{}, resultSelectorFn interface{}) interface{} {
 	fGenericFunc, err := newGenericFunc(
 		"AggregateWithSeedByT", "f", f,
 		simpleParamValidator(newElemTypeSlice(new(genericType), new(genericType)), newElemTypeSlice(new(genericType))),

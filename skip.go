@@ -118,7 +118,6 @@ func (q Query) SkipWhileIndexed(predicate func(int, interface{}) bool) Query {
 //
 // predicateFn is of a type "func(int,TSource)bool"
 func (q Query) SkipWhileIndexedT(predicateFn interface{}) Query {
-
 	predicateGenericFunc, err := newGenericFunc(
 		"SkipWhileIndexedT", "predicateFn", predicateFn,
 		simpleParamValidator(newElemTypeSlice(new(int), new(genericType)), newElemTypeSlice(new(bool))),

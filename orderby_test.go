@@ -36,16 +36,9 @@ func TestOrderBy(t *testing.T) {
 }
 
 func TestOrderByT_PanicWhenSelectorFnIsInvalid(t *testing.T) {
-	defer func() {
-		r := recover()
-		t.Log(r)
-		if r == nil {
-			t.Error("This execution should panic", r)
-		}
-
-	}()
-
-	From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).OrderByT(func(item, j int) int { return item + 2 })
+	mustPanicWithError(t, "OrderByT: parameter [selectorFn] has a invalid function signature. Expected: 'func(T)T', actual: 'func(int,int)int'", func() {
+		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).OrderByT(func(item, j int) int { return item + 2 })
+	})
 }
 
 func TestOrderByDescending(t *testing.T) {
@@ -71,16 +64,9 @@ func TestOrderByDescending(t *testing.T) {
 }
 
 func TestOrderByDescendingT_PanicWhenSelectorFnIsInvalid(t *testing.T) {
-	defer func() {
-		r := recover()
-		t.Log(r)
-		if r == nil {
-			t.Error("This execution should panic", r)
-		}
-
-	}()
-
-	From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).OrderByDescendingT(func(item, j int) int { return item + 2 })
+	mustPanicWithError(t, "OrderByDescendingT: parameter [selectorFn] has a invalid function signature. Expected: 'func(T)T', actual: 'func(int,int)int'", func() {
+		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).OrderByDescendingT(func(item, j int) int { return item + 2 })
+	})
 }
 
 func TestThenBy(t *testing.T) {
@@ -106,18 +92,11 @@ func TestThenBy(t *testing.T) {
 }
 
 func TestThenByT_PanicWhenSelectorFnIsInvalid(t *testing.T) {
-	defer func() {
-		r := recover()
-		t.Log(r)
-		if r == nil {
-			t.Error("This execution should panic", r)
-		}
-
-	}()
-
-	From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).
-		OrderByT(func(item int) int { return item }).
-		ThenByT(func(item, j int) bool { return true })
+	mustPanicWithError(t, "ThenByT: parameter [selectorFn] has a invalid function signature. Expected: 'func(T)T', actual: 'func(int,int)bool'", func() {
+		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).
+			OrderByT(func(item int) int { return item }).
+			ThenByT(func(item, j int) bool { return true })
+	})
 }
 
 func TestThenByDescending(t *testing.T) {
@@ -143,18 +122,11 @@ func TestThenByDescending(t *testing.T) {
 }
 
 func TestThenByDescendingT_PanicWhenSelectorFnIsInvalid(t *testing.T) {
-	defer func() {
-		r := recover()
-		t.Log(r)
-		if r == nil {
-			t.Error("This execution should panic", r)
-		}
-
-	}()
-
-	From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).
-		OrderByT(func(item int) int { return item }).
-		ThenByDescendingT(func(item, j int) bool { return true })
+	mustPanicWithError(t, "ThenByDescending: parameter [selectorFn] has a invalid function signature. Expected: 'func(T)T', actual: 'func(int,int)bool'", func() {
+		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).
+			OrderByT(func(item int) int { return item }).
+			ThenByDescendingT(func(item, j int) bool { return true })
+	})
 }
 
 func TestSort(t *testing.T) {
@@ -180,14 +152,7 @@ func TestSort(t *testing.T) {
 }
 
 func TestSortT_PanicWhenLessFnIsInvalid(t *testing.T) {
-	defer func() {
-		r := recover()
-		t.Log(r)
-		if r == nil {
-			t.Error("This execution should panic", r)
-		}
-
-	}()
-
-	From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).SortT(func(i, j int) string { return "" })
+	mustPanicWithError(t, "SortT: parameter [lessFn] has a invalid function signature. Expected: 'func(T,T)bool', actual: 'func(int,int)string'", func() {
+		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).SortT(func(i, j int) string { return "" })
+	})
 }

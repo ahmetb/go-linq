@@ -64,7 +64,6 @@ func (q Query) ExceptBy(
 //
 // selectorFn is of a type "func(TSource) TSource"
 func (q Query) ExceptByT(q2 Query, selectorFn interface{}) Query {
-
 	selectorGenericFunc, err := newGenericFunc(
 		"ExceptByT", "selectorFn", selectorFn,
 		simpleParamValidator(newElemTypeSlice(new(genericType)), newElemTypeSlice(new(genericType))),

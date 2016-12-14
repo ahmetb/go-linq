@@ -98,7 +98,6 @@ func (q Query) SelectIndexed(selector func(int, interface{}) interface{}) Query 
 //
 // selectorFn is of a type "func(int,TSource)TResult"
 func (q Query) SelectIndexedT(selectorFn interface{}) Query {
-
 	selectGenericFunc, err := newGenericFunc(
 		"SelectIndexedT", "selectorFn", selectorFn,
 		simpleParamValidator(newElemTypeSlice(new(int), new(genericType)), newElemTypeSlice(new(genericType))),

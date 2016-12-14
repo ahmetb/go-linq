@@ -63,7 +63,6 @@ func (q Query) GroupJoin(
 //
 // resultSelectorFn: is of a type "func(TOuter, inners []TInner) TResult"
 func (q Query) GroupJoinT(inner Query, outerKeySelectorFn interface{}, innerKeySelectorFn interface{}, resultSelectorFn interface{}) Query {
-
 	outerKeySelectorGenericFunc, err := newGenericFunc(
 		"GroupJoinT", "outerKeySelectorFn", outerKeySelectorFn,
 		simpleParamValidator(newElemTypeSlice(new(genericType)), newElemTypeSlice(new(genericType))),

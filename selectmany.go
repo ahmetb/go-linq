@@ -238,7 +238,6 @@ func (q Query) SelectManyByIndexed(selector func(int, interface{}) Query,
 //
 // resultSelectorFn is of a type "func(TSource,TCollection)TResult"
 func (q Query) SelectManyByIndexedT(selectorFn interface{}, resultSelectorFn interface{}) Query {
-
 	selectorGenericFunc, err := newGenericFunc(
 		"SelectManyByIndexedT", "selectorFn", selectorFn,
 		simpleParamValidator(newElemTypeSlice(new(int), new(genericType)), newElemTypeSlice(new(Query))),

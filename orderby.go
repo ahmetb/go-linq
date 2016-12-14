@@ -49,7 +49,6 @@ func (q Query) OrderBy(
 //
 // selectorFn is of a type "func(TSource) TKey"
 func (q Query) OrderByT(selectorFn interface{}) OrderedQuery {
-
 	selectorGenericFunc, err := newGenericFunc(
 		"OrderByT", "selectorFn", selectorFn,
 		simpleParamValidator(newElemTypeSlice(new(genericType)), newElemTypeSlice(new(genericType))),
@@ -63,7 +62,6 @@ func (q Query) OrderByT(selectorFn interface{}) OrderedQuery {
 	}
 
 	return q.OrderBy(selectorFunc)
-
 }
 
 // OrderByDescending sorts the elements of a collection in descending order.
@@ -99,7 +97,6 @@ func (q Query) OrderByDescending(
 //
 // selectorFn is of a type "func(TSource) TKey"
 func (q Query) OrderByDescendingT(selectorFn interface{}) OrderedQuery {
-
 	selectorGenericFunc, err := newGenericFunc(
 		"OrderByDescendingT", "selectorFn", selectorFn,
 		simpleParamValidator(newElemTypeSlice(new(genericType)), newElemTypeSlice(new(genericType))),
@@ -198,7 +195,6 @@ func (oq OrderedQuery) ThenByDescending(
 //
 // selectorFn is of a type "func(TSource) TKey"
 func (oq OrderedQuery) ThenByDescendingT(selectorFn interface{}) OrderedQuery {
-
 	selectorFunc, ok := selectorFn.(func(interface{}) interface{})
 	if !ok {
 		selectorGenericFunc, err := newGenericFunc(
@@ -213,7 +209,6 @@ func (oq OrderedQuery) ThenByDescendingT(selectorFn interface{}) OrderedQuery {
 			return selectorGenericFunc.Call(item)
 		}
 	}
-
 	return oq.ThenByDescending(selectorFunc)
 }
 
@@ -247,7 +242,6 @@ func (q Query) Sort(less func(i, j interface{}) bool) Query {
 //
 // lessFn is of a type "func(TSource,TSource) bool"
 func (q Query) SortT(lessFn interface{}) Query {
-
 	lessGenericFunc, err := newGenericFunc(
 		"SortT", "lessFn", lessFn,
 		simpleParamValidator(newElemTypeSlice(new(genericType), new(genericType)), newElemTypeSlice(new(bool))),

@@ -111,7 +111,6 @@ func (q Query) TakeWhileIndexed(predicate func(int, interface{}) bool) Query {
 //
 // predicateFn is of a type "func(int,TSource)bool"
 func (q Query) TakeWhileIndexedT(predicateFn interface{}) Query {
-
 	whereFunc, err := newGenericFunc(
 		"TakeWhileIndexedT", "predicateFn", predicateFn,
 		simpleParamValidator(newElemTypeSlice(new(int), new(genericType)), newElemTypeSlice(new(bool))),

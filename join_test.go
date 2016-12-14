@@ -27,55 +27,34 @@ func TestJoin(t *testing.T) {
 }
 
 func TestJoinT_PanicWhenOuterKeySelectorFnIsInvalid(t *testing.T) {
-	defer func() {
-		r := recover()
-		t.Log(r)
-		if r == nil {
-			t.Error("This execution should panic", r)
-		}
-
-	}()
-
-	From([]int{0, 1, 2}).JoinT(
-		From([]int{1, 2, 3, 4, 5, 6, 7, 8, 9}),
-		func(i, j int) int { return i },
-		func(i int) int { return i % 2 },
-		func(outer int, inner int) KeyValue { return KeyValue{outer, inner} },
-	)
+	mustPanicWithError(t, "JoinT: parameter [outerKeySelectorFn] has a invalid function signature. Expected: 'func(T)T', actual: 'func(int,int)int'", func() {
+		From([]int{0, 1, 2}).JoinT(
+			From([]int{1, 2, 3, 4, 5, 6, 7, 8, 9}),
+			func(i, j int) int { return i },
+			func(i int) int { return i % 2 },
+			func(outer int, inner int) KeyValue { return KeyValue{outer, inner} },
+		)
+	})
 }
 
 func TestJoinT_PanicWhenInnerKeySelectorFnIsInvalid(t *testing.T) {
-	defer func() {
-		r := recover()
-		t.Log(r)
-		if r == nil {
-			t.Error("This execution should panic", r)
-		}
-
-	}()
-
-	From([]int{0, 1, 2}).JoinT(
-		From([]int{1, 2, 3, 4, 5, 6, 7, 8, 9}),
-		func(i int) int { return i },
-		func(i, j int) int { return i % 2 },
-		func(outer int, inners []int) KeyValue { return KeyValue{outer, len(inners)} },
-	)
+	mustPanicWithError(t, "JoinT: parameter [innerKeySelectorFn] has a invalid function signature. Expected: 'func(T)T', actual: 'func(int,int)int'", func() {
+		From([]int{0, 1, 2}).JoinT(
+			From([]int{1, 2, 3, 4, 5, 6, 7, 8, 9}),
+			func(i int) int { return i },
+			func(i, j int) int { return i % 2 },
+			func(outer int, inners []int) KeyValue { return KeyValue{outer, len(inners)} },
+		)
+	})
 }
 
 func TestJoinT_PanicWhenResultSelectorFnIsInvalid(t *testing.T) {
-	defer func() {
-		r := recover()
-		t.Log(r)
-		if r == nil {
-			t.Error("This execution should panic", r)
-		}
-
-	}()
-
-	From([]int{0, 1, 2}).JoinT(
-		From([]int{1, 2, 3, 4, 5, 6, 7, 8, 9}),
-		func(i int) int { return i },
-		func(i int) int { return i % 2 },
-		func(outer int, inner, j int) KeyValue { return KeyValue{outer, inner} },
-	)
+	mustPanicWithError(t, "JoinT: parameter [resultSelectorFn] has a invalid function signature. Expected: 'func(T,T)T', actual: 'func(int,int,int)linq.KeyValue'", func() {
+		From([]int{0, 1, 2}).JoinT(
+			From([]int{1, 2, 3, 4, 5, 6, 7, 8, 9}),
+			func(i int) int { return i },
+			func(i int) int { return i % 2 },
+			func(outer int, inner, j int) KeyValue { return KeyValue{outer, inner} },
+		)
+	})
 }

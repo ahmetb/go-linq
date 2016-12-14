@@ -15,20 +15,12 @@ func TestZip(t *testing.T) {
 }
 
 func TestZipT_PanicWhenResultSelectorFnIsInvalid(t *testing.T) {
-	defer func() {
-		r := recover()
-		t.Log(r)
-		if r == nil {
-			t.Error("This execution should panic", r)
-		}
+	mustPanicWithError(t, "ZipT: parameter [resultSelectorFn] has a invalid function signature. Expected: 'func(T,T)T', actual: 'func(int,int,int)int'", func() {
+		input1 := []int{1, 2, 3}
+		input2 := []int{2, 4, 5, 1}
 
-	}()
-
-	input1 := []int{1, 2, 3}
-	input2 := []int{2, 4, 5, 1}
-
-	From(input1).ZipT(From(input2), func(i, j, k int) int {
-		return i + j
+		From(input1).ZipT(From(input2), func(i, j, k int) int {
+			return i + j
+		})
 	})
-
 }

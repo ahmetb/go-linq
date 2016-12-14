@@ -72,7 +72,6 @@ func (q Query) IntersectBy(
 //
 // selectorFn is of a type "func(TSource) TSource"
 func (q Query) IntersectByT(q2 Query, selectorFn interface{}) Query {
-
 	selectorGenericFunc, err := newGenericFunc(
 		"IntersectByT", "selectorFn", selectorFn,
 		simpleParamValidator(newElemTypeSlice(new(genericType)), newElemTypeSlice(new(genericType))),

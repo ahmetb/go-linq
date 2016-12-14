@@ -73,7 +73,6 @@ func (q Query) WhereIndexed(predicate func(int, interface{}) bool) Query {
 //
 // predicateFn is of a type "func(int,TSource)bool"
 func (q Query) WhereIndexedT(predicateFn interface{}) Query {
-
 	predicateGenericFunc, err := newGenericFunc(
 		"WhereIndexedT", "predicateFn", predicateFn,
 		simpleParamValidator(newElemTypeSlice(new(int), new(genericType)), newElemTypeSlice(new(bool))),

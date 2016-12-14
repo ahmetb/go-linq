@@ -55,7 +55,6 @@ func (q Query) GroupBy(
 //
 // elementSelectorFn is of a type "func(TSource) TElement"
 func (q Query) GroupByT(keySelectorFn interface{}, elementSelectorFn interface{}) Query {
-
 	keySelectorGenericFunc, err := newGenericFunc(
 		"GroupByT", "keySelectorFn", keySelectorFn,
 		simpleParamValidator(newElemTypeSlice(new(genericType)), newElemTypeSlice(new(genericType))),

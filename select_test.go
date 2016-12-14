@@ -27,15 +27,9 @@ func TestSelect(t *testing.T) {
 }
 
 func TestSelectT_PanicWhenSelectorFnIsInvalid(t *testing.T) {
-	defer func() {
-		r := recover()
-		t.Log(r)
-		if r == nil {
-			t.Error("This execution should panic", r)
-		}
-	}()
-
-	From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).SelectT(func(item, idx int) int { return item + 2 })
+	mustPanicWithError(t, "SelectT: parameter [selectorFn] has a invalid function signature. Expected: 'func(T)T', actual: 'func(int,int)int'", func() {
+		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).SelectT(func(item, idx int) int { return item + 2 })
+	})
 }
 
 func TestSelectIndexed(t *testing.T) {
@@ -60,13 +54,7 @@ func TestSelectIndexed(t *testing.T) {
 }
 
 func TestSelectIndexedT_PanicWhenSelectorFnIsInvalid(t *testing.T) {
-	defer func() {
-		r := recover()
-		t.Log(r)
-		if r == nil {
-			t.Error("This execution should panic", r)
-		}
-	}()
-
-	From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).SelectIndexedT(func(index string, item int) int { return item + 2 })
+	mustPanicWithError(t, "SelectIndexedT: parameter [selectorFn] has a invalid function signature. Expected: 'func(int,T)T', actual: 'func(string,int)int'", func() {
+		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).SelectIndexedT(func(index string, item int) int { return item + 2 })
+	})
 }

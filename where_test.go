@@ -24,16 +24,9 @@ func TestWhere(t *testing.T) {
 }
 
 func TestWhereT_PanicWhenPredicateFnIsInvalid(t *testing.T) {
-	defer func() {
-		r := recover()
-		t.Log(r)
-		if r == nil {
-			t.Error("This execution should panic", r)
-		}
-
-	}()
-
-	From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).WhereT(func(item int) int { return item + 2 })
+	mustPanicWithError(t, "WhereT: parameter [predicateFn] has a invalid function signature. Expected: 'func(T)bool', actual: 'func(int)int'", func() {
+		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).WhereT(func(item int) int { return item + 2 })
+	})
 }
 
 func TestWhereIndexed(t *testing.T) {
@@ -58,13 +51,7 @@ func TestWhereIndexed(t *testing.T) {
 }
 
 func TestWhereIndexedT_PanicWhenPredicateFnIsInvalid(t *testing.T) {
-	defer func() {
-		r := recover()
-		t.Log(r)
-		if r == nil {
-			t.Error("This execution should panic")
-		}
-	}()
-
-	From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).WhereIndexedT(func(item string) {})
+	mustPanicWithError(t, "WhereIndexedT: parameter [predicateFn] has a invalid function signature. Expected: 'func(int,T)bool', actual: 'func(string)'", func() {
+		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).WhereIndexedT(func(item string) {})
+	})
 }

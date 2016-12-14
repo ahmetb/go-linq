@@ -40,7 +40,6 @@ func (q Query) Zip(
 //
 // resultSelectorFn is of a type "func(TFirst,TSecond)TResult"
 func (q Query) ZipT(q2 Query, resultSelectorFn interface{}) Query {
-
 	resultSelectorFunc, ok := resultSelectorFn.(func(interface{}, interface{}) interface{})
 	if !ok {
 		resultSelectorGenericFunc, err := newGenericFunc(
