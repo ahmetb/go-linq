@@ -4,6 +4,7 @@ import (
 	"math"
 	"reflect"
 	"testing"
+	"unsafe"
 )
 
 func TestAll(t *testing.T) {
@@ -466,12 +467,86 @@ func TestToMapByT_PanicWhenValueSelectorFnIsInvalid(t *testing.T) {
 }
 
 func TestToSlice(t *testing.T) {
-	input := []int{1, 2, 3, 4}
+	tests := []struct {
+		input             []int
+		output            []int
+		want              []int
+		wantedOutputCap   int
+		outputIsANewSlice bool
+	}{
+		// output is nil slice
+		{
+			[]int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
+			nil,
+			[]int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
+			16,
+			true},
+		// output is empty slice (cap=0)
+		{
+			[]int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
+			[]int{},
+			[]int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
+			16,
+			true},
+		// ToSlice() overwrites existing elements and reslices.
+		{[]int{1, 2, 3},
+			[]int{99, 98, 97, 96, 95},
+			[]int{1, 2, 3},
+			5,
+			false},
+		// cap(out)>len(result): we get the same slice, resliced. cap unchanged.
+		{[]int{1, 2, 3, 4, 5},
+			make([]int, 0, 11),
+			[]int{1, 2, 3, 4, 5},
+			11,
+			false},
+		// cap(out)==len(result): we get the same slice, cap unchanged.
+		{[]int{1, 2, 3, 4, 5},
+			make([]int, 0, 5),
+			[]int{1, 2, 3, 4, 5},
+			5,
+			false},
+		// cap(out)<len(result): we get a new slice with len(out)=len(result) and cap doubled: cap(out')==2*cap(out)
+		{[]int{1, 2, 3, 4, 5},
+			make([]int, 0, 4),
+			[]int{1, 2, 3, 4, 5},
+			8,
+			true},
+		// cap(out)<<len(result): trigger capacity to double more than once (26 -> 52 -> 104)
+		{make([]int, 100),
+			make([]int, 0, 26),
+			make([]int, 100),
+			104,
+			true},
+		// len(out) > len(result): we get the same slice with len(out)=len(result) and cap unchanged: cap(out')==cap(out)
+		{[]int{1, 2, 3, 4, 5},
+			make([]int, 0, 50),
+			[]int{1, 2, 3, 4, 5},
+			50,
+			false},
+	}
 
-	result := []int{}
-	From(input).ToSlice(&result)
+	for c, test := range tests {
+		initialOutputValue := test.output
+		From(test.input).ToSlice(&test.output)
+		modifiedOutputValue := test.output
 
-	if !reflect.DeepEqual(result, input) {
-		t.Errorf("From(%v).ToSlice()=%v expected %v", input, result, input)
+		// test slice values
+		if !reflect.DeepEqual(test.output, test.want) {
+			t.Fatalf("case #%d: From(%#v).ToSlice()=%#v expected=%#v", c, test.input, test.output, test.want)
+		}
+
+		// test capacity of output slice
+		if cap(test.output) != test.wantedOutputCap {
+			t.Fatalf("case #%d: cap(output)=%d expected=%d", c, cap(test.output), test.wantedOutputCap)
+		}
+
+		// test if a new slice is allocated
+		inPtr := (*reflect.SliceHeader)(unsafe.Pointer(&initialOutputValue)).Data
+		outPtr := (*reflect.SliceHeader)(unsafe.Pointer(&modifiedOutputValue)).Data
+		isNewSlice := inPtr != outPtr
+		if isNewSlice != test.outputIsANewSlice {
+			t.Fatalf("case #%d: isNewSlice=%v (in=0x%X out=0x%X) expected=%v", c, isNewSlice, inPtr, outPtr, test.outputIsANewSlice)
+		}
 	}
 }

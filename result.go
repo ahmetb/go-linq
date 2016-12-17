@@ -546,17 +546,43 @@ func (q Query) ToMapByT(result interface{}, keySelectorFn interface{}, valueSele
 	q.ToMapBy(result, keySelectorFunc, valueSelectorFunc)
 }
 
-// ToSlice iterates over a collection and populates the result slice with elements.
-// Collection elements must be assignable to the slice's element type.
-// ToSlice doesn't empty the result slice before populating it.
-func (q Query) ToSlice(result interface{}) {
-	res := reflect.ValueOf(result)
+// ToSlice iterates over a collection and saves the results in the slice pointed
+// by v. It overwrites the existing slice, starting from index 0.
+//
+// If the slice pointed by v has sufficient capacity, v will be pointed to a
+// resliced slice. If it does not, a new underlying array will be allocated and
+// v will point to it.
+func (q Query) ToSlice(v interface{}) {
+	res := reflect.ValueOf(v)
 	slice := reflect.Indirect(res)
-	next := q.Iterate()
 
+	cap := slice.Cap()
+	res.Elem().Set(slice.Slice(0, cap)) // make len(slice)==cap(slice) from now on
+
+	next := q.Iterate()
+	index := 0
 	for item, ok := next(); ok; item, ok = next() {
-		slice = reflect.Append(slice, reflect.ValueOf(item))
+		if index >= cap {
+			slice, cap = grow(slice)
+		}
+		slice.Index(index).Set(reflect.ValueOf(item))
+		index++
 	}
 
-	res.Elem().Set(slice)
+	// reslice the len(res)==cap(res) actual res size
+	res.Elem().Set(slice.Slice(0, index))
+}
+
+// grow grows the slice s by doubling its capacity, then it returns the new
+// slice (resliced to its full capacity) and the new capacity.
+func grow(s reflect.Value) (v reflect.Value, newCap int) {
+	cap := s.Cap()
+	if cap == 0 {
+		cap = 1
+	} else {
+		cap *= 2
+	}
+	newSlice := reflect.MakeSlice(s.Type(), cap, cap)
+	reflect.Copy(newSlice, s)
+	return newSlice, cap
 }
