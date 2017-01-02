@@ -20,9 +20,9 @@ func (q Query) All(predicate func(interface{}) bool) bool {
 
 // AllT is the typed version of All.
 //
-// NOTE: All method has better performance than AllT
+//   - predicateFn is of type "func(TSource) bool"
 //
-// predicateFn is of a type "func(TSource) bool"
+// NOTE: All has better performance than AllT.
 func (q Query) AllT(predicateFn interface{}) bool {
 
 	predicateGenericFunc, err := newGenericFunc(
@@ -60,9 +60,9 @@ func (q Query) AnyWith(predicate func(interface{}) bool) bool {
 
 // AnyWithT is the typed version of AnyWith.
 //
-// NOTE: AnyWith method has better performance than AnyWithT
+//   - predicateFn is of type "func(TSource) bool"
 //
-// predicateFn is of a type "func(TSource) bool"
+// NOTE: AnyWith has better performance than AnyWithT.
 func (q Query) AnyWithT(predicateFn interface{}) bool {
 
 	predicateGenericFunc, err := newGenericFunc(
@@ -147,8 +147,8 @@ func (q Query) Count() (r int) {
 	return
 }
 
-// CountWith returns a number that represents how many elements
-// in the specified collection satisfy a condition.
+// CountWith returns a number that represents how many elements in the specified
+// collection satisfy a condition.
 func (q Query) CountWith(predicate func(interface{}) bool) (r int) {
 	next := q.Iterate()
 
@@ -163,9 +163,9 @@ func (q Query) CountWith(predicate func(interface{}) bool) (r int) {
 
 // CountWithT is the typed version of CountWith.
 //
-// NOTE: CountWith method has better performance than CountWithT
+//   - predicateFn is of type "func(TSource) bool"
 //
-// predicateFn is of a type "func(TSource) bool"
+// NOTE: CountWith has better performance than CountWithT.
 func (q Query) CountWithT(predicateFn interface{}) int {
 
 	predicateGenericFunc, err := newGenericFunc(
@@ -189,8 +189,8 @@ func (q Query) First() interface{} {
 	return item
 }
 
-// FirstWith returns the first element of a collection that satisfies
-// a specified condition.
+// FirstWith returns the first element of a collection that satisfies a
+// specified condition.
 func (q Query) FirstWith(predicate func(interface{}) bool) interface{} {
 	next := q.Iterate()
 
@@ -205,9 +205,9 @@ func (q Query) FirstWith(predicate func(interface{}) bool) interface{} {
 
 // FirstWithT is the typed version of FirstWith.
 //
-// NOTE: FirstWith method has better performance than FirstWithT
+//   - predicateFn is of type "func(TSource) bool"
 //
-// predicateFn is of a type "func(TSource) bool"
+// NOTE: FirstWith has better performance than FirstWithT.
 func (q Query) FirstWithT(predicateFn interface{}) interface{} {
 
 	predicateGenericFunc, err := newGenericFunc(
@@ -236,8 +236,8 @@ func (q Query) Last() (r interface{}) {
 	return
 }
 
-// LastWith returns the last element of a collection that satisfies
-// a specified condition.
+// LastWith returns the last element of a collection that satisfies a specified
+// condition.
 func (q Query) LastWith(predicate func(interface{}) bool) (r interface{}) {
 	next := q.Iterate()
 
@@ -252,9 +252,9 @@ func (q Query) LastWith(predicate func(interface{}) bool) (r interface{}) {
 
 // LastWithT is the typed version of LastWith.
 //
-// NOTE: LastWith method has better performance than LastWithT
+//   - predicateFn is of type "func(TSource) bool"
 //
-// predicateFn is of a type "func(TSource) bool"
+// NOTE: LastWith has better performance than LastWithT.
 func (q Query) LastWithT(predicateFn interface{}) interface{} {
 
 	predicateGenericFunc, err := newGenericFunc(
@@ -339,8 +339,8 @@ func (q Query) SequenceEqual(q2 Query) bool {
 	return !ok2
 }
 
-// Single returns the only element of a collection, and nil
-// if there is not exactly one element in the collection.
+// Single returns the only element of a collection, and nil if there is not
+// exactly one element in the collection.
 func (q Query) Single() interface{} {
 	next := q.Iterate()
 	item, ok := next()
@@ -356,8 +356,8 @@ func (q Query) Single() interface{} {
 	return item
 }
 
-// SingleWith returns the only element of a collection that satisfies
-// a specified condition, and nil if more than one such element exists.
+// SingleWith returns the only element of a collection that satisfies a
+// specified condition, and nil if more than one such element exists.
 func (q Query) SingleWith(predicate func(interface{}) bool) (r interface{}) {
 	next := q.Iterate()
 	found := false
@@ -378,9 +378,9 @@ func (q Query) SingleWith(predicate func(interface{}) bool) (r interface{}) {
 
 // SingleWithT is the typed version of SingleWith.
 //
-// NOTE: SingleWith method has better performance than SingleWithT
+//   - predicateFn is of type "func(TSource) bool"
 //
-// predicateFn is of a type "func(TSource) bool"
+// NOTE: SingleWith has better performance than SingleWithT.
 func (q Query) SingleWithT(predicateFn interface{}) interface{} {
 	predicateGenericFunc, err := newGenericFunc(
 		"SingleWithT", "predicateFn", predicateFn,
@@ -399,8 +399,8 @@ func (q Query) SingleWithT(predicateFn interface{}) interface{} {
 
 // SumInts computes the sum of a collection of numeric values.
 //
-// Values can be of any integer type: int, int8, int16, int32, int64.
-// The result is int64. Method returns zero if collection contains no elements.
+// Values can be of any integer type: int, int8, int16, int32, int64. The result
+// is int64. Method returns zero if collection contains no elements.
 func (q Query) SumInts() (r int64) {
 	next := q.Iterate()
 	item, ok := next()
@@ -420,8 +420,9 @@ func (q Query) SumInts() (r int64) {
 
 // SumUInts computes the sum of a collection of numeric values.
 //
-// Values can be of any unsigned integer type: uint, uint8, uint16, uint32, uint64.
-// The result is uint64. Method returns zero if collection contains no elements.
+// Values can be of any unsigned integer type: uint, uint8, uint16, uint32,
+// uint64. The result is uint64. Method returns zero if collection contains no
+// elements.
 func (q Query) SumUInts() (r uint64) {
 	next := q.Iterate()
 	item, ok := next()
@@ -460,8 +461,8 @@ func (q Query) SumFloats() (r float64) {
 	return
 }
 
-// ToChannel iterates over a collection and outputs each element
-// to a channel, then closes it.
+// ToChannel iterates over a collection and outputs each element to a channel,
+// then closes it.
 func (q Query) ToChannel(result chan<- interface{}) {
 	next := q.Iterate()
 
@@ -473,9 +474,9 @@ func (q Query) ToChannel(result chan<- interface{}) {
 }
 
 // ToMap iterates over a collection and populates result map with elements.
-// Collection elements have to be of KeyValue type to use this method.
-// To populate a map with elements of different type use ToMapBy method.
-// ToMap doesn't empty the result map before populating it.
+// Collection elements have to be of KeyValue type to use this method. To
+// populate a map with elements of different type use ToMapBy method. ToMap
+// doesn't empty the result map before populating it.
 func (q Query) ToMap(result interface{}) {
 	q.ToMapBy(
 		result,
@@ -487,10 +488,10 @@ func (q Query) ToMap(result interface{}) {
 		})
 }
 
-// ToMapBy iterates over a collection and populates the result map with elements.
-// Functions keySelector and valueSelector are executed for each element of the collection
-// to generate key and value for the map. Generated key and value types must be assignable
-// to the map's key and value types.
+// ToMapBy iterates over a collection and populates the result map with
+// elements. Functions keySelector and valueSelector are executed for each
+// element of the collection to generate key and value for the map. Generated
+// key and value types must be assignable to the map's key and value types.
 // ToMapBy doesn't empty the result map before populating it.
 func (q Query) ToMapBy(
 	result interface{},
@@ -513,11 +514,10 @@ func (q Query) ToMapBy(
 
 // ToMapByT is the typed version of ToMapBy.
 //
-// NOTE: ToMapBy method has better performance than ToMapByT
+//   - keySelectorFn is of type "func(TSource)TKey"
+//   - valueSelectorFn is of type "func(TSource)TValue"
 //
-// keySelectorFn is of a type "func(TSource)TKey"
-//
-// valueSelectorFn is of a type "func(TSource)TValue"
+// NOTE: ToMapBy has better performance than ToMapByT.
 func (q Query) ToMapByT(result interface{}, keySelectorFn interface{}, valueSelectorFn interface{}) {
 	keySelectorGenericFunc, err := newGenericFunc(
 		"ToMapByT", "keySelectorFn", keySelectorFn,

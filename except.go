@@ -1,8 +1,7 @@
 package linq
 
-// Except produces the set difference of two sequences.
-// The set difference is the members of the first sequence
-// that don't appear in the second sequence.
+// Except produces the set difference of two sequences. The set difference is
+// the members of the first sequence that don't appear in the second sequence.
 func (q Query) Except(q2 Query) Query {
 	return Query{
 		Iterate: func() Iterator {
@@ -27,10 +26,9 @@ func (q Query) Except(q2 Query) Query {
 	}
 }
 
-// ExceptBy invokes a transform function on each element of a collection
-// and produces the set difference of two sequences.
-// The set difference is the members of the first sequence
-// that don't appear in the second sequence.
+// ExceptBy invokes a transform function on each element of a collection and
+// produces the set difference of two sequences. The set difference is the
+// members of the first sequence that don't appear in the second sequence.
 func (q Query) ExceptBy(
 	q2 Query, selector func(interface{}) interface{}) Query {
 	return Query{
@@ -60,9 +58,9 @@ func (q Query) ExceptBy(
 
 // ExceptByT is the typed version of ExceptBy.
 //
-// NOTE: ExceptBy method has better performance than ExceptByT
+//   - selectorFn is of type "func(TSource) TSource"
 //
-// selectorFn is of a type "func(TSource) TSource"
+// NOTE: ExceptBy has better performance than ExceptByT.
 func (q Query) ExceptByT(q2 Query, selectorFn interface{}) Query {
 	selectorGenericFunc, err := newGenericFunc(
 		"ExceptByT", "selectorFn", selectorFn,

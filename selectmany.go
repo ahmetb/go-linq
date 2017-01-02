@@ -34,9 +34,9 @@ func (q Query) SelectMany(selector func(interface{}) Query) Query {
 
 // SelectManyT is the typed version of SelectMany.
 //
-// NOTE: SelectMany method has better performance than SelectManyT
+//   - selectorFn is of type "func(TSource)Query"
 //
-// selectorFn is of a type "func(TSource)Query"
+// NOTE: SelectMany has better performance than SelectManyT.
 func (q Query) SelectManyT(selectorFn interface{}) Query {
 
 	selectManyGenericFunc, err := newGenericFunc(
@@ -54,14 +54,15 @@ func (q Query) SelectManyT(selectorFn interface{}) Query {
 
 }
 
-// SelectManyIndexed projects each element of a collection to a Query, iterates and
-// flattens the resulting collection into one collection.
+// SelectManyIndexed projects each element of a collection to a Query, iterates
+// and flattens the resulting collection into one collection.
 //
-// The first argument to selector represents the zero-based index of that element
-// in the source collection. This can be useful if the elements are in a known order
-// and you want to do something with an element at a particular index, for example.
-// It can also be useful if you want to retrieve the index of one or more elements.
-// The second argument to selector represents the element to process.
+// The first argument to selector represents the zero-based index of that
+// element in the source collection. This can be useful if the elements are in a
+// known order and you want to do something with an element at a particular
+// index, for example. It can also be useful if you want to retrieve the index
+// of one or more elements. The second argument to selector represents the
+// element to process.
 func (q Query) SelectManyIndexed(selector func(int, interface{}) Query) Query {
 	return Query{
 		Iterate: func() Iterator {
@@ -96,9 +97,9 @@ func (q Query) SelectManyIndexed(selector func(int, interface{}) Query) Query {
 
 // SelectManyIndexedT is the typed version of SelectManyIndexed.
 //
-// NOTE: SelectManyIndexed method has better performance than SelectManyIndexedT
+//   - selectorFn is of type "func(int,TSource)Query"
 //
-// selectorFn is of a type "func(int,TSource)Query"
+// NOTE: SelectManyIndexed has better performance than SelectManyIndexedT.
 func (q Query) SelectManyIndexedT(selectorFn interface{}) Query {
 
 	selectManyIndexedGenericFunc, err := newGenericFunc(
@@ -117,8 +118,8 @@ func (q Query) SelectManyIndexedT(selectorFn interface{}) Query {
 }
 
 // SelectManyBy projects each element of a collection to a Query, iterates and
-// flattens the resulting collection into one collection, and invokes
-// a result selector function on each element therein.
+// flattens the resulting collection into one collection, and invokes a result
+// selector function on each element therein.
 func (q Query) SelectManyBy(
 	selector func(interface{}) Query,
 	resultSelector func(interface{}, interface{}) interface{},
@@ -156,11 +157,10 @@ func (q Query) SelectManyBy(
 
 // SelectManyByT is the typed version of SelectManyBy.
 //
-// NOTE: SelectManyBy method has better performance than SelectManyByT
+//   - selectorFn is of type "func(TSource)Query"
+//   - resultSelectorFn is of type "func(TSource,TCollection)TResult"
 //
-// selectorFn is of a type "func(TSource)Query"
-//
-// resultSelectorFn is of a type "func(TSource,TCollection)TResult"
+// NOTE: SelectManyBy has better performance than SelectManyByT.
 func (q Query) SelectManyByT(selectorFn interface{}, resultSelectorFn interface{}) Query {
 
 	selectorGenericFunc, err := newGenericFunc(
@@ -190,11 +190,10 @@ func (q Query) SelectManyByT(selectorFn interface{}, resultSelectorFn interface{
 	return q.SelectManyBy(selectorFunc, resultSelectorFunc)
 }
 
-// SelectManyByIndexed projects each element of a collection to a Query, iterates and
-// flattens the resulting collection into one collection, and invokes
-// a result selector function on each element therein.
-// The index of each source element is used in the intermediate projected form
-// of that element.
+// SelectManyByIndexed projects each element of a collection to a Query,
+// iterates and flattens the resulting collection into one collection, and
+// invokes a result selector function on each element therein. The index of each
+// source element is used in the intermediate projected form of that element.
 func (q Query) SelectManyByIndexed(selector func(int, interface{}) Query,
 	resultSelector func(interface{}, interface{}) interface{}) Query {
 
@@ -232,11 +231,11 @@ func (q Query) SelectManyByIndexed(selector func(int, interface{}) Query,
 
 // SelectManyByIndexedT is the typed version of SelectManyByIndexed.
 //
-// NOTE: SelectManyByIndexed method has better performance than SelectManyByIndexedT
+//   - selectorFn is of type "func(int,TSource)Query"
+//   - resultSelectorFn is of type "func(TSource,TCollection)TResult"
 //
-// selectorFn is of a type "func(int,TSource)Query"
-//
-// resultSelectorFn is of a type "func(TSource,TCollection)TResult"
+// NOTE: SelectManyByIndexed has better performance than
+// SelectManyByIndexedT.
 func (q Query) SelectManyByIndexedT(selectorFn interface{}, resultSelectorFn interface{}) Query {
 	selectorGenericFunc, err := newGenericFunc(
 		"SelectManyByIndexedT", "selectorFn", selectorFn,
