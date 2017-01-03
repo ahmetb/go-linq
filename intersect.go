@@ -2,8 +2,8 @@ package linq
 
 // Intersect produces the set intersection of the source collection and the
 // provided input collection. The intersection of two sets A and B is defined as
-// the set that contains all the elements of A that also appear in B,
-// but no other elements.
+// the set that contains all the elements of A that also appear in B, but no
+// other elements.
 func (q Query) Intersect(q2 Query) Query {
 	return Query{
 		Iterate: func() Iterator {
@@ -31,8 +31,8 @@ func (q Query) Intersect(q2 Query) Query {
 
 // IntersectBy produces the set intersection of the source collection and the
 // provided input collection. The intersection of two sets A and B is defined as
-// the set that contains all the elements of A that also appear in B,
-// but no other elements.
+// the set that contains all the elements of A that also appear in B, but no
+// other elements.
 //
 // IntersectBy invokes a transform function on each element of both collections.
 func (q Query) IntersectBy(
@@ -68,9 +68,9 @@ func (q Query) IntersectBy(
 
 // IntersectByT is the typed version of IntersectBy.
 //
-// NOTE: IntersectBy method has better performance than IntersectByT
+//   - selectorFn is of type "func(TSource) TSource"
 //
-// selectorFn is of a type "func(TSource) TSource"
+// NOTE: IntersectBy has better performance than IntersectByT.
 func (q Query) IntersectByT(q2 Query, selectorFn interface{}) Query {
 	selectorGenericFunc, err := newGenericFunc(
 		"IntersectByT", "selectorFn", selectorFn,

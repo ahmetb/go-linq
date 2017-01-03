@@ -21,9 +21,9 @@ func (q Query) Where(predicate func(interface{}) bool) Query {
 
 // WhereT is the typed version of Where.
 //
-// NOTE: Where method has better performance than WhereT
+//   - predicateFn is of type "func(TSource)bool"
 //
-// predicateFn is of a type "func(TSource)bool"
+// NOTE: Where has better performance than WhereT.
 func (q Query) WhereT(predicateFn interface{}) Query {
 
 	predicateGenericFunc, err := newGenericFunc(
@@ -41,11 +41,11 @@ func (q Query) WhereT(predicateFn interface{}) Query {
 	return q.Where(predicateFunc)
 }
 
-// WhereIndexed filters a collection of values based on a predicate.
-// Each element's index is used in the logic of the predicate function.
+// WhereIndexed filters a collection of values based on a predicate. Each
+// element's index is used in the logic of the predicate function.
 //
-// The first argument represents the zero-based index of the element within collection.
-// The second argument of predicate represents the element to test.
+// The first argument represents the zero-based index of the element within
+// collection. The second argument of predicate represents the element to test.
 func (q Query) WhereIndexed(predicate func(int, interface{}) bool) Query {
 	return Query{
 		Iterate: func() Iterator {
@@ -69,9 +69,9 @@ func (q Query) WhereIndexed(predicate func(int, interface{}) bool) Query {
 
 // WhereIndexedT is the typed version of WhereIndexed.
 //
-// NOTE: WhereIndexed method has better performance than WhereIndexedT
+//   - predicateFn is of type "func(int,TSource)bool"
 //
-// predicateFn is of a type "func(int,TSource)bool"
+// NOTE: WhereIndexed has better performance than WhereIndexedT.
 func (q Query) WhereIndexedT(predicateFn interface{}) Query {
 	predicateGenericFunc, err := newGenericFunc(
 		"WhereIndexedT", "predicateFn", predicateFn,

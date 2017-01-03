@@ -6,12 +6,12 @@ import (
 	"strings"
 )
 
-// genericType represents a any reflect.Type
+// genericType represents a any reflect.Type.
 type genericType int
 
 var genericTp = reflect.TypeOf(new(genericType)).Elem()
 
-// functionCache keeps genericFunc reflection objects in cache
+// functionCache keeps genericFunc reflection objects in cache.
 type functionCache struct {
 	MethodName string
 	ParamName  string
@@ -21,12 +21,12 @@ type functionCache struct {
 	TypesOut   []reflect.Type
 }
 
-// genericFunc is a type used to validate and call dynamic functions
+// genericFunc is a type used to validate and call dynamic functions.
 type genericFunc struct {
 	Cache *functionCache
 }
 
-// Call calls a dynamic function
+// Call calls a dynamic function.
 func (g *genericFunc) Call(params ...interface{}) interface{} {
 	paramsIn := make([]reflect.Value, len(params))
 	for i, param := range params {
@@ -68,7 +68,8 @@ func newGenericFunc(methodName, paramName string, fn interface{}, validateFunc f
 	return &genericFunc{Cache: cache}, nil
 }
 
-// simpleParamValidator creates a function to validate genericFunc based in the In and Out function parameters
+// simpleParamValidator creates a function to validate genericFunc based in the
+// In and Out function parameters.
 func simpleParamValidator(In []reflect.Type, Out []reflect.Type) func(cache *functionCache) error {
 	return func(cache *functionCache) error {
 		var isValid = func() bool {
@@ -102,7 +103,7 @@ func simpleParamValidator(In []reflect.Type, Out []reflect.Type) func(cache *fun
 	}
 }
 
-// newElemTypeSlice creates a slice of items elem types
+// newElemTypeSlice creates a slice of items elem types.
 func newElemTypeSlice(items ...interface{}) []reflect.Type {
 	typeList := make([]reflect.Type, len(items))
 	for i, item := range items {
@@ -114,7 +115,7 @@ func newElemTypeSlice(items ...interface{}) []reflect.Type {
 	return typeList
 }
 
-// formatFnSignature formats the func signature based in the parameters types
+// formatFnSignature formats the func signature based in the parameters types.
 func formatFnSignature(In []reflect.Type, Out []reflect.Type) string {
 	paramInNames := make([]string, len(In))
 	for i, typeIn := range In {
