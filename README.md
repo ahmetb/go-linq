@@ -1,15 +1,20 @@
 # go-linq [![GoDoc](https://godoc.org/github.com/ahmetalpbalkan/go-linq?status.svg)](https://godoc.org/github.com/ahmetalpbalkan/go-linq) [![Build Status](https://travis-ci.org/ahmetalpbalkan/go-linq.svg?branch=master)](https://travis-ci.org/ahmetalpbalkan/go-linq) [![Coverage Status](https://coveralls.io/repos/github/ahmetalpbalkan/go-linq/badge.svg?branch=master)](https://coveralls.io/github/ahmetalpbalkan/go-linq?branch=master) [![Go Report Card](https://goreportcard.com/badge/github.com/ahmetalpbalkan/go-linq)](https://goreportcard.com/report/github.com/ahmetalpbalkan/go-linq)
 A powerful language integrated query (LINQ) library for Go.
-* Written in vanilla Go!
-* Safe for concurrent use
+* Written in vanilla Go, no dependencies!
 * Complete lazy evaluation with iterator pattern
+* Safe for concurrent use
+* Supports generic functions to make your code cleaner and free of type assertions
 * Supports arrays, slices, maps, strings, channels and custom collections
-(collection needs to implement `Iterable` interface and element - `Comparable`
-interface)
 
 ## Installation
 
     $ go get github.com/ahmetalpbalkan/go-linq
+
+We recommend using a dependency manager (e.g. [govendor][govendor] or
+[godep][godep]) to maintain a local copy of this package in your projcet.
+
+[govendor]: https://github.com/kardianos/govendor
+[godep]: https://github.com/tools/godep/
 
 > :warning: :warning: `go-linq` has recently introduced _breaking API changes_
 > with v2.0.0. See [release notes](#release-notes) for details. v2.0.0 comes with
@@ -26,16 +31,20 @@ Usage is as easy as chaining methods like:
 
 `From(slice)` `.Where(predicate)` `.Select(selector)` `.Union(data)` 
 
-**Example: Find all owners of cars manufactured from 2015**
+**Example 1: Find all owners of cars manufactured after 2015**
+
 ```go
 import . "github.com/ahmetalpbalkan/go-linq"
 	
 type Car struct {
-    id, year int
+    year int
     owner, model string
 }
 
-owners := []string{}
+...
+
+
+var owners []string
 
 From(cars).Where(func(c interface{}) bool {
 	return c.(Car).year >= 2015
@@ -44,7 +53,21 @@ From(cars).Where(func(c interface{}) bool {
 }).ToSlice(&owners)
 ```
 
-**Example: Find the author who has written the most books**
+Or, you can use generic functions, like `WhereT` and `SelectT` to simplify your code
+(at a performance penalty):
+
+```go
+var owners []string
+
+From(cars).WhereT(func(c Car) bool {
+	return c.year >= 2015
+}).SelectT(func(c Car) string {
+	return c.owner
+}).ToSlice(&owners)	
+```
+
+**Example 2: Find the author who has written the most books**
+
 ```go
 import . "github.com/ahmetalpbalkan/go-linq"
 	
@@ -71,7 +94,8 @@ author := From(books).SelectMany( // make a flat array of authors
 	}).First() // take the first author
 ```
 
-**Example: Implement a custom method that leaves only values greater than the specified threshold**
+**Example 3: Implement a custom method that leaves only values greater than the specified threshold**
+
 ```go
 type MyQuery Query
 
@@ -95,53 +119,66 @@ func (q MyQuery) GreaterThan(threshold int) Query {
 
 result := MyQuery(Range(1,10)).GreaterThan(5).Results()
 ```
-## Generic functions
 
-All we know that Go doesn't implement generics. On the other hand, Go offer a nice collection of reflection functions
-that can be used to emulate some generic behaviors. 
-Although there are some [performance loss](../master/benchmark_test.go) when using reflection to parse the functions 
-and parameters types, the use of generic functions will bring you more code readability removing the type casting.
-All the generic functions have a T suffix (eg. WhereT, SelectT, etc.).
+## Generic Functions
 
-**Example: Implement "MapReduce" in a slice of string sentences to list the top 5 most used words using *generic functions***
+Although Go doesn't implement generics, with some reflection tricks, you can use go-linq without
+typing `interface{}`s and type assertions. This will introduce a performance penalty (5x-10x slower)
+but will yield in a cleaner and more readable code.
+
+Methods with `T` suffix (such as `WhereT`) accept functions with generic types. So instead of
+
+    .Select(func(v interface{}) interface{} {...})
+
+you can type:
+
+    .SelectT(func(v YourType) YourOtherType {...})
+
+This will make your code free of `interface{}` and type assertions.
+
+**Example 4: "MapReduce" in a slice of string sentences to list the top 5 most used words using generic functions**
+
 ```go
 var results []string
+
 From(sentences).
-	//Split the sentences in a slice of words
+	// split sentences to words
 	SelectManyT(func(sentence string) Query {
 		return From(strings.Split(sentence, " "))
 	}).
-	//Grouping the words
-	GroupByT(
+	// group the words
+	GroupByT( 
 		func(word string) string { return word },
 		func(word string) string { return word },
 	).
-	//Ordering by word counts
+	// order by count
 	OrderByDescendingT(func(wordGroup Group) int {
 		return len(wordGroup.Group)
 	}).
-	//Then order by word
+	// order by the word
 	ThenByT(func(wordGroup Group) string {
 		return wordGroup.Key.(string)
 	}).
-	//Take the top 5
-	Take(5).
-	//Project the words using the index as rank
+	Take(5).  // take the top 5
+	// project the words using the index as rank
 	SelectIndexedT(func(index int, wordGroup Group) string {
 		return fmt.Sprintf("Rank: #%d, Word: %s, Counts: %d", index+1, wordGroup.Key, len(wordGroup.Group))
 	}).
 	ToSlice(&results)
 ```
 
-**More examples** can be found in [documentation](https://godoc.org/github.com/ahmetalpbalkan/go-linq).
+**More examples** can be found in the [documentation](https://godoc.org/github.com/ahmetalpbalkan/go-linq).
 
 ## Release Notes
 ~~~
 v3.0.0 (2016-10-19)
-* Generic methods
-  - Added generic methods support to all functions
-  - Totally backward compatible with v2.0.0 functions
-* AggregateWithSeedBy()
+* Breaking: ToSlice() now overwrites existing slice starting
+  from index 0 and grows/reslices it as needed.
+* Generic methods support!
+  - You can now avoid type assertions and interface{}s
+  - Keeps it backwards-compatible with v2.0.0.
+* Added AggregateWithSeedBy()
+
 v2.0.0 (2016-09-02)
 * IMPORTANT: This release is a BREAKING CHANGE. The old version
   is archived at the 'archive/0.9' branch or the 0.9 tags.
