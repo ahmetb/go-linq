@@ -11,7 +11,7 @@ A powerful language integrated query (LINQ) library for Go.
     $ go get github.com/ahmetalpbalkan/go-linq
 
 We recommend using a dependency manager (e.g. [govendor][govendor] or
-[godep][godep]) to maintain a local copy of this package in your projcet.
+[godep][godep]) to maintain a local copy of this package in your project.
 
 [govendor]: https://github.com/kardianos/govendor
 [godep]: https://github.com/tools/godep/
