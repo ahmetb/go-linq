@@ -550,3 +550,64 @@ func TestToSlice(t *testing.T) {
 		}
 	}
 }
+
+func TestAddRange(t *testing.T) {
+	tests := []struct {
+		input             []int
+		output            []int
+		want              []int
+		wantedOutputCap   int
+		outputIsANewSlice bool
+	}{
+		// output is nil slice
+		{
+			[]int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
+			nil,
+			[]int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
+			16,
+			true},
+		// output is empty slice (cap=0)
+		{
+			[]int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
+			[]int{},
+			[]int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
+			16,
+			true},
+		// cap(out)<len(result): we get a new slice with and cap doubled: cap(out')==2*cap(out)
+		{[]int{1, 2, 3},
+			[]int{99, 98, 97, 96, 95},
+			[]int{99, 98, 97, 96, 95, 1, 2, 3},
+			10,
+			true},
+		// cap(out) == len(out) + len(result): we get the same slice, cap unchanged.
+		{[]int{1, 2, 3, 4, 5},
+			make([]int, 0, 5),
+			[]int{1, 2, 3, 4, 5},
+			5,
+			false},
+	}
+
+	for c, test := range tests {
+		initialOutputValue := test.output
+		From(test.input).AddRange(&test.output)
+		modifiedOutputValue := test.output
+
+		// test slice values
+		if !reflect.DeepEqual(test.output, test.want) {
+			t.Fatalf("case #%d: From(%#v).ToSlice()=%#v expected=%#v", c, test.input, test.output, test.want)
+		}
+
+		// test capacity of output slice
+		if cap(test.output) != test.wantedOutputCap {
+			t.Fatalf("case #%d: cap(output)=%d expected=%d", c, cap(test.output), test.wantedOutputCap)
+		}
+
+		// test if a new slice is allocated
+		inPtr := (*reflect.SliceHeader)(unsafe.Pointer(&initialOutputValue)).Data
+		outPtr := (*reflect.SliceHeader)(unsafe.Pointer(&modifiedOutputValue)).Data
+		isNewSlice := inPtr != outPtr
+		if isNewSlice != test.outputIsANewSlice {
+			t.Fatalf("case #%d: isNewSlice=%v (in=0x%X out=0x%X) expected=%v", c, isNewSlice, inPtr, outPtr, test.outputIsANewSlice)
+		}
+	}
+}

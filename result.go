@@ -573,6 +573,33 @@ func (q Query) ToSlice(v interface{}) {
 	res.Elem().Set(slice.Slice(0, index))
 }
 
+// AddRange iterates over a collection and append the results in the slice pointed
+// by v.
+//
+// If the slice pointed by v has sufficient capacity, v will be pointed to a
+// resliced slice. If it does not, a new underlying array will be allocated and
+// v will point to it.
+func (q Query) AddRange(v interface{}) {
+	res := reflect.ValueOf(v)
+	slice := reflect.Indirect(res)
+
+	index := slice.Len()
+	cap := slice.Cap()
+	res.Elem().Set(slice.Slice(0, cap)) // make len(slice)==cap(slice) from now on
+
+	next := q.Iterate()
+	for item, ok := next(); ok; item, ok = next() {
+		if index >= cap {
+			slice, cap = grow(slice)
+		}
+		slice.Index(index).Set(reflect.ValueOf(item))
+		index++
+	}
+
+	// reslice the len(res)==cap(res) actual res size
+	res.Elem().Set(slice.Slice(0, index))
+}
+
 // grow grows the slice s by doubling its capacity, then it returns the new
 // slice (resliced to its full capacity) and the new capacity.
 func grow(s reflect.Value) (v reflect.Value, newCap int) {
