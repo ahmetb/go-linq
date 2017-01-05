@@ -10,12 +10,10 @@ package linq
 //
 // Join preserves the order of the elements of outer collection, and for each of
 // these elements, the order of the matching elements of inner.
-func (q Query) Join(
-	inner Query,
+func (q Query) Join(inner Query,
 	outerKeySelector func(interface{}) interface{},
 	innerKeySelector func(interface{}) interface{},
-	resultSelector func(outer interface{}, inner interface{}) interface{},
-) Query {
+	resultSelector func(outer interface{}, inner interface{}) interface{}) Query {
 
 	return Query{
 		Iterate: func() Iterator {
@@ -65,8 +63,7 @@ func (q Query) Join(
 func (q Query) JoinT(inner Query,
 	outerKeySelectorFn interface{},
 	innerKeySelectorFn interface{},
-	resultSelectorFn interface{},
-) Query {
+	resultSelectorFn interface{}) Query {
 	outerKeySelectorGenericFunc, err := newGenericFunc(
 		"JoinT", "outerKeySelectorFn", outerKeySelectorFn,
 		simpleParamValidator(newElemTypeSlice(new(genericType)), newElemTypeSlice(new(genericType))),

@@ -10,8 +10,7 @@ package linq
 // result of f() replaces the previous aggregated value.
 //
 // Aggregate returns the final result of f().
-func (q Query) Aggregate(
-	f func(interface{}, interface{}) interface{}) interface{} {
+func (q Query) Aggregate(f func(interface{}, interface{}) interface{}) interface{} {
 	next := q.Iterate()
 
 	result, any := next()
@@ -32,7 +31,6 @@ func (q Query) Aggregate(
 //
 // NOTE: Aggregate has better performance than AggregateT.
 func (q Query) AggregateT(f interface{}) interface{} {
-
 	fGenericFunc, err := newGenericFunc(
 		"AggregateT", "f", f,
 		simpleParamValidator(newElemTypeSlice(new(genericType), new(genericType)), newElemTypeSlice(new(genericType))),
@@ -59,10 +57,8 @@ func (q Query) AggregateT(f interface{}) interface{} {
 // The result of f() replaces the previous aggregated value.
 //
 // Aggregate returns the final result of f().
-func (q Query) AggregateWithSeed(
-	seed interface{},
-	f func(interface{}, interface{}) interface{},
-) interface{} {
+func (q Query) AggregateWithSeed(seed interface{},
+	f func(interface{}, interface{}) interface{}) interface{} {
 
 	next := q.Iterate()
 	result := seed
@@ -80,7 +76,8 @@ func (q Query) AggregateWithSeed(
 //
 // NOTE: AggregateWithSeed has better performance than
 // AggregateWithSeedT.
-func (q Query) AggregateWithSeedT(seed interface{}, f interface{}) interface{} {
+func (q Query) AggregateWithSeedT(seed interface{},
+	f interface{}) interface{} {
 	fGenericFunc, err := newGenericFunc(
 		"AggregateWithSeed", "f", f,
 		simpleParamValidator(newElemTypeSlice(new(genericType), new(genericType)), newElemTypeSlice(new(genericType))),
@@ -109,11 +106,9 @@ func (q Query) AggregateWithSeedT(seed interface{}, f interface{}) interface{} {
 //
 // The final result of func is passed to resultSelector to obtain the final
 // result of Aggregate.
-func (q Query) AggregateWithSeedBy(
-	seed interface{},
+func (q Query) AggregateWithSeedBy(seed interface{},
 	f func(interface{}, interface{}) interface{},
-	resultSelector func(interface{}) interface{},
-) interface{} {
+	resultSelector func(interface{}) interface{}) interface{} {
 
 	next := q.Iterate()
 	result := seed
@@ -132,7 +127,9 @@ func (q Query) AggregateWithSeedBy(
 //
 // NOTE: AggregateWithSeedBy has better performance than
 // AggregateWithSeedByT.
-func (q Query) AggregateWithSeedByT(seed interface{}, f interface{}, resultSelectorFn interface{}) interface{} {
+func (q Query) AggregateWithSeedByT(seed interface{},
+	f interface{},
+	resultSelectorFn interface{}) interface{} {
 	fGenericFunc, err := newGenericFunc(
 		"AggregateWithSeedByT", "f", f,
 		simpleParamValidator(newElemTypeSlice(new(genericType), new(genericType)), newElemTypeSlice(new(genericType))),

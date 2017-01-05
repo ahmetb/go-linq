@@ -18,12 +18,10 @@ import "reflect"
 //
 // GroupJoin preserves the order of the elements of outer, and for each element
 // of outer, the order of the matching elements from inner.
-func (q Query) GroupJoin(
-	inner Query,
+func (q Query) GroupJoin(inner Query,
 	outerKeySelector func(interface{}) interface{},
 	innerKeySelector func(interface{}) interface{},
-	resultSelector func(outer interface{}, inners []interface{}) interface{},
-) Query {
+	resultSelector func(outer interface{}, inners []interface{}) interface{}) Query {
 
 	return Query{
 		Iterate: func() Iterator {
@@ -61,7 +59,10 @@ func (q Query) GroupJoin(
 //   - resultSelectorFn: is of type "func(TOuter, inners []TInner) TResult"
 //
 // NOTE: GroupJoin has better performance than GroupJoinT.
-func (q Query) GroupJoinT(inner Query, outerKeySelectorFn interface{}, innerKeySelectorFn interface{}, resultSelectorFn interface{}) Query {
+func (q Query) GroupJoinT(inner Query,
+	outerKeySelectorFn interface{},
+	innerKeySelectorFn interface{},
+	resultSelectorFn interface{}) Query {
 	outerKeySelectorGenericFunc, err := newGenericFunc(
 		"GroupJoinT", "outerKeySelectorFn", outerKeySelectorFn,
 		simpleParamValidator(newElemTypeSlice(new(genericType)), newElemTypeSlice(new(genericType))),
