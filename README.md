@@ -11,7 +11,7 @@ A powerful language integrated query (LINQ) library for Go.
     $ go get github.com/ahmetalpbalkan/go-linq
 
 We recommend using a dependency manager (e.g. [govendor][govendor] or
-[godep][godep]) to maintain a local copy of this package in your projcet.
+[godep][godep]) to maintain a local copy of this package in your project.
 
 [govendor]: https://github.com/kardianos/govendor
 [godep]: https://github.com/tools/godep/
@@ -171,12 +171,14 @@ From(sentences).
 
 ## Release Notes
 ~~~
-v3.0.0 (2016-10-19)
-* Breaking: ToSlice() now overwrites existing slice starting
+v3.0.0 (2017-01-05)
+* Breaking change: ToSlice() now overwrites existing slice starting
   from index 0 and grows/reslices it as needed.
-* Generic methods support!
+* Generic methods support (thanks @cleitonmarx!)
+  - Accepting parametrized functions was originally proposed in #26
   - You can now avoid type assertions and interface{}s
-  - Keeps it backwards-compatible with v2.0.0.
+  - Functions with generic methods are named as "MethodNameT" and
+    signature for the existing LINQ methods are unchanged.
 * Added AggregateWithSeedBy()
 
 v2.0.0 (2016-09-02)
