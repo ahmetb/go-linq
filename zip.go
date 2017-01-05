@@ -10,10 +10,8 @@ package linq
 // combines elements until it reaches the end of one of the collections. For
 // example, if one collection has three elements and the other one has four, the
 // result collection has only three elements.
-func (q Query) Zip(
-	q2 Query,
-	resultSelector func(interface{}, interface{}) interface{},
-) Query {
+func (q Query) Zip(q2 Query,
+	resultSelector func(interface{}, interface{}) interface{}) Query {
 
 	return Query{
 		Iterate: func() Iterator {
@@ -39,7 +37,8 @@ func (q Query) Zip(
 //   - resultSelectorFn is of type "func(TFirst,TSecond)TResult"
 //
 // NOTE: Zip has better performance than ZipT.
-func (q Query) ZipT(q2 Query, resultSelectorFn interface{}) Query {
+func (q Query) ZipT(q2 Query,
+	resultSelectorFn interface{}) Query {
 	resultSelectorGenericFunc, err := newGenericFunc(
 		"ZipT", "resultSelectorFn", resultSelectorFn,
 		simpleParamValidator(newElemTypeSlice(new(genericType), new(genericType)), newElemTypeSlice(new(genericType))),

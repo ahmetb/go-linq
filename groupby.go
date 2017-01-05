@@ -9,11 +9,8 @@ type Group struct {
 // GroupBy method groups the elements of a collection according to a specified
 // key selector function and projects the elements for each group by using a
 // specified function.
-func (q Query) GroupBy(
-	keySelector func(interface{}) interface{},
-	elementSelector func(interface{}) interface{},
-) Query {
-
+func (q Query) GroupBy(keySelector func(interface{}) interface{},
+	elementSelector func(interface{}) interface{}) Query {
 	return Query{
 		func() Iterator {
 			next := q.Iterate()
@@ -53,7 +50,8 @@ func (q Query) GroupBy(
 //   - elementSelectorFn is of type "func(TSource) TElement"
 //
 // NOTE: GroupBy has better performance than GroupByT.
-func (q Query) GroupByT(keySelectorFn interface{}, elementSelectorFn interface{}) Query {
+func (q Query) GroupByT(keySelectorFn interface{},
+	elementSelectorFn interface{}) Query {
 	keySelectorGenericFunc, err := newGenericFunc(
 		"GroupByT", "keySelectorFn", keySelectorFn,
 		simpleParamValidator(newElemTypeSlice(new(genericType)), newElemTypeSlice(new(genericType))),

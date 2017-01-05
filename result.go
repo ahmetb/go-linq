@@ -493,11 +493,9 @@ func (q Query) ToMap(result interface{}) {
 // element of the collection to generate key and value for the map. Generated
 // key and value types must be assignable to the map's key and value types.
 // ToMapBy doesn't empty the result map before populating it.
-func (q Query) ToMapBy(
-	result interface{},
+func (q Query) ToMapBy(result interface{},
 	keySelector func(interface{}) interface{},
-	valueSelector func(interface{}) interface{},
-) {
+	valueSelector func(interface{}) interface{}) {
 	res := reflect.ValueOf(result)
 	m := reflect.Indirect(res)
 	next := q.Iterate()
@@ -518,7 +516,8 @@ func (q Query) ToMapBy(
 //   - valueSelectorFn is of type "func(TSource)TValue"
 //
 // NOTE: ToMapBy has better performance than ToMapByT.
-func (q Query) ToMapByT(result interface{}, keySelectorFn interface{}, valueSelectorFn interface{}) {
+func (q Query) ToMapByT(result interface{},
+	keySelectorFn interface{}, valueSelectorFn interface{}) {
 	keySelectorGenericFunc, err := newGenericFunc(
 		"ToMapByT", "keySelectorFn", keySelectorFn,
 		simpleParamValidator(newElemTypeSlice(new(genericType)), newElemTypeSlice(new(genericType))),

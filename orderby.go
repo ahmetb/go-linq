@@ -18,8 +18,7 @@ type OrderedQuery struct {
 
 // OrderBy sorts the elements of a collection in ascending order. Elements are
 // sorted according to a key.
-func (q Query) OrderBy(
-	selector func(interface{}) interface{}) OrderedQuery {
+func (q Query) OrderBy(selector func(interface{}) interface{}) OrderedQuery {
 	return OrderedQuery{
 		orders:   []order{{selector: selector}},
 		original: q,
@@ -66,8 +65,7 @@ func (q Query) OrderByT(selectorFn interface{}) OrderedQuery {
 
 // OrderByDescending sorts the elements of a collection in descending order.
 // Elements are sorted according to a key.
-func (q Query) OrderByDescending(
-	selector func(interface{}) interface{}) OrderedQuery {
+func (q Query) OrderByDescending(selector func(interface{}) interface{}) OrderedQuery {
 	return OrderedQuery{
 		orders:   []order{{selector: selector, desc: true}},
 		original: q,
@@ -160,8 +158,7 @@ func (oq OrderedQuery) ThenByT(selectorFn interface{}) OrderedQuery {
 // ThenByDescending performs a subsequent ordering of the elements in a
 // collection in descending order. This method enables you to specify multiple
 // sort criteria by applying any number of ThenBy or ThenByDescending methods.
-func (oq OrderedQuery) ThenByDescending(
-	selector func(interface{}) interface{}) OrderedQuery {
+func (oq OrderedQuery) ThenByDescending(selector func(interface{}) interface{}) OrderedQuery {
 	return OrderedQuery{
 		orders:   append(oq.orders, order{selector: selector, desc: true}),
 		original: oq.original,

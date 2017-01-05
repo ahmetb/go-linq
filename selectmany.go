@@ -120,10 +120,8 @@ func (q Query) SelectManyIndexedT(selectorFn interface{}) Query {
 // SelectManyBy projects each element of a collection to a Query, iterates and
 // flattens the resulting collection into one collection, and invokes a result
 // selector function on each element therein.
-func (q Query) SelectManyBy(
-	selector func(interface{}) Query,
-	resultSelector func(interface{}, interface{}) interface{},
-) Query {
+func (q Query) SelectManyBy(selector func(interface{}) Query,
+	resultSelector func(interface{}, interface{}) interface{}) Query {
 
 	return Query{
 		Iterate: func() Iterator {
@@ -161,7 +159,8 @@ func (q Query) SelectManyBy(
 //   - resultSelectorFn is of type "func(TSource,TCollection)TResult"
 //
 // NOTE: SelectManyBy has better performance than SelectManyByT.
-func (q Query) SelectManyByT(selectorFn interface{}, resultSelectorFn interface{}) Query {
+func (q Query) SelectManyByT(selectorFn interface{},
+	resultSelectorFn interface{}) Query {
 
 	selectorGenericFunc, err := newGenericFunc(
 		"SelectManyByT", "selectorFn", selectorFn,
@@ -236,7 +235,8 @@ func (q Query) SelectManyByIndexed(selector func(int, interface{}) Query,
 //
 // NOTE: SelectManyByIndexed has better performance than
 // SelectManyByIndexedT.
-func (q Query) SelectManyByIndexedT(selectorFn interface{}, resultSelectorFn interface{}) Query {
+func (q Query) SelectManyByIndexedT(selectorFn interface{},
+	resultSelectorFn interface{}) Query {
 	selectorGenericFunc, err := newGenericFunc(
 		"SelectManyByIndexedT", "selectorFn", selectorFn,
 		simpleParamValidator(newElemTypeSlice(new(int), new(genericType)), newElemTypeSlice(new(Query))),

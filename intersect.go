@@ -35,10 +35,8 @@ func (q Query) Intersect(q2 Query) Query {
 // other elements.
 //
 // IntersectBy invokes a transform function on each element of both collections.
-func (q Query) IntersectBy(
-	q2 Query,
-	selector func(interface{}) interface{},
-) Query {
+func (q Query) IntersectBy(q2 Query,
+	selector func(interface{}) interface{}) Query {
 
 	return Query{
 		Iterate: func() Iterator {
@@ -71,7 +69,8 @@ func (q Query) IntersectBy(
 //   - selectorFn is of type "func(TSource) TSource"
 //
 // NOTE: IntersectBy has better performance than IntersectByT.
-func (q Query) IntersectByT(q2 Query, selectorFn interface{}) Query {
+func (q Query) IntersectByT(q2 Query,
+	selectorFn interface{}) Query {
 	selectorGenericFunc, err := newGenericFunc(
 		"IntersectByT", "selectorFn", selectorFn,
 		simpleParamValidator(newElemTypeSlice(new(genericType)), newElemTypeSlice(new(genericType))),
