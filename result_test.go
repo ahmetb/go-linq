@@ -4,6 +4,7 @@ import (
 	"math"
 	"reflect"
 	"testing"
+	"unsafe"
 )
 
 func TestAll(t *testing.T) {
@@ -23,6 +24,12 @@ func TestAll(t *testing.T) {
 	if r2 {
 		t.Errorf("From(%v).All()=%v", input, r2)
 	}
+}
+
+func TestAllT_PanicWhenPredicateFnIsInvalid(t *testing.T) {
+	mustPanicWithError(t, "AllT: parameter [predicateFn] has a invalid function signature. Expected: 'func(T)bool', actual: 'func(int)int'", func() {
+		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).AllT(func(item int) int { return item + 2 })
+	})
 }
 
 func TestAny(t *testing.T) {
@@ -60,6 +67,12 @@ func TestAnyWith(t *testing.T) {
 			t.Errorf("From(%v).Any()=%v expected %v", test.input, r, test.want)
 		}
 	}
+}
+
+func TestAnyWithT_PanicWhenPredicateFnIsInvalid(t *testing.T) {
+	mustPanicWithError(t, "AnyWithT: parameter [predicateFn] has a invalid function signature. Expected: 'func(T)bool', actual: 'func(int)int'", func() {
+		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).AnyWithT(func(item int) int { return item + 2 })
+	})
 }
 
 func TestAverage(t *testing.T) {
@@ -138,6 +151,12 @@ func TestCountWith(t *testing.T) {
 	}
 }
 
+func TestCountWithT_PanicWhenPredicateFnIsInvalid(t *testing.T) {
+	mustPanicWithError(t, "CountWithT: parameter [predicateFn] has a invalid function signature. Expected: 'func(T)bool', actual: 'func(int)int'", func() {
+		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).CountWithT(func(item int) int { return item + 2 })
+	})
+}
+
 func TestFirst(t *testing.T) {
 	tests := []struct {
 		input interface{}
@@ -172,6 +191,12 @@ func TestFirstWith(t *testing.T) {
 	}
 }
 
+func TestFirstWithT_PanicWhenPredicateFnIsInvalid(t *testing.T) {
+	mustPanicWithError(t, "FirstWithT: parameter [predicateFn] has a invalid function signature. Expected: 'func(T)bool', actual: 'func(int)int'", func() {
+		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).FirstWithT(func(item int) int { return item + 2 })
+	})
+}
+
 func TestLast(t *testing.T) {
 	tests := []struct {
 		input interface{}
@@ -204,6 +229,12 @@ func TestLastWith(t *testing.T) {
 			t.Errorf("From(%v).LastWith()=%v expected %v", test.input, r, test.want)
 		}
 	}
+}
+
+func TestLastWithT_PanicWhenPredicateFnIsInvalid(t *testing.T) {
+	mustPanicWithError(t, "LastWithT: parameter [predicateFn] has a invalid function signature. Expected: 'func(T)bool', actual: 'func(int)int'", func() {
+		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).LastWithT(func(item int) int { return item + 2 })
+	})
 }
 
 func TestMax(t *testing.T) {
@@ -302,6 +333,12 @@ func TestSingleWith(t *testing.T) {
 			t.Errorf("From(%v).SingleWith()=%v expected %v", test.input, r, test.want)
 		}
 	}
+}
+
+func TestSingleWithT_PanicWhenPredicateFnIsInvalid(t *testing.T) {
+	mustPanicWithError(t, "SingleWithT: parameter [predicateFn] has a invalid function signature. Expected: 'func(T)bool', actual: 'func(int)int'", func() {
+		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).SingleWithT(func(item int) int { return item + 2 })
+	})
 }
 
 func TestSumInts(t *testing.T) {
@@ -407,13 +444,109 @@ func TestToMapBy(t *testing.T) {
 	}
 }
 
+func TestToMapByT_PanicWhenKeySelectorFnIsInvalid(t *testing.T) {
+	mustPanicWithError(t, "ToMapByT: parameter [keySelectorFn] has a invalid function signature. Expected: 'func(T)T', actual: 'func(int,int)int'", func() {
+		result := make(map[int]bool)
+		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).ToMapByT(
+			&result,
+			func(item, j int) int { return item + 2 },
+			func(item int) int { return item + 2 },
+		)
+	})
+}
+
+func TestToMapByT_PanicWhenValueSelectorFnIsInvalid(t *testing.T) {
+	mustPanicWithError(t, "ToMapByT: parameter [valueSelectorFn] has a invalid function signature. Expected: 'func(T)T', actual: 'func(int,int)int'", func() {
+		result := make(map[int]bool)
+		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).ToMapByT(
+			&result,
+			func(item int) int { return item + 2 },
+			func(item, j int) int { return item + 2 },
+		)
+	})
+}
+
 func TestToSlice(t *testing.T) {
-	input := []int{1, 2, 3, 4}
+	tests := []struct {
+		input             []int
+		output            []int
+		want              []int
+		wantedOutputCap   int
+		outputIsANewSlice bool
+	}{
+		// output is nil slice
+		{
+			[]int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
+			nil,
+			[]int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
+			16,
+			true},
+		// output is empty slice (cap=0)
+		{
+			[]int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
+			[]int{},
+			[]int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
+			16,
+			true},
+		// ToSlice() overwrites existing elements and reslices.
+		{[]int{1, 2, 3},
+			[]int{99, 98, 97, 96, 95},
+			[]int{1, 2, 3},
+			5,
+			false},
+		// cap(out)>len(result): we get the same slice, resliced. cap unchanged.
+		{[]int{1, 2, 3, 4, 5},
+			make([]int, 0, 11),
+			[]int{1, 2, 3, 4, 5},
+			11,
+			false},
+		// cap(out)==len(result): we get the same slice, cap unchanged.
+		{[]int{1, 2, 3, 4, 5},
+			make([]int, 0, 5),
+			[]int{1, 2, 3, 4, 5},
+			5,
+			false},
+		// cap(out)<len(result): we get a new slice with len(out)=len(result) and cap doubled: cap(out')==2*cap(out)
+		{[]int{1, 2, 3, 4, 5},
+			make([]int, 0, 4),
+			[]int{1, 2, 3, 4, 5},
+			8,
+			true},
+		// cap(out)<<len(result): trigger capacity to double more than once (26 -> 52 -> 104)
+		{make([]int, 100),
+			make([]int, 0, 26),
+			make([]int, 100),
+			104,
+			true},
+		// len(out) > len(result): we get the same slice with len(out)=len(result) and cap unchanged: cap(out')==cap(out)
+		{[]int{1, 2, 3, 4, 5},
+			make([]int, 0, 50),
+			[]int{1, 2, 3, 4, 5},
+			50,
+			false},
+	}
 
-	result := []int{}
-	From(input).ToSlice(&result)
+	for c, test := range tests {
+		initialOutputValue := test.output
+		From(test.input).ToSlice(&test.output)
+		modifiedOutputValue := test.output
 
-	if !reflect.DeepEqual(result, input) {
-		t.Errorf("From(%v).ToSlice()=%v expected %v", input, result, input)
+		// test slice values
+		if !reflect.DeepEqual(test.output, test.want) {
+			t.Fatalf("case #%d: From(%#v).ToSlice()=%#v expected=%#v", c, test.input, test.output, test.want)
+		}
+
+		// test capacity of output slice
+		if cap(test.output) != test.wantedOutputCap {
+			t.Fatalf("case #%d: cap(output)=%d expected=%d", c, cap(test.output), test.wantedOutputCap)
+		}
+
+		// test if a new slice is allocated
+		inPtr := (*reflect.SliceHeader)(unsafe.Pointer(&initialOutputValue)).Data
+		outPtr := (*reflect.SliceHeader)(unsafe.Pointer(&modifiedOutputValue)).Data
+		isNewSlice := inPtr != outPtr
+		if isNewSlice != test.outputIsANewSlice {
+			t.Fatalf("case #%d: isNewSlice=%v (in=0x%X out=0x%X) expected=%v", c, isNewSlice, inPtr, outPtr, test.outputIsANewSlice)
+		}
 	}
 }

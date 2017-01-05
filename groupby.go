@@ -6,9 +6,9 @@ type Group struct {
 	Group []interface{}
 }
 
-// GroupBy method groups the elements of a collection according
-// to a specified key selector function and projects the elements for each group
-// by using a specified function.
+// GroupBy method groups the elements of a collection according to a specified
+// key selector function and projects the elements for each group by using a
+// specified function.
 func (q Query) GroupBy(
 	keySelector func(interface{}) interface{},
 	elementSelector func(interface{}) interface{},
@@ -45,4 +45,39 @@ func (q Query) GroupBy(
 			}
 		},
 	}
+}
+
+// GroupByT is the typed version of GroupBy.
+//
+//   - keySelectorFn is of type "func(TSource) TKey"
+//   - elementSelectorFn is of type "func(TSource) TElement"
+//
+// NOTE: GroupBy has better performance than GroupByT.
+func (q Query) GroupByT(keySelectorFn interface{}, elementSelectorFn interface{}) Query {
+	keySelectorGenericFunc, err := newGenericFunc(
+		"GroupByT", "keySelectorFn", keySelectorFn,
+		simpleParamValidator(newElemTypeSlice(new(genericType)), newElemTypeSlice(new(genericType))),
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	keySelectorFunc := func(item interface{}) interface{} {
+		return keySelectorGenericFunc.Call(item)
+	}
+
+	elementSelectorGenericFunc, err := newGenericFunc(
+		"GroupByT", "elementSelectorFn", elementSelectorFn,
+		simpleParamValidator(newElemTypeSlice(new(genericType)), newElemTypeSlice(new(genericType))),
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	elementSelectorFunc := func(item interface{}) interface{} {
+		return elementSelectorGenericFunc.Call(item)
+
+	}
+
+	return q.GroupBy(keySelectorFunc, elementSelectorFunc)
 }

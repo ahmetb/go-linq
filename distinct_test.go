@@ -53,3 +53,9 @@ func TestDistinctBy(t *testing.T) {
 		t.Errorf("From(%v).DistinctBy()=%v expected %v", users, toSlice(q), want)
 	}
 }
+
+func TestDistinctByT_PanicWhenSelectorFnIsInvalid(t *testing.T) {
+	mustPanicWithError(t, "DistinctByT: parameter [selectorFn] has a invalid function signature. Expected: 'func(T)T', actual: 'func(string,string)bool'", func() {
+		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).DistinctByT(func(indice, item string) bool { return item == "2" })
+	})
+}

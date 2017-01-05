@@ -1,7 +1,7 @@
 package linq
 
-// Append inserts an item to the end of a collection,
-// so it becomes the last item.
+// Append inserts an item to the end of a collection, so it becomes the last
+// item.
 func (q Query) Append(item interface{}) Query {
 	return Query{
 		Iterate: func() Iterator {
@@ -28,8 +28,8 @@ func (q Query) Append(item interface{}) Query {
 // Concat concatenates two collections.
 //
 // The Concat method differs from the Union method because the Concat method
-// returns all the original elements in the input sequences.
-// The Union method returns only unique elements.
+// returns all the original elements in the input sequences. The Union method
+// returns only unique elements.
 func (q Query) Concat(q2 Query) Query {
 	return Query{
 		Iterate: func() Iterator {
@@ -53,8 +53,8 @@ func (q Query) Concat(q2 Query) Query {
 	}
 }
 
-// Prepend inserts an item to the beginning of a collection,
-// so it becomes the first item.
+// Prepend inserts an item to the beginning of a collection, so it becomes the
+// first item.
 func (q Query) Prepend(item interface{}) Query {
 	return Query{
 		Iterate: func() Iterator {

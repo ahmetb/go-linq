@@ -23,3 +23,9 @@ func TestExceptBy(t *testing.T) {
 		t.Errorf("From(%v).ExceptBy(%v)=%v expected %v", input1, input2, toSlice(q), want)
 	}
 }
+
+func TestExceptByT_PanicWhenSelectorFnIsInvalid(t *testing.T) {
+	mustPanicWithError(t, "ExceptByT: parameter [selectorFn] has a invalid function signature. Expected: 'func(T)T', actual: 'func(int,int)int'", func() {
+		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).ExceptByT(From([]int{1}), func(x, item int) int { return item + 2 })
+	})
+}

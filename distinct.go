@@ -1,7 +1,7 @@
 package linq
 
-// Distinct method returns distinct elements from a collection.
-// The result is an unordered collection that contains no duplicate values.
+// Distinct method returns distinct elements from a collection. The result is an
+// unordered collection that contains no duplicate values.
 func (q Query) Distinct() Query {
 	return Query{
 		Iterate: func() Iterator {
@@ -22,11 +22,11 @@ func (q Query) Distinct() Query {
 	}
 }
 
-// Distinct method returns distinct elements from a collection.
-// The result is an ordered collection that contains no duplicate values.
+// Distinct method returns distinct elements from a collection. The result is an
+// ordered collection that contains no duplicate values.
 //
 // NOTE: Distinct method on OrderedQuery type has better performance than
-// Distinct method on Query type
+// Distinct method on Query type.
 func (oq OrderedQuery) Distinct() OrderedQuery {
 	return OrderedQuery{
 		orders: oq.orders,
@@ -72,4 +72,27 @@ func (q Query) DistinctBy(selector func(interface{}) interface{}) Query {
 			}
 		},
 	}
+}
+
+// DistinctByT is the typed version of DistinctBy.
+//
+//   - selectorFn is of type "func(TSource) TSource".
+//
+// NOTE: DistinctBy has better performance than DistinctByT.
+func (q Query) DistinctByT(selectorFn interface{}) Query {
+	selectorFunc, ok := selectorFn.(func(interface{}) interface{})
+	if !ok {
+		selectorGenericFunc, err := newGenericFunc(
+			"DistinctByT", "selectorFn", selectorFn,
+			simpleParamValidator(newElemTypeSlice(new(genericType)), newElemTypeSlice(new(genericType))),
+		)
+		if err != nil {
+			panic(err)
+		}
+
+		selectorFunc = func(item interface{}) interface{} {
+			return selectorGenericFunc.Call(item)
+		}
+	}
+	return q.DistinctBy(selectorFunc)
 }
