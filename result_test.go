@@ -392,6 +392,28 @@ func TestSumFloats(t *testing.T) {
 	}
 }
 
+func TestToArray(t *testing.T) {
+	tests := []struct {
+		input  interface{}
+		output [5]int
+		want   [5]int
+	}{
+		{[]int{1, 2, 3, 3, 5}, [5]int{5, 5, 5, 5, 5}, [5]int{1, 2, 3, 3, 5}},
+		{[]int{1, 2, 3, 4, 5}, [5]int{}, [5]int{1, 2, 3, 4, 5}},
+		{[]int{1, 2, 3, 4}, [5]int{}, [5]int{1, 2, 3, 4, 0}},
+		{[]int{1, 2, 3, 4, 5, 6, 7}, [5]int{}, [5]int{1, 2, 3, 4, 5}},
+	}
+
+	for _, test := range tests {
+		From(test.input).ToArray(&test.output)
+
+		if !reflect.DeepEqual(test.output, test.want) {
+			t.Fatalf("From(%#v).ToArray()=%#v expected=%#v", test.input, test.output, test.want)
+		}
+	}
+
+}
+
 func TestToChannel(t *testing.T) {
 	c := make(chan interface{})
 	input := []int{1, 2, 3, 4, 5}

@@ -461,6 +461,23 @@ func (q Query) SumFloats() (r float64) {
 	return
 }
 
+// ToArray iterates over a collection and saves the results in the array pointed
+// by result. It overwrites the existing values, starting from index 0.
+func (q Query) ToArray(result interface{}) {
+	res := reflect.ValueOf(result)
+	array := reflect.Indirect(res)
+	len := array.Len()
+
+	next := q.Iterate()
+	index := 0
+	for item, ok := next(); ok && index < len; item, ok = next() {
+		array.Index(index).Set(reflect.ValueOf(item))
+		index++
+	}
+
+	res.Elem().Set(array)
+}
+
 // ToChannel iterates over a collection and outputs each element to a channel,
 // then closes it.
 func (q Query) ToChannel(result chan<- interface{}) {
