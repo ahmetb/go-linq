@@ -225,6 +225,77 @@ func (q Query) FirstWithT(predicateFn interface{}) interface{} {
 	return q.FirstWith(predicateFunc)
 }
 
+// ForEach performs the specified action on each element of a collection.
+func (q Query) ForEach(action func(interface{})) {
+	next := q.Iterate()
+
+	for item, ok := next(); ok; item, ok = next() {
+		action(item)
+	}
+}
+
+// ForEachT is the typed version of ForEach.
+//
+//   - actionFn is of type "func(TSource)"
+//
+// NOTE: ForEach has better performance than ForEachT.
+func (q Query) ForEachT(actionFn interface{}) {
+	actionGenericFunc, err := newGenericFunc(
+		"ForEachT", "actionFn", actionFn,
+		simpleParamValidator(newElemTypeSlice(new(genericType)), nil),
+	)
+
+	if err != nil {
+		panic(err)
+	}
+
+	actionFunc := func(item interface{}) {
+		actionGenericFunc.Call(item)
+	}
+
+	q.ForEach(actionFunc)
+}
+
+// ForEachIndexed performs the specified action on each element of a collection.
+//
+// The first argument to action represents the zero-based index of that
+// element in the source collection. This can be useful if the elements are in a
+// known order and you want to do something with an element at a particular
+// index, for example. It can also be useful if you want to retrieve the index
+// of one or more elements. The second argument to action represents the
+// element to process.
+func (q Query) ForEachIndexed(action func(int, interface{})) {
+	next := q.Iterate()
+	index := 0
+
+	for item, ok := next(); ok; item, ok = next() {
+		action(index, item)
+		index++
+	}
+}
+
+// ForEachIndexedT is the typed version of ForEachIndexed.
+//
+//   - actionFn is of type "func(int, TSource)"
+//
+// NOTE: ForEachIndexed has better performance than ForEachIndexedT.
+func (q Query) ForEachIndexedT(actionFn interface{}) {
+	actionGenericFunc, err := newGenericFunc(
+		"ForEachIndexedT", "actionFn", actionFn,
+		simpleParamValidator(newElemTypeSlice(new(int), new(genericType)), nil),
+	)
+
+	if err != nil {
+		panic(err)
+	}
+
+	actionFunc := func(index int, item interface{}) {
+		actionGenericFunc.Call(index, item)
+	}
+
+	q.ForEachIndexed(actionFunc)
+}
+
 // Last returns the last element of a collection.
 func (q Query) Last() (r interface{}) {
 	next := q.Iterate()
