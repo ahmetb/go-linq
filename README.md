@@ -170,8 +170,9 @@ From(sentences).
 **More examples** can be found in the [documentation](https://godoc.org/github.com/ahmetalpbalkan/go-linq).
 
 ## Release Notes
+
 ~~~
-v3.0.0 (2017-01-05)
+v3.0.0 (2017-01-10)
 * Breaking change: ToSlice() now overwrites existing slice starting
   from index 0 and grows/reslices it as needed.
 * Generic methods support (thanks @cleitonmarx!)
@@ -179,7 +180,7 @@ v3.0.0 (2017-01-05)
   - You can now avoid type assertions and interface{}s
   - Functions with generic methods are named as "MethodNameT" and
     signature for the existing LINQ methods are unchanged.
-* Added AggregateWithSeedBy()
+* Added ForEach(), ForEachIndexed() and AggregateWithSeedBy().
 
 v2.0.0 (2016-09-02)
 * IMPORTANT: This release is a BREAKING CHANGE. The old version
