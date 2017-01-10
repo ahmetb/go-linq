@@ -197,6 +197,60 @@ func TestFirstWithT_PanicWhenPredicateFnIsInvalid(t *testing.T) {
 	})
 }
 
+func TestForEach(t *testing.T) {
+	tests := []struct {
+		input interface{}
+		want  interface{}
+	}{
+		{[5]int{1, 2, 2, 35, 111}, []int{2, 4, 4, 70, 222}},
+		{[]int{}, []int{}},
+	}
+
+	for _, test := range tests {
+		output := []int{}
+		From(test.input).ForEach(func(item interface{}) {
+			output = append(output, item.(int)*2)
+		})
+
+		if !reflect.DeepEqual(output, test.want) {
+			t.Fatalf("From(%#v).ForEach()=%#v expected=%#v", test.input, output, test.want)
+		}
+	}
+}
+
+func TestForEachT_PanicWhenActionFnIsInvalid(t *testing.T) {
+	mustPanicWithError(t, "ForEachT: parameter [actionFn] has a invalid function signature. Expected: 'func(T)', actual: 'func(int,int)'", func() {
+		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).ForEachT(func(item, idx int) { item = item + 2 })
+	})
+}
+
+func TestForEachIndexed(t *testing.T) {
+	tests := []struct {
+		input interface{}
+		want  interface{}
+	}{
+		{[5]int{1, 2, 2, 35, 111}, []int{1, 3, 4, 38, 115}},
+		{[]int{}, []int{}},
+	}
+
+	for _, test := range tests {
+		output := []int{}
+		From(test.input).ForEachIndexed(func(index int, item interface{}) {
+			output = append(output, item.(int)+index)
+		})
+
+		if !reflect.DeepEqual(output, test.want) {
+			t.Fatalf("From(%#v).ForEachIndexed()=%#v expected=%#v", test.input, output, test.want)
+		}
+	}
+}
+
+func TestForEachIndexedT_PanicWhenActionFnIsInvalid(t *testing.T) {
+	mustPanicWithError(t, "ForEachIndexedT: parameter [actionFn] has a invalid function signature. Expected: 'func(int,T)', actual: 'func(int)'", func() {
+		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).ForEachIndexedT(func(item int) { item = item + 2 })
+	})
+}
+
 func TestLast(t *testing.T) {
 	tests := []struct {
 		input interface{}

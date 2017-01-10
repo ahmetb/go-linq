@@ -1735,6 +1735,70 @@ func ExampleQuery_FirstWithT() {
 
 }
 
+// The following code example demonstrates how to use ForEach
+// to output all elements of an array.
+func ExampleQuery_ForEach() {
+	fruits := []string{"orange", "apple", "lemon", "apple"}
+
+	From(fruits).ForEach(func(fruit interface{}) {
+		fmt.Println(fruit)
+	})
+
+	// Output:
+	// orange
+	// apple
+	// lemon
+	// apple
+}
+
+// The following code example demonstrates how to use ForEachIndexed
+// to output all elements of an array with its index.
+func ExampleQuery_ForEachIndexed() {
+	fruits := []string{"orange", "apple", "lemon", "apple"}
+
+	From(fruits).ForEachIndexed(func(i int, fruit interface{}) {
+		fmt.Printf("%d.%s\n", i, fruit)
+	})
+
+	// Output:
+	// 0.orange
+	// 1.apple
+	// 2.lemon
+	// 3.apple
+}
+
+// The following code example demonstrates how to use ForEachT
+// to output all elements of an array.
+func ExampleQuery_ForEachT() {
+	fruits := []string{"orange", "apple", "lemon", "apple"}
+
+	From(fruits).ForEachT(func(fruit string) {
+		fmt.Println(fruit)
+	})
+
+	// Output:
+	// orange
+	// apple
+	// lemon
+	// apple
+}
+
+// The following code example demonstrates how to use ForEachIndexedT
+// to output all elements of an array with its index.
+func ExampleQuery_ForEachIndexedT() {
+	fruits := []string{"orange", "apple", "lemon", "apple"}
+
+	From(fruits).ForEachIndexedT(func(i int, fruit string) {
+		fmt.Printf("%d.%s\n", i, fruit)
+	})
+
+	// Output:
+	// 0.orange
+	// 1.apple
+	// 2.lemon
+	// 3.apple
+}
+
 // The following code example demonstrates how to use GroupByT
 // to group the elements of a slice.
 func ExampleQuery_GroupByT() {
