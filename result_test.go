@@ -202,14 +202,14 @@ func TestForEach(t *testing.T) {
 		input interface{}
 		want  interface{}
 	}{
-		{[5]int{1, 2, 2, 35, 111}, []int{1, 2, 2, 35, 111}},
+		{[5]int{1, 2, 2, 35, 111}, []int{2, 4, 4, 70, 222}},
 		{[]int{}, []int{}},
 	}
 
 	for _, test := range tests {
 		output := []int{}
 		From(test.input).ForEach(func(item interface{}) {
-			output = append(output, item.(int))
+			output = append(output, item.(int)*2)
 		})
 
 		if !reflect.DeepEqual(output, test.want) {
