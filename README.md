@@ -8,22 +8,16 @@ A powerful language integrated query (LINQ) library for Go.
 
 ## Installation
 
-    $ go get github.com/ahmetalpbalkan/go-linq
+    go get github.com/ahmetalpbalkan/go-linq
 
-We recommend using a dependency manager (e.g. [govendor][govendor] or
-[godep][godep]) to maintain a local copy of this package in your project.
+`go-linq` follows semantic versioning. However, we recommend using a dependency manager
+such as [govendor][govendor] or [godep][godep] to maintain a local copy of this package
+in your repository. Alternatively you can use the following command to get a specific version:
+
+    go get gopkg.in/ahmetalpbalkan/go-linq.v3
 
 [govendor]: https://github.com/kardianos/govendor
 [godep]: https://github.com/tools/godep/
-
-> :warning: :warning: `go-linq` has recently introduced _breaking API changes_
-> with v2.0.0. See [release notes](#release-notes) for details. v2.0.0 comes with
-> a refined interface, dramatically increased performance and memory efficiency,
-> and new features such as lazy evaluation ([read more](http://kalan.rocks/2016/07/16/manipulating-data-with-iterators-in-go/)).
->
-> The old version is still available in `archive/0.9` branch and tagged as `0.9`
-> as well. If you are using `go-linq`, please vendor a copy of it in your
-> source tree to avoid getting broken by upstream changes.
 
 ## Quickstart
 
