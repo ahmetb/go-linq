@@ -8,12 +8,14 @@ before_install:
   - go get github.com/mattn/goveralls
   - go get golang.org/x/tools/cmd/cover
   - go get -u github.com/golang/lint/golint
+  - go get -u github.com/bradleyfalzon/apicompat/cmd/apicompat
 
 script:
   - go vet -x ./...
   - golint ./...
   - go test -v  ./...
   - go test -covermode=count -coverprofile=profile.cov
+  - test -z "$(apicompat -before master -after HEAD ./... | tee /dev/stderr)"
 
 after_script:
   - goveralls -coverprofile=profile.cov -service=travis-ci
