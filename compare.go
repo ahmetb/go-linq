@@ -3,7 +3,7 @@ package linq
 type comparer func(interface{}, interface{}) int
 
 // Comparable is an interface that has to be implemented by a custom collection
-// elememts in order to work with linq.
+// elements in order to work with linq.
 //
 // Example:
 // 	func (f foo) CompareTo(c Comparable) int {
