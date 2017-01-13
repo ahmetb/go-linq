@@ -12,7 +12,8 @@ before_install:
 
 script:
   - go vet -x ./...
-  - golint ./...
+  - test -z "$(golint ./...)"
+  - test -z "$(gofmt -s -l -w . | tee /dev/stderr)"
   - go test -v  ./...
   - go test -covermode=count -coverprofile=profile.cov
   - test -z "$(apicompat -before ${TRAVIS_COMMIT_RANGE%...*} -after ${TRAVIS_COMMIT_RANGE#*...} ./... | tee /dev/stderr)"
