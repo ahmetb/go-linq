@@ -1,4 +1,4 @@
-# go-linq [![GoDoc](https://godoc.org/github.com/ahmetalpbalkan/go-linq?status.svg)](https://godoc.org/github.com/ahmetalpbalkan/go-linq) [![Build Status](https://travis-ci.org/ahmetalpbalkan/go-linq.svg?branch=master)](https://travis-ci.org/ahmetalpbalkan/go-linq) [![Coverage Status](https://coveralls.io/repos/github/ahmetalpbalkan/go-linq/badge.svg?branch=master)](https://coveralls.io/github/ahmetalpbalkan/go-linq?branch=master) [![Go Report Card](https://goreportcard.com/badge/github.com/ahmetalpbalkan/go-linq)](https://goreportcard.com/report/github.com/ahmetalpbalkan/go-linq)
+# go-linq [![GoDoc](https://godoc.org/github.com/ahmetb/go-linq?status.svg)](https://godoc.org/github.com/ahmetb/go-linq) [![Build Status](https://travis-ci.org/ahmetb/go-linq.svg?branch=master)](https://travis-ci.org/ahmetb/go-linq) [![Coverage Status](https://coveralls.io/repos/github/ahmetb/go-linq/badge.svg?branch=master)](https://coveralls.io/github/ahmetb/go-linq?branch=master) [![Go Report Card](https://goreportcard.com/badge/github.com/ahmetb/go-linq)](https://goreportcard.com/report/github.com/ahmetb/go-linq)
 A powerful language integrated query (LINQ) library for Go.
 * Written in vanilla Go, no dependencies!
 * Complete lazy evaluation with iterator pattern
@@ -8,13 +8,13 @@ A powerful language integrated query (LINQ) library for Go.
 
 ## Installation
 
-    go get github.com/ahmetalpbalkan/go-linq
+    go get github.com/ahmetb/go-linq
 
 `go-linq` follows semantic versioning. However, we recommend using a dependency manager
 such as [govendor][govendor] or [godep][godep] to maintain a local copy of this package
 in your repository. Alternatively you can use the following command to get a specific version:
 
-    go get gopkg.in/ahmetalpbalkan/go-linq.v3
+    go get gopkg.in/ahmetb/go-linq.v3
 
 [govendor]: https://github.com/kardianos/govendor
 [godep]: https://github.com/tools/godep/
@@ -28,7 +28,7 @@ Usage is as easy as chaining methods like:
 **Example 1: Find all owners of cars manufactured after 2015**
 
 ```go
-import . "github.com/ahmetalpbalkan/go-linq"
+import . "github.com/ahmetb/go-linq"
 	
 type Car struct {
     year int
@@ -63,7 +63,7 @@ From(cars).WhereT(func(c Car) bool {
 **Example 2: Find the author who has written the most books**
 
 ```go
-import . "github.com/ahmetalpbalkan/go-linq"
+import . "github.com/ahmetb/go-linq"
 	
 type Book struct {
 	id      int
@@ -161,7 +161,7 @@ From(sentences).
 	ToSlice(&results)
 ```
 
-**More examples** can be found in the [documentation](https://godoc.org/github.com/ahmetalpbalkan/go-linq).
+**More examples** can be found in the [documentation](https://godoc.org/github.com/ahmetb/go-linq).
 
 ## Release Notes
 
