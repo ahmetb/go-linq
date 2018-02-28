@@ -1,4 +1,5 @@
 # go-linq [![GoDoc](https://godoc.org/github.com/ahmetb/go-linq?status.svg)](https://godoc.org/github.com/ahmetb/go-linq) [![Build Status](https://travis-ci.org/ahmetb/go-linq.svg?branch=master)](https://travis-ci.org/ahmetb/go-linq) [![Coverage Status](https://coveralls.io/repos/github/ahmetb/go-linq/badge.svg?branch=master)](https://coveralls.io/github/ahmetb/go-linq?branch=master) [![Go Report Card](https://goreportcard.com/badge/github.com/ahmetb/go-linq)](https://goreportcard.com/report/github.com/ahmetb/go-linq)
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fahmetb%2Fgo-linq.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fahmetb%2Fgo-linq?ref=badge_shield)
 A powerful language integrated query (LINQ) library for Go.
 * Written in vanilla Go, no dependencies!
 * Complete lazy evaluation with iterator pattern
@@ -214,3 +215,7 @@ v0.9-rc1
 * travis-ci.org build integrated
 * open sourced on github, master & dev branches
 ~~~
+
+
+## License
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fahmetb%2Fgo-linq.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Fahmetb%2Fgo-linq?ref=badge_large)
