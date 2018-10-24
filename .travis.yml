@@ -2,12 +2,12 @@ sudo: false
 
 language: go
 go:
-  - 1.7
+  - 1.11
 
 before_install:
   - go get github.com/mattn/goveralls
   - go get golang.org/x/tools/cmd/cover
-  - go get -u github.com/golang/lint/golint
+  - go get -u golang.org/x/lint/golint
   - go get -u github.com/bradleyfalzon/apicompat/cmd/apicompat
 
 script:
