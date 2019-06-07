@@ -3,12 +3,11 @@ sudo: false
 language: go
 go:
   - 1.11
+  - tip
 
-before_install:
-  - go get github.com/mattn/goveralls
-  - go get golang.org/x/tools/cmd/cover
-  - go get -u golang.org/x/lint/golint
-  - go get -u github.com/bradleyfalzon/apicompat/cmd/apicompat
+install: true
+env:
+  - GO111MODULE=on
 
 script:
   - go vet -x ./...
