@@ -725,6 +725,47 @@ func ExampleQuery_GroupJoin() {
 	// [{a [apple apricot]} {b [banana]} {c [cherry clementine]}]
 }
 
+// The following code example demonstrates how to use IndexOf
+// to retrieve the position of an item in the array and then
+// update that item.
+func ExampleQuery_IndexOf() {
+	type Item struct {
+		ID   uint64
+		Name string
+	}
+	items := []Item{
+		{
+			ID:   1,
+			Name: "Joe",
+		},
+		{
+			ID:   2,
+			Name: "Bob",
+		},
+		{
+			ID:   3,
+			Name: "Rickster",
+		},
+		{
+			ID:   4,
+			Name: "Jim",
+		},
+	}
+
+	index := From(items).IndexOf(func(i interface{}) bool {
+		item, ok := i.(Item)
+		return ok && item.Name == "Rickster"
+	})
+
+	if index >= 0 {
+		// We found the item in the array. Change the name using the index.
+		items[index].Name = "Joshua"
+		fmt.Println("Item found at:", index, "new name:", items[index].Name)
+	}
+	// Output:
+	// Item found at: 2 new name: Joshua
+}
+
 // The following code example demonstrates how to use Join
 // to perform an inner join of two slices based on a common key.
 func ExampleQuery_Join() {
