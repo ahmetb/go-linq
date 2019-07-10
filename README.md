@@ -1,5 +1,7 @@
 # go-linq [![GoDoc](https://godoc.org/github.com/ahmetb/go-linq?status.svg)](https://godoc.org/github.com/ahmetb/go-linq) [![Build Status](https://travis-ci.org/ahmetb/go-linq.svg?branch=master)](https://travis-ci.org/ahmetb/go-linq) [![Coverage Status](https://coveralls.io/repos/github/ahmetb/go-linq/badge.svg?branch=master)](https://coveralls.io/github/ahmetb/go-linq?branch=master) [![Go Report Card](https://goreportcard.com/badge/github.com/ahmetb/go-linq)](https://goreportcard.com/report/github.com/ahmetb/go-linq)
+
 A powerful language integrated query (LINQ) library for Go.
+
 * Written in vanilla Go, no dependencies!
 * Complete lazy evaluation with iterator pattern
 * Safe for concurrent use
@@ -8,28 +10,26 @@ A powerful language integrated query (LINQ) library for Go.
 
 ## Installation
 
-    go get github.com/ahmetb/go-linq
+When used with Go modules, use the following import path:
 
-`go-linq` follows semantic versioning. However, we recommend using a dependency manager
-such as [govendor][govendor] or [godep][godep] to maintain a local copy of this package
-in your repository. Alternatively you can use the following command to get a specific version:
+    go get github.com/ahmetb/go-linq/v3
+
+Older versions of Go using different dependency management tools can use the
+following import path to prevent breaking API changes:
 
     go get gopkg.in/ahmetb/go-linq.v3
-
-[govendor]: https://github.com/kardianos/govendor
-[godep]: https://github.com/tools/godep/
 
 ## Quickstart
 
 Usage is as easy as chaining methods like:
 
-`From(slice)` `.Where(predicate)` `.Select(selector)` `.Union(data)` 
+`From(slice)` `.Where(predicate)` `.Select(selector)` `.Union(data)`
 
 **Example 1: Find all owners of cars manufactured after 2015**
 
 ```go
 import . "github.com/ahmetb/go-linq"
-	
+
 type Car struct {
     year int
     owner, model string
@@ -57,14 +57,14 @@ From(cars).WhereT(func(c Car) bool {
 	return c.year >= 2015
 }).SelectT(func(c Car) string {
 	return c.owner
-}).ToSlice(&owners)	
+}).ToSlice(&owners)
 ```
 
 **Example 2: Find the author who has written the most books**
 
 ```go
 import . "github.com/ahmetb/go-linq"
-	
+
 type Book struct {
 	id      int
 	title   string
@@ -141,7 +141,7 @@ From(sentences).
 		return From(strings.Split(sentence, " "))
 	}).
 	// group the words
-	GroupByT( 
+	GroupByT(
 		func(word string) string { return word },
 		func(word string) string { return word },
 	).
@@ -166,6 +166,11 @@ From(sentences).
 ## Release Notes
 
 ~~~
+
+v3.0.1 (2019-07-09)
+* Support for Go modules
+* Added IndexOf()/IndexOfT().
+
 v3.0.0 (2017-01-10)
 * Breaking change: ToSlice() now overwrites existing slice starting
   from index 0 and grows/reslices it as needed.
@@ -183,7 +188,7 @@ v2.0.0 (2016-09-02)
   efficiency. (thanks @kalaninja!)
 * API has significantly changed. Most notably:
   - linq.T removed in favor of interface{}
-  - library methods no longer return errors 
+  - library methods no longer return errors
   - PLINQ removed for now (see channels support)
   - support for channels, custom collections and comparables
 
@@ -197,7 +202,7 @@ v0.9-rc3.1
 * bugfix: modifying result slice affects subsequent query methods
 
 v0.9-rc3
-* removed FirstOrNil, LastOrNil, ElementAtOrNil methods 
+* removed FirstOrNil, LastOrNil, ElementAtOrNil methods
 
 v0.9-rc2.5
 * slice-accepting methods accept slices of any type with reflections
