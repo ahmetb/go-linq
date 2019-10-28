@@ -44,7 +44,6 @@ func TestWhereIndexed(t *testing.T) {
 		{"abcde", func(i int, _ interface{}) bool {
 			return i < 2
 		}, []interface{}{'a', 'b'}},
-
 	}
 
 	for _, test := range tests {
