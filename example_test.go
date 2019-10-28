@@ -1386,7 +1386,7 @@ func ExampleQuery_WhereIndexed() {
 
 	fmt.Println(query)
 	// Output:
-	// [0 15 40]
+	// [0 20 15 40]
 }
 
 // The following code example demonstrates how to use the Zip
@@ -2506,7 +2506,7 @@ func ExampleQuery_WhereIndexedT() {
 
 	fmt.Println(query)
 	// Output:
-	// [0 15 40]
+	// [0 20 15 40]
 }
 
 // The following code example demonstrates how to use the Zip
