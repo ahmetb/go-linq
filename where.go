@@ -55,6 +55,7 @@ func (q Query) WhereIndexed(predicate func(int, interface{}) bool) Query {
 			return func() (item interface{}, ok bool) {
 				for item, ok = next(); ok; item, ok = next() {
 					if predicate(index, item) {
+						index++
 						return
 					}
 
