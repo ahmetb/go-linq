@@ -78,7 +78,7 @@ func From(source interface{}) Query {
 	case reflect.String:
 		return FromString(source.(string))
 	case reflect.Chan:
-		return FromChannel(source.(chan interface{}))
+		return FromChannel(source)
 	default:
 		return FromIterable(source.(Iterable))
 	}
@@ -86,12 +86,16 @@ func From(source interface{}) Query {
 
 // FromChannel initializes a linq query with passed channel, linq iterates over
 // channel until it is closed.
-func FromChannel(source <-chan interface{}) Query {
+func FromChannel(source interface{}) Query {
+	var val reflect.Value
+	var ok bool
+	src := reflect.ValueOf(source)
+
 	return Query{
 		Iterate: func() Iterator {
-			return func() (item interface{}, ok bool) {
-				item, ok = <-source
-				return
+			return func() (interface{}, bool) {
+				val, ok = src.Recv()
+				return val.Interface(), ok
 			}
 		},
 	}
