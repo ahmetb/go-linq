@@ -38,7 +38,7 @@ func TestFrom(t *testing.T) {
 }
 
 func TestFromChannel(t *testing.T) {
-	c := make(chan []int, 3)
+	c := make(chan int, 3)
 	c <- 10
 	c <- 15
 	c <- -3
