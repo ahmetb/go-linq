@@ -9,6 +9,12 @@ func TestFrom(t *testing.T) {
 	c <- 1
 	close(c)
 
+	ct := make(chan int, 3)
+	ct <- -10
+	ct <- 0
+	ct <- 10
+	close(ct)
+
 	tests := []struct {
 		input  interface{}
 		output []interface{}
@@ -23,6 +29,7 @@ func TestFrom(t *testing.T) {
 		{map[string]bool{"foo": true}, []interface{}{KeyValue{"foo", true}}, true},
 		{map[string]bool{"foo": true}, []interface{}{KeyValue{"foo", false}}, false},
 		{c, []interface{}{-1, 0, 1}, true},
+		{ct, []interface{}{-10, 0, 10}, true},
 		{foo{f1: 1, f2: true, f3: "string"}, []interface{}{1, true, "string"}, true},
 	}
 
@@ -48,6 +55,20 @@ func TestFromChannel(t *testing.T) {
 
 	if q := FromChannel(c); !validateQuery(q, w) {
 		t.Errorf("FromChannel() failed expected %v", w)
+	}
+}
+
+func TestFromTypedChannel(t *testing.T) {
+	c := make(chan int, 3)
+	c <- 10
+	c <- 15
+	c <- -3
+	close(c)
+
+	w := []interface{}{10, 15, -3}
+
+	if q := FromTypedChannel(c); !validateQuery(q, w) {
+		t.Errorf("FromTypedChannel() failed expected %v", w)
 	}
 }
 
