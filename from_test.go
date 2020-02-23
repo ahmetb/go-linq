@@ -58,7 +58,7 @@ func TestFromChannel(t *testing.T) {
 	}
 }
 
-func TestFromTypedChannel(t *testing.T) {
+func TestFromChannelT(t *testing.T) {
 	c := make(chan int, 3)
 	c <- 10
 	c <- 15
@@ -67,8 +67,8 @@ func TestFromTypedChannel(t *testing.T) {
 
 	w := []interface{}{10, 15, -3}
 
-	if q := FromTypedChannel(c); !validateQuery(q, w) {
-		t.Errorf("FromTypedChannel() failed expected %v", w)
+	if q := FromChannelT(c); !validateQuery(q, w) {
+		t.Errorf("FromChannelT() failed expected %v", w)
 	}
 }
 

@@ -81,7 +81,7 @@ func From(source interface{}) Query {
 		if _, ok := source.(chan interface{}); ok {
 			return FromChannel(source.(chan interface{}))
 		} else {
-			return FromTypedChannel(source)
+			return FromChannelT(source)
 		}
 	default:
 		return FromIterable(source.(Iterable))
@@ -101,9 +101,12 @@ func FromChannel(source <-chan interface{}) Query {
 	}
 }
 
-// FromTypedChannel initializes a linq query with passed typed channel, linq iterates over
-// channel until it is closed.
-func FromTypedChannel(source interface{}) Query {
+// FromChannelT is the typed version of FromChannel.
+//
+//   - source is of type "chan TSource"
+//
+// NOTE: FromChannel has better performance than FromChannelT.
+func FromChannelT(source interface{}) Query {
 	src := reflect.ValueOf(source)
 	return Query{
 		Iterate: func() Iterator {

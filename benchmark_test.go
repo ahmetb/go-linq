@@ -77,7 +77,7 @@ func BenchmarkFromChannel(b *testing.B) {
 	}
 }
 
-func BenchmarkFromTypedChannel(b *testing.B) {
+func BenchmarkFromChannelT(b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		ch := make(chan interface{})
 		go func() {
@@ -88,6 +88,6 @@ func BenchmarkFromTypedChannel(b *testing.B) {
 			close(ch)
 		}()
 
-		FromTypedChannel(ch).All(func(i interface{}) bool { return true })
+		FromChannelT(ch).All(func(i interface{}) bool { return true })
 	}
 }
