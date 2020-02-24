@@ -2527,7 +2527,7 @@ func ExampleQuery_ZipT() {
 
 // The following code example demonstrates how to use the FromChannelT
 // to make a Query from typed channel.
-func ExampleQuery_FromChannelT() {
+func ExampleFromChannelT() {
 	ch := make(chan string, 3)
 	ch <- "one"
 	ch <- "two"
