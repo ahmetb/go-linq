@@ -2509,7 +2509,7 @@ func ExampleQuery_WhereIndexedT() {
 	// [0 20 15 40]
 }
 
-// The following code example demonstrates how to use the Zip
+// The following code example demonstrates how to use the ZipT
 // method to merge two slices.
 func ExampleQuery_ZipT() {
 	number := []int{1, 2, 3, 4, 5}
@@ -2523,4 +2523,20 @@ func ExampleQuery_ZipT() {
 	fmt.Println(q.Results())
 	// Output:
 	// [[1 one] [2 two] [3 three]]
+}
+
+// The following code example demonstrates how to use the FromChannelT
+// to make a Query from typed channel.
+func ExampleFromChannelT() {
+	ch := make(chan string, 3)
+	ch <- "one"
+	ch <- "two"
+	ch <- "three"
+	close(ch)
+
+	q := FromChannelT(ch)
+
+	fmt.Println(q.Results())
+	// Output:
+	// [one two three]
 }

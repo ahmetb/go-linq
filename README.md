@@ -166,6 +166,8 @@ From(sentences).
 ## Release Notes
 
 ~~~
+v3.0.2 (2020-02-23)
+* Added FromChannelT().
 
 v3.0.1 (2019-07-09)
 * Support for Go modules
