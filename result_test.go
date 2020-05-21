@@ -464,6 +464,24 @@ func TestToChannel(t *testing.T) {
 	}
 }
 
+func TestToChannelT(t *testing.T) {
+	c := make(chan string)
+	input := []string{"1", "2", "3", "4", "5"}
+
+	go func() {
+		From(input).ToChannelT(c)
+	}()
+
+	result := []string{}
+	for value := range c {
+		result = append(result, value)
+	}
+
+	if !reflect.DeepEqual(result, input) {
+		t.Errorf("From(%v).ToChannelT()=%v expected %v", input, result, input)
+	}
+}
+
 func TestToMap(t *testing.T) {
 	input := make(map[int]bool)
 	input[1] = true

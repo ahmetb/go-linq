@@ -544,6 +544,22 @@ func (q Query) ToChannel(result chan<- interface{}) {
 	close(result)
 }
 
+// ToChannelT is the typed version of ToChannel.
+//
+//   - result is of type "chan TSource"
+//
+// NOTE: ToChannel has better performance than ToChannelT.
+func (q Query) ToChannelT(result interface{}) {
+	r := reflect.ValueOf(result)
+	next := q.Iterate()
+
+	for item, ok := next(); ok; item, ok = next() {
+		r.Send(reflect.ValueOf(item))
+	}
+
+	r.Close()
+}
+
 // ToMap iterates over a collection and populates result map with elements.
 // Collection elements have to be of KeyValue type to use this method. To
 // populate a map with elements of different type use ToMapBy method. ToMap

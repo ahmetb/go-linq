@@ -1354,6 +1354,24 @@ func ExampleQuery_ToChannel() {
 	// 10
 }
 
+// The following code example demonstrates how to use ToChannelT
+// to send a slice to a typed channel.
+func ExampleQuery_ToChannelT() {
+	c := make(chan string)
+
+	go func() {
+		Repeat("ten", 3).ToChannelT(c)
+	}()
+
+	for i := range c {
+		fmt.Println(i)
+	}
+	// Output:
+	// ten
+	// ten
+	// ten
+}
+
 // The following code example demonstrates how to use ToMap to populate a map.
 func ExampleQuery_ToMap() {
 	type Product struct {
