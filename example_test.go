@@ -375,6 +375,76 @@ func ExampleQuery_CountWith() {
 	// 6
 }
 
+// The following example demonstrates how to use the DefaultIfEmpty
+// method on the results of a group join to perform a left outer join.
+//
+// The first step in producing a left outer join of two collections is to perform
+// an inner join by using a group join. In this example, the list of Person objects
+// is inner-joined to the list of Pet objects based on a Person object that matches Pet.Owner.
+//
+// The second step is to include each element of the first (left) collection in the
+// result set even if that element has no matches in the right collection.
+// This is accomplished by calling DefaultIfEmpty on each sequence of matching
+// elements from the group join.
+// In this example, DefaultIfEmpty is called on each sequence of matching Pet elements.
+// The method returns a collection that contains a single, default value if the sequence
+// of matching Pet elements is empty for any Person element, thereby ensuring that each
+// Person element is represented in the result collection.
+func ExampleQuery_DefaultIfEmpty() {
+	type Person struct {
+		FirstName string
+		LastName  string
+	}
+
+	type Pet struct {
+		Name  string
+		Owner Person
+	}
+
+	magnus := Person{FirstName: "Magnus", LastName: "Hedlund"}
+	terry := Person{FirstName: "Terry", LastName: "Adams"}
+	charlotte := Person{FirstName: "Charlotte", LastName: "Weiss"}
+	arlene := Person{FirstName: "Arlene", LastName: "Huff"}
+
+	barley := Pet{Name: "Barley", Owner: terry}
+	boots := Pet{Name: "Boots", Owner: terry}
+	whiskers := Pet{Name: "Whiskers", Owner: charlotte}
+	bluemoon := Pet{Name: "Blue Moon", Owner: terry}
+	daisy := Pet{Name: "Daisy", Owner: magnus}
+
+	// Create two lists.
+	people := []Person{magnus, terry, charlotte, arlene}
+	pets := []Pet{barley, boots, whiskers, bluemoon, daisy}
+
+	results := []string{}
+	From(people).
+		GroupJoinT(
+			From(pets),
+			func(person Person) Person { return person },
+			func(pet Pet) Person { return pet.Owner },
+			func(person Person, pets []Pet) Group { return Group{Key: person, Group: From(pets).Results()} },
+		).
+		SelectManyByT(
+			func(g Group) Query { return From(g.Group).DefaultIfEmpty(Pet{}) },
+			func(pet Pet, group Group) string {
+				return fmt.Sprintf("%s: %s", group.Key.(Person).FirstName, pet.Name)
+			},
+		).
+		ToSlice(&results)
+
+	for _, s := range results {
+		fmt.Println(s)
+	}
+	// Output:
+	// Magnus: Daisy
+	// Terry: Barley
+	// Terry: Boots
+	// Terry: Blue Moon
+	// Charlotte: Whiskers
+	// Arlene:
+
+}
+
 //The following code example demonstrates how to use Distinct
 //to return distinct elements from a slice of integers.
 func ExampleQuery_Distinct() {
