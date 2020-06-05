@@ -468,9 +468,7 @@ func TestToChannelT(t *testing.T) {
 	c := make(chan string)
 	input := []string{"1", "2", "3", "4", "5"}
 
-	go func() {
-		From(input).ToChannelT(c)
-	}()
+	go From(input).ToChannelT(c)
 
 	result := []string{}
 	for value := range c {
