@@ -1359,9 +1359,7 @@ func ExampleQuery_ToChannel() {
 func ExampleQuery_ToChannelT() {
 	c := make(chan string)
 
-	go func() {
-		Repeat("ten", 3).ToChannelT(c)
-	}()
+	go Repeat("ten", 3).ToChannelT(c)
 
 	for i := range c {
 		fmt.Println(i)
