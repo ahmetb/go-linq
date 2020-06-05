@@ -1296,7 +1296,6 @@ func ExampleQuery_Take() {
 	fmt.Printf("The top three grades are: %v", topThreeGrades)
 	// Output:
 	// The top three grades are: [98 92 85]
-
 }
 
 // The following code example demonstrates how to use TakeWhile
