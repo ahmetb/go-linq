@@ -1296,7 +1296,6 @@ func ExampleQuery_Take() {
 	fmt.Printf("The top three grades are: %v", topThreeGrades)
 	// Output:
 	// The top three grades are: [98 92 85]
-
 }
 
 // The following code example demonstrates how to use TakeWhile
@@ -1352,6 +1351,22 @@ func ExampleQuery_ToChannel() {
 	// 10
 	// 10
 	// 10
+}
+
+// The following code example demonstrates how to use ToChannelT
+// to send a slice to a typed channel.
+func ExampleQuery_ToChannelT() {
+	c := make(chan string)
+
+	go Repeat("ten", 3).ToChannelT(c)
+
+	for i := range c {
+		fmt.Println(i)
+	}
+	// Output:
+	// ten
+	// ten
+	// ten
 }
 
 // The following code example demonstrates how to use ToMap to populate a map.
