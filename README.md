@@ -28,7 +28,7 @@ Usage is as easy as chaining methods like:
 **Example 1: Find all owners of cars manufactured after 2015**
 
 ```go
-import . "github.com/ahmetb/go-linq"
+import . "github.com/ahmetb/go-linq/v3"
 
 type Car struct {
     year int
@@ -63,7 +63,7 @@ From(cars).WhereT(func(c Car) bool {
 **Example 2: Find the author who has written the most books**
 
 ```go
-import . "github.com/ahmetb/go-linq"
+import . "github.com/ahmetb/go-linq/v3"
 
 type Book struct {
 	id      int
@@ -165,11 +165,12 @@ From(sentences).
 
 ## Release Notes
 
-~~~
-v3.0.2 (2020-02-23)
+```text
+v3.2.0 (2020-12-29)
 * Added FromChannelT().
+* Added DefaultIfEmpty().
 
-v3.0.1 (2019-07-09)
+v3.1.0 (2019-07-09)
 * Support for Go modules
 * Added IndexOf()/IndexOfT().
 
@@ -220,4 +221,4 @@ v0.9-rc1
 * type assertion limitations are unresolved
 * travis-ci.org build integrated
 * open sourced on github, master & dev branches
-~~~
+```
