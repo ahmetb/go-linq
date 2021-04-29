@@ -190,7 +190,7 @@ func (q Query) First() interface{} {
 }
 
 // FirstWith returns the first element of a collection that satisfies a
-// specified condition.
+// specified condition if found, otherwise nil.
 func (q Query) FirstWith(predicate func(interface{}) bool) interface{} {
 	next := q.Iterate()
 
