@@ -55,10 +55,9 @@ jobs:
         test -z "$(apicompat -before ${{ github.event.before }} -after ${{ github.event.after}} ./... | tee /dev/stderr)"
       
     - name: Send coverage
-      env:
-        COVERALLS_TOKEN: ${{ secrets.COVERALLS_TOKEN }}
-      run: goveralls -coverprofile=profile.cov -service=github
-      working-directory: ${{ env.workspace }}
+      uses: shogo82148/actions-goveralls@v1
+      with:
+        path-to-profile: profile.cov
       # working-directory: github.com/ahmetb/go-linq #???
             
     
