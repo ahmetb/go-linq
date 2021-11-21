@@ -27,9 +27,6 @@ jobs:
     # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
     - uses: actions/checkout@v2
     
-    - name: Check env
-      run: echo $GO111MODULE
-
     # Setup Go
     - name: Setup Go
       uses: actions/setup-go@v2
@@ -60,7 +57,7 @@ jobs:
     - name: Send coverage
       env:
         COVERALLS_TOKEN: ${{ secrets.COVERALLS_TOKEN }}
-      run: goveralls -coverprofile=covprofile -service=github
+      run: goveralls -coverprofile=profile.cov -service=github
       # working-directory: github.com/ahmetb/go-linq #???
             
     
