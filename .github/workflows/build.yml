@@ -58,6 +58,7 @@ jobs:
       env:
         COVERALLS_TOKEN: ${{ secrets.COVERALLS_TOKEN }}
       run: goveralls -coverprofile=profile.cov -service=github
+      working-directory: ${{ env.workspace }}
       # working-directory: github.com/ahmetb/go-linq #???
             
     
