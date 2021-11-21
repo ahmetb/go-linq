@@ -1,0 +1,23 @@
+name: go-linq
+on: [push, pull_request]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: 1.17
+    - name: Build
+      run: go build -v ./...
+    - name: Test
+      run: |
+           test -z "$(golint ./...)"
+           test -z "$(gofmt -s -l -w . | tee /dev/stderr)"
+           go test -v  ./...
+           test -z "$(apicompat -before ${TRAVIS_COMMIT_RANGE%...*} -after ${TRAVIS_COMMIT_RANGE#*...} ./... | tee /dev/stderr)"
+    - name: Calculate coverage
+      run: |
+           go test -covermode=count -coverprofile=profile.cov
+  
