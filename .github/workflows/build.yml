@@ -8,9 +8,6 @@ on:
   pull_request:
     branches:
     - master
-  push:
-    branches: 
-     - master
 
 env:
   GO111MODULE: on
