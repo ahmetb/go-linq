@@ -37,7 +37,6 @@ jobs:
     - name: Install dependencies
       run: |
         go get -u github.com/bradleyfalzon/apicompat/cmd/apicompat
-        go get -u github.com/mattn/goveralls@latest
 
     # Run vet & lint on the code
     - name: Run vet & lint
