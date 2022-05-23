@@ -55,6 +55,7 @@ func (q Query) Join(inner Query,
 
 // JoinT is the typed version of Join.
 //
+//   - inner: The query to join to the outer query.
 //   - outerKeySelectorFn is of type "func(TOuter) TKey"
 //   - innerKeySelectorFn is of type "func(TInner) TKey"
 //   - resultSelectorFn is of type "func(TOuter,TInner) TResult"
