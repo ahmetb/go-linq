@@ -11,12 +11,23 @@ type Query struct {
 	Iterate func() Iterator
 }
 
+type IteratorG[T interface{}] func() (item T, ok bool)
+
+type QueryG[T interface{}] struct {
+	Iterate func() IteratorG[T]
+}
+
 // KeyValue is a type that is used to iterate over a map (if query is created
 // from a map). This type is also used by ToMap() method to output result of a
 // query into a map.
 type KeyValue struct {
 	Key   interface{}
 	Value interface{}
+}
+
+type KeyValueG[K, V interface{}] struct {
+	Key   K
+	Value V
 }
 
 // Iterable is an interface that has to be implemented by a custom collection in
@@ -85,6 +96,23 @@ func From(source interface{}) Query {
 		}
 	default:
 		return FromIterable(source.(Iterable))
+	}
+}
+
+func FromSliceG[T interface{}](source []T) QueryG[T] {
+	return QueryG[T]{
+		Iterate: func() IteratorG[T] {
+			index := 0
+			return func() (item T, ok bool) {
+				ok = index < len(source)
+				if ok {
+					item = source[index]
+					index++
+					return
+				}
+				return
+			}
+		},
 	}
 }
 

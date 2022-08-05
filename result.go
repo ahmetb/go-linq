@@ -659,6 +659,15 @@ func (q Query) ToSlice(v interface{}) {
 	res.Elem().Set(slice.Slice(0, index))
 }
 
+func (q QueryG[T]) ToSlice() []T {
+	var r []T
+	next := q.Iterate()
+	for item, ok := next(); ok; item, ok = next() {
+		r = append(r, item)
+	}
+	return r
+}
+
 // grow grows the slice s by doubling its capacity, then it returns the new
 // slice (resliced to its full capacity) and the new capacity.
 func grow(s reflect.Value) (v reflect.Value, newCap int) {

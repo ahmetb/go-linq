@@ -5,6 +5,8 @@ import (
 	"reflect"
 	"testing"
 	"unsafe"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestAll(t *testing.T) {
@@ -619,4 +621,11 @@ func TestToSlice(t *testing.T) {
 			t.Fatalf("case #%d: isNewSlice=%v (in=0x%X out=0x%X) expected=%v", c, isNewSlice, inPtr, outPtr, test.outputIsANewSlice)
 		}
 	}
+}
+
+func TestToSliceG(t *testing.T) {
+	slice := []int{1, 2, 3}
+	q := FromSliceG(slice)
+	to := q.ToSlice()
+	assert.Equal(t, slice, to)
 }

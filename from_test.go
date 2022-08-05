@@ -44,6 +44,14 @@ func TestFrom(t *testing.T) {
 	}
 }
 
+func TestFromSliceG(t *testing.T) {
+	slice := []int{1, 2, 3}
+	q := FromSliceG(slice)
+	if !validateQueryG(q, slice) {
+		t.Fatalf("FromSliceG")
+	}
+}
+
 func TestFromChannel(t *testing.T) {
 	c := make(chan interface{}, 3)
 	c <- 10

@@ -19,6 +19,23 @@ func (q Query) Where(predicate func(interface{}) bool) Query {
 	}
 }
 
+func (q QueryG[T]) Where(predicate func(T) bool) QueryG[T] {
+	return QueryG[T]{
+		Iterate: func() IteratorG[T] {
+			next := q.Iterate()
+
+			return func() (item T, ok bool) {
+				for item, ok = next(); ok; item, ok = next() {
+					if predicate(item) {
+						return
+					}
+				}
+				return
+			}
+		},
+	}
+}
+
 // WhereT is the typed version of Where.
 //
 //   - predicateFn is of type "func(TSource)bool"

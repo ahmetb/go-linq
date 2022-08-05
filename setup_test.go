@@ -1,6 +1,9 @@
 package linq
 
-import "testing"
+import (
+	"reflect"
+	"testing"
+)
 
 import "fmt"
 
@@ -69,6 +72,21 @@ func validateQuery(q Query, output []interface{}) bool {
 	_, ok := next()
 	_, ok2 := next()
 	return !(ok || ok2)
+}
+
+func validateQueryG[T interface{}](g QueryG[T], output []T) bool {
+	next := g.Iterate()
+	for _, o := range output {
+		q, ok := next()
+		if !ok {
+			return false
+		}
+		if !reflect.DeepEqual(q, o) {
+			return false
+		}
+	}
+	_, ok := next()
+	return !ok
 }
 
 func mustPanicWithError(t *testing.T, expectedErr string, f func()) {
