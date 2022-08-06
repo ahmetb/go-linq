@@ -196,6 +196,10 @@ func (q Query) Count() (r int) {
 	return
 }
 
+func (q QueryG[T]) Count() int {
+	return q.AsQuery().Count()
+}
+
 // CountWith returns a number that represents how many elements in the specified
 // collection satisfy a condition.
 func (q Query) CountWith(predicate func(interface{}) bool) (r int) {

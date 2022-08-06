@@ -201,6 +201,11 @@ func TestCount(t *testing.T) {
 	}
 }
 
+func TestCountG(t *testing.T) {
+	assert.Equal(t, 5, FromSliceG([]int{1, 2, 2, 3, 1}).Count())
+	assert.Equal(t, 0, FromSliceG([]float32{}).Count())
+}
+
 func TestCountWith(t *testing.T) {
 	tests := []struct {
 		input interface{}
