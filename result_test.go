@@ -662,6 +662,7 @@ func TestSumG(t *testing.T) {
 	assert.Equal(t, int8(9), FromSliceG([]int8{int8(4), int8(5)}).Sum())
 	assert.Equal(t, 1, FromSliceG([]int{1}).Sum())
 	assert.Equal(t, 0, FromSliceG([]int{}).Sum())
+	assert.Equal(t, float64(9.), FromSliceG([]float64{1., 2., 2., 3., 1.}).Sum())
 }
 
 func TestSumInts(t *testing.T) {
