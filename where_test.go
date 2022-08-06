@@ -1,6 +1,9 @@
 package linq
 
-import "testing"
+import (
+	"github.com/stretchr/testify/assert"
+	"testing"
+)
 
 func TestWhere(t *testing.T) {
 	tests := []struct {
@@ -21,6 +24,16 @@ func TestWhere(t *testing.T) {
 			t.Errorf("From(%v).Where()=%v expected %v", test.input, toSlice(q), test.output)
 		}
 	}
+}
+
+func TestWhereG(t *testing.T) {
+	inputs := []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
+	q := FromSliceG(inputs)
+	greaterThanFive := q.Where(func(item int) bool {
+		return item > 5
+	}).ToSlice()
+	expected := []int{6, 7, 8, 9, 10}
+	assert.Equal(t, expected, greaterThanFive)
 }
 
 func TestWhereT_PanicWhenPredicateFnIsInvalid(t *testing.T) {

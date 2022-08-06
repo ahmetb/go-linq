@@ -11,9 +11,9 @@ type Query struct {
 	Iterate func() Iterator
 }
 
-type IteratorG[T interface{}] func() (item T, ok bool)
+type IteratorG[T any] func() (item T, ok bool)
 
-type QueryG[T interface{}] struct {
+type QueryG[T any] struct {
 	Iterate func() IteratorG[T]
 }
 
@@ -99,7 +99,7 @@ func From(source interface{}) Query {
 	}
 }
 
-func FromSliceG[T interface{}](source []T) QueryG[T] {
+func FromSliceG[T any](source []T) QueryG[T] {
 	return QueryG[T]{
 		Iterate: func() IteratorG[T] {
 			index := 0

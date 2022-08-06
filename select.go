@@ -50,6 +50,47 @@ func (q Query) SelectT(selectorFn interface{}) Query {
 	return q.Select(selectorFunc)
 }
 
+func (q QueryG[T]) Select(m Mapper[T]) interface{} {
+	return m.Map(q)
+}
+
+type Mapper[T any] interface {
+	Map(QueryG[T]) interface{}
+}
+
+type mapper[TIn, TOut any] struct {
+	selector func(TIn) TOut
+}
+
+func (m mapper[TIn, TOut]) Map(q QueryG[TIn]) interface{} {
+	return Select(q, m.selector)
+}
+
+func Map[TIn, TOut any](selector func(TIn) TOut) Mapper[TIn] {
+	return mapper[TIn, TOut]{
+		selector: selector,
+	}
+}
+
+func Select[TIn, TOut any](q QueryG[TIn], selector func(TIn) TOut) QueryG[TOut] {
+	o := QueryG[TOut]{
+		Iterate: func() IteratorG[TOut] {
+			next := q.Iterate()
+			return func() (outItem TOut, ok bool) {
+				item, hasNext := next()
+				if hasNext {
+					outItem = selector(item)
+					ok = true
+					return
+				}
+				ok = false
+				return
+			}
+		},
+	}
+	return o
+}
+
 // SelectIndexed projects each element of a collection into a new form by
 // incorporating the element's index. Returns a query with the result of
 // invoking the transform function on each element of original source.

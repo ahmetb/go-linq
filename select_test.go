@@ -1,6 +1,7 @@
 package linq
 
 import (
+	"github.com/stretchr/testify/assert"
 	"strconv"
 	"testing"
 )
@@ -24,6 +25,24 @@ func TestSelect(t *testing.T) {
 			t.Errorf("From(%v).Select()=%v expected %v", test.input, toSlice(q), test.output)
 		}
 	}
+}
+
+func TestSelectGFunc(t *testing.T) {
+	input := []int{1, 2, 3}
+	expected := []string{"1", "2", "3"}
+	stringSlice := Select[int, string](FromSliceG(input), func(i int) string {
+		return strconv.Itoa(i)
+	}).ToSlice()
+	assert.Equal(t, expected, stringSlice)
+}
+
+func TestSelectG(t *testing.T) {
+	input := []int{1, 2, 3}
+	expected := []string{"1", "2", "3"}
+	stringSlice := FromSliceG(input).Select(Map[int, string](func(i int) string {
+		return strconv.Itoa(i)
+	})).(QueryG[string]).ToSlice()
+	assert.Equal(t, expected, stringSlice)
 }
 
 func TestSelectT_PanicWhenSelectorFnIsInvalid(t *testing.T) {
