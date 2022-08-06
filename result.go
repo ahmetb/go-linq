@@ -365,6 +365,16 @@ func (q Query) ForEachIndexed(action func(int, interface{})) {
 	}
 }
 
+func (q QueryG[T]) ForEachIndexed(action func(int, T)) {
+	next := q.Iterate()
+	index := 0
+
+	for item, ok := next(); ok; item, ok = next() {
+		action(index, item)
+		index++
+	}
+}
+
 // ForEachIndexedT is the typed version of ForEachIndexed.
 //
 //   - actionFn is of type "func(int, TSource)"
