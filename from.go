@@ -219,3 +219,22 @@ func Repeat(value interface{}, count int) Query {
 		},
 	}
 }
+
+func RepeatG[T any](value T, count int) QueryG[T] {
+	return QueryG[T]{
+		Iterate: func() IteratorG[T] {
+			index := 0
+
+			return func() (item T, ok bool) {
+				if index >= count {
+					return *new(T), false
+				}
+
+				item, ok = value, true
+
+				index++
+				return
+			}
+		},
+	}
+}

@@ -1,6 +1,9 @@
 package linq
 
-import "testing"
+import (
+	"github.com/stretchr/testify/assert"
+	"testing"
+)
 
 func TestFrom(t *testing.T) {
 	c := make(chan interface{}, 3)
@@ -112,4 +115,10 @@ func TestRepeat(t *testing.T) {
 	if q := Repeat(1, 5); !validateQuery(q, w) {
 		t.Errorf("Repeat(1, 5)=%v expected %v", toSlice(q), w)
 	}
+}
+
+func TestRepeatG(t *testing.T) {
+	expected := []int{1, 1, 1, 1, 1}
+	actual := RepeatG(1, 5).ToSlice()
+	assert.Equal(t, expected, actual)
 }
