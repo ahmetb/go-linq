@@ -579,6 +579,23 @@ func (q Query) Single() interface{} {
 	return item
 }
 
+// Single returns the only element of a collection, and nil if there is not
+// exactly one element in the collection.
+func (q QueryG[T]) Single() (T, bool) {
+	next := q.Iterate()
+	item, ok := next()
+	if !ok {
+		return *new(T), false
+	}
+
+	_, ok = next()
+	if ok {
+		return *new(T), false
+	}
+
+	return item, true
+}
+
 // SingleWith returns the only element of a collection that satisfies a
 // specified condition, and nil if more than one such element exists.
 func (q Query) SingleWith(predicate func(interface{}) bool) (r interface{}) {
@@ -596,6 +613,23 @@ func (q Query) SingleWith(predicate func(interface{}) bool) (r interface{}) {
 		}
 	}
 
+	return
+}
+
+func (q QueryG[T]) SingleWith(predicate func(T) bool) (r T, found bool) {
+	next := q.Iterate()
+	found = false
+
+	for item, ok := next(); ok; item, ok = next() {
+		if predicate(item) {
+			if found {
+				return *new(T), false
+			}
+
+			found = true
+			r = item
+		}
+	}
 	return
 }
 

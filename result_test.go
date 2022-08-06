@@ -584,6 +584,28 @@ func TestSingle(t *testing.T) {
 	}
 }
 
+func TestSingleG(t *testing.T) {
+	tests := []struct {
+		input []int
+		want  int
+		ok    bool
+	}{
+		{[]int{1, 2, 2, 3, 1}, 0, false},
+		{[]int{1}, 1, true},
+		{[]int{}, 0, false},
+	}
+
+	for _, test := range tests {
+		single, ok := FromSliceG(test.input).Single()
+		if !test.ok {
+			assert.False(t, ok)
+		} else {
+			assert.True(t, ok)
+			assert.Equal(t, test.want, single)
+		}
+	}
+}
+
 func TestSingleWith(t *testing.T) {
 	tests := []struct {
 		input interface{}
@@ -600,6 +622,31 @@ func TestSingleWith(t *testing.T) {
 			return i.(int) > 2
 		}); r != test.want {
 			t.Errorf("From(%v).SingleWith()=%v expected %v", test.input, r, test.want)
+		}
+	}
+}
+
+func TestSingleWithG(t *testing.T) {
+	tests := []struct {
+		input []int
+		want  int
+		ok    bool
+	}{
+		{[]int{1, 2, 2, 3, 1}, 3, true},
+		{[]int{1, 1, 1}, 0, false},
+		{[]int{5, 1, 1, 10, 2, 2}, 0, false},
+		{[]int{}, 0, false},
+	}
+
+	for _, test := range tests {
+		item, found := FromSliceG(test.input).SingleWith(func(i int) bool {
+			return i > 2
+		})
+		if !test.ok {
+			assert.False(t, found)
+		} else {
+			assert.True(t, found)
+			assert.Equal(t, test.want, item)
 		}
 	}
 }
