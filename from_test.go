@@ -97,6 +97,18 @@ func TestFromChannelT(t *testing.T) {
 	}
 }
 
+func TestFromChannelG(t *testing.T) {
+	c := make(chan int, 3)
+	c <- 10
+	c <- 15
+	c <- -3
+	close(c)
+
+	expected := []int{10, 15, -3}
+	actual := FromChannelG(c).ToSlice()
+	assert.Equal(t, expected, actual)
+}
+
 func TestFromString(t *testing.T) {
 	s := "string"
 	w := []interface{}{'s', 't', 'r', 'i', 'n', 'g'}

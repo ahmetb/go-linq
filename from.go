@@ -173,6 +173,19 @@ func FromChannelT(source interface{}) Query {
 	}
 }
 
+// FromChannelG initializes a linq query with passed channel, linq iterates over
+// channel until it is closed.
+func FromChannelG[T any](source <-chan T) QueryG[T] {
+	return QueryG[T]{
+		Iterate: func() IteratorG[T] {
+			return func() (item T, ok bool) {
+				item, ok = <-source
+				return
+			}
+		},
+	}
+}
+
 // FromString initializes a linq query with passed string, linq iterates over
 // runes of string.
 func FromString(source string) Query {
