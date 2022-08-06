@@ -29,6 +29,18 @@ func TestAll(t *testing.T) {
 	}
 }
 
+func TestAllG(t *testing.T) {
+	input := []int{2, 4, 6, 8}
+	allEven := FromSliceG(input).All(func(i int) bool {
+		return i%2 == 0
+	})
+	allOdd := FromSliceG(input).All(func(i int) bool {
+		return i%2 != 0
+	})
+	assert.True(t, allEven)
+	assert.False(t, allOdd)
+}
+
 func TestAllT_PanicWhenPredicateFnIsInvalid(t *testing.T) {
 	mustPanicWithError(t, "AllT: parameter [predicateFn] has a invalid function signature. Expected: 'func(T)bool', actual: 'func(int)int'", func() {
 		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).AllT(func(item int) int { return item + 2 })

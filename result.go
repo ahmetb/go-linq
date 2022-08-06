@@ -18,6 +18,19 @@ func (q Query) All(predicate func(interface{}) bool) bool {
 	return true
 }
 
+// All determines whether all elements of a collection satisfy a condition.
+func (q QueryG[T]) All(predicate func(T) bool) bool {
+	next := q.Iterate()
+
+	for item, ok := next(); ok; item, ok = next() {
+		if !predicate(item) {
+			return false
+		}
+	}
+
+	return true
+}
+
 // AllT is the typed version of All.
 //
 //   - predicateFn is of type "func(TSource) bool"
