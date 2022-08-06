@@ -116,6 +116,33 @@ func FromSliceG[T any](source []T) QueryG[T] {
 	}
 }
 
+func FromMapG[K comparable, V any](source map[K]V) QueryG[KeyValueG[K, V]] {
+	return QueryG[KeyValueG[K, V]]{
+		Iterate: func() IteratorG[KeyValueG[K, V]] {
+			index := 0
+			length := len(source)
+			var keys []K
+			for k, _ := range source {
+				keys = append(keys, k)
+			}
+			return func() (item KeyValueG[K, V], next bool) {
+				if index == length {
+					next = false
+					return
+				}
+				key := keys[index]
+				item = KeyValueG[K, V]{
+					Key:   key,
+					Value: source[key],
+				}
+				next = true
+				index++
+				return
+			}
+		},
+	}
+}
+
 // FromChannel initializes a linq query with passed channel, linq iterates over
 // channel until it is closed.
 func FromChannel(source <-chan interface{}) Query {

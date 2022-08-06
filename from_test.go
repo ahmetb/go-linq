@@ -2,6 +2,7 @@ package linq
 
 import (
 	"github.com/stretchr/testify/assert"
+	"strconv"
 	"testing"
 )
 
@@ -52,6 +53,19 @@ func TestFromSliceG(t *testing.T) {
 	q := FromSliceG(slice)
 	if !validateQueryG(q, slice) {
 		t.Fatalf("FromSliceG")
+	}
+}
+
+func TestFromMapG(t *testing.T) {
+	source := map[string]int{
+		"1": 1,
+		"2": 2,
+		"3": 3,
+	}
+
+	slice := FromMapG(source).ToSlice()
+	for _, pair := range slice {
+		assert.Equal(t, pair.Key, strconv.Itoa(pair.Value))
 	}
 }
 
