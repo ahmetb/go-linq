@@ -654,6 +654,18 @@ func (q Query) SingleWithT(predicateFn interface{}) interface{} {
 	return q.SingleWith(predicateFunc)
 }
 
+func (q QueryG[T]) Sum() T {
+	var sum any
+	adder := getAdder(*new(T))
+	q.ForEach(func(t T) {
+		sum = adder(t)
+	})
+	if sum == nil {
+		return *new(T)
+	}
+	return sum.(T)
+}
+
 // SumInts computes the sum of a collection of numeric values.
 //
 // Values can be of any integer type: int, int8, int16, int32, int64. The result

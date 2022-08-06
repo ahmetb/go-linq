@@ -2,7 +2,10 @@ module github.com/ahmetb/go-linq/v3
 
 go 1.18
 
-require github.com/stretchr/testify v1.8.0
+require (
+	github.com/stretchr/testify v1.8.0
+	golang.org/x/exp v0.0.0-20220722155223-a9213eeb770e
+)
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
