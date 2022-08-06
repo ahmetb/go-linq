@@ -90,6 +90,22 @@ func TestAnyWith(t *testing.T) {
 	}
 }
 
+func TestAnyWithG(t *testing.T) {
+	tests := []struct {
+		input []int
+		want  bool
+	}{
+		{[]int{1, 2, 2, 3, 1}, false},
+		{[]int{}, false},
+	}
+
+	for _, test := range tests {
+		assert.Equal(t, test.want, FromSliceG(test.input).AnyWith(func(i int) bool {
+			return i == 4
+		}))
+	}
+}
+
 func TestAnyWithT_PanicWhenPredicateFnIsInvalid(t *testing.T) {
 	mustPanicWithError(t, "AnyWithT: parameter [predicateFn] has a invalid function signature. Expected: 'func(T)bool', actual: 'func(int)int'", func() {
 		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).AnyWithT(func(item int) int { return item + 2 })
