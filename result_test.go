@@ -551,6 +551,22 @@ func TestSequenceEqual(t *testing.T) {
 	}
 }
 
+func TestSequenceEqualG(t *testing.T) {
+	tests := []struct {
+		input  []int
+		input2 []int
+		want   bool
+	}{
+		{[]int{1, 2, 2, 3, 1}, []int{4, 6}, false},
+		{[]int{1, -1, 100}, []int{1, -1, 100}, true},
+		{[]int{}, []int{}, true},
+	}
+
+	for _, test := range tests {
+		assert.Equal(t, test.want, FromSliceG(test.input).SequenceEqual(FromSliceG(test.input2)))
+	}
+}
+
 func TestSingle(t *testing.T) {
 	tests := []struct {
 		input interface{}

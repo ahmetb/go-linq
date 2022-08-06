@@ -547,6 +547,21 @@ func (q Query) SequenceEqual(q2 Query) bool {
 	return !ok2
 }
 
+func (q QueryG[T]) SequenceEqual(q2 QueryG[T]) bool {
+	next := q.Iterate()
+	next2 := q2.Iterate()
+
+	for item, ok := next(); ok; item, ok = next() {
+		item2, ok2 := next2()
+		if !ok2 || !reflect.DeepEqual(item, item2) {
+			return false
+		}
+	}
+
+	_, ok2 := next2()
+	return !ok2
+}
+
 // Single returns the only element of a collection, and nil if there is not
 // exactly one element in the collection.
 func (q Query) Single() interface{} {
