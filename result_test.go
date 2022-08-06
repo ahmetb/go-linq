@@ -264,19 +264,11 @@ func TestFirst(t *testing.T) {
 }
 
 func TestFirstG(t *testing.T) {
-	tests := []struct {
-		input []int
-		want  int
-	}{
-		{[]int{1, 2, 2, 3, 1}, 1},
-		{[]int{}, 0},
-	}
-
-	for _, test := range tests {
-		assert.Equal(t, test.want, FromSliceG(test.input).First())
-	}
-
-	assert.Equal(t, "", FromSliceG([]string{}).First())
+	first, got := FromSliceG([]int{1, 2, 2, 3, 5}).First()
+	assert.Equal(t, 1, first)
+	assert.True(t, got)
+	_, got = FromSliceG([]string{}).First()
+	assert.False(t, got)
 }
 
 func TestFirstWith(t *testing.T) {

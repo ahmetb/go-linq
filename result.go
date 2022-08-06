@@ -255,9 +255,9 @@ func (q Query) First() interface{} {
 }
 
 // First returns the first element of a collection.
-func (q QueryG[T]) First() T {
-	item, _ := q.Iterate()()
-	return item
+func (q QueryG[T]) First() (T, bool) {
+	item, ok := q.Iterate()()
+	return item, ok
 }
 
 // FirstWith returns the first element of a collection that satisfies a
