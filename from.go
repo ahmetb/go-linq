@@ -275,6 +275,28 @@ func Range(start, count int) Query {
 	}
 }
 
+// RangeG generates a sequence of integral numbers within a specified range.
+func RangeG(start, count int) QueryG[int] {
+	return QueryG[int]{
+		Iterate: func() IteratorG[int] {
+			index := 0
+			current := start
+
+			return func() (item int, ok bool) {
+				if index >= count {
+					return 0, false
+				}
+
+				item, ok = current, true
+
+				index++
+				current++
+				return
+			}
+		},
+	}
+}
+
 // Repeat generates a sequence that contains one repeated value.
 func Repeat(value interface{}, count int) Query {
 	return Query{

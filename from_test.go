@@ -149,6 +149,13 @@ func TestRange(t *testing.T) {
 	}
 }
 
+func TestRangeG(t *testing.T) {
+	expected := []int{-2, -1, 0, 1, 2}
+
+	actual := RangeG(-2, 5).ToSlice()
+	assert.Equal(t, expected, actual)
+}
+
 func TestRepeat(t *testing.T) {
 	w := []interface{}{1, 1, 1, 1, 1}
 
