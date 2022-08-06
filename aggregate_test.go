@@ -1,6 +1,9 @@
 package linq
 
-import "testing"
+import (
+	"github.com/stretchr/testify/assert"
+	"testing"
+)
 import "strings"
 
 func TestAggregate(t *testing.T) {
@@ -24,6 +27,42 @@ func TestAggregate(t *testing.T) {
 			t.Errorf("From(%v).Aggregate()=%v expected %v", test.input, r, test.want)
 		}
 	}
+}
+
+func TestAggregateG(t *testing.T) {
+	input := []string{"apple", "mango", "orange", "passionfruit", "grape"}
+	expected := "passionfruit"
+	actual := FromSliceG(input).Aggregate(func(r, i string) string {
+		if len(r) > len(i) {
+			return r
+		}
+		return i
+	})
+	assert.Equal(t, expected, actual)
+}
+
+func TestAggregateSumG(t *testing.T) {
+	input := []int{1, 2, 3, 4}
+	expected := 10
+	actual := FromSliceG(input).Aggregate(func(i1, i2 int) int {
+		return i1 + i2
+	})
+	assert.Equal(t, expected, actual)
+}
+
+func TestAggregateWithSeedG(t *testing.T) {
+	input := []int{1, 2, 3, 4}
+	expected := 15
+	actual := FromSliceG(input).AggregateWithSeed(5, func(i1, i2 int) int {
+		return i1 + i2
+	})
+	assert.Equal(t, expected, actual)
+	input = []int{}
+	expected = 5
+	actual = FromSliceG(input).AggregateWithSeed(5, func(i1, i2 int) int {
+		return i1 + i2
+	})
+	assert.Equal(t, expected, actual)
 }
 
 func TestAggregateT_PanicWhenFunctionIsInvalid(t *testing.T) {
@@ -116,4 +155,23 @@ func TestAggregateWithSeedByT_PanicWhenResultSelectorFnIsInvalid(t *testing.T) {
 			},
 		)
 	})
+}
+
+func TestAggregateWithSeedByG(t *testing.T) {
+	input := []string{"apple", "mango", "orange", "passionfruit", "grape"}
+	expected := "PASSIONFRUIT"
+
+	actual := FromSliceG(input).AggregateWithSeedBy("banana",
+		func(r, i string) string {
+			if len(r) > len(i) {
+				return r
+			}
+			return i
+		},
+		func(r string) interface{} {
+			return strings.ToUpper(r)
+		},
+	).(string)
+
+	assert.Equal(t, expected, actual)
 }
