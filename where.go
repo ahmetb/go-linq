@@ -85,6 +85,33 @@ func (q Query) WhereIndexed(predicate func(int, interface{}) bool) Query {
 	}
 }
 
+// WhereIndexed filters a collection of values based on a predicate. Each
+// element's index is used in the logic of the predicate function.
+//
+// The first argument represents the zero-based index of the element within
+// collection. The second argument of predicate represents the element to test.
+func (q QueryG[T]) WhereIndexed(predicate func(int, T) bool) QueryG[T] {
+	return QueryG[T]{
+		Iterate: func() IteratorG[T] {
+			next := q.Iterate()
+			index := 0
+
+			return func() (item T, ok bool) {
+				for item, ok = next(); ok; item, ok = next() {
+					if predicate(index, item) {
+						index++
+						return
+					}
+
+					index++
+				}
+
+				return
+			}
+		},
+	}
+}
+
 // WhereIndexedT is the typed version of WhereIndexed.
 //
 //   - predicateFn is of type "func(int,TSource)bool"
