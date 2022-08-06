@@ -196,6 +196,26 @@ func FromString(source string) Query {
 	}
 }
 
+func FromStringG(source string) QueryG[rune] {
+	runes := []rune(source)
+	length := len(runes)
+
+	return QueryG[rune]{
+		Iterate: func() IteratorG[rune] {
+			index := 0
+
+			return func() (item rune, ok bool) {
+				ok = index < length
+				if ok {
+					item = runes[index]
+					index++
+				}
+				return
+			}
+		},
+	}
+}
+
 // FromIterable initializes a linq query with custom collection passed. This
 // collection has to implement Iterable interface, linq iterates over items,
 // that has to implement Comparable interface or be basic types.

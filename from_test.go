@@ -106,6 +106,13 @@ func TestFromString(t *testing.T) {
 	}
 }
 
+func TestFromStringG(t *testing.T) {
+	source := "string"
+	expected := []rune{'s', 't', 'r', 'i', 'n', 'g'}
+	actual := FromStringG(source).ToSlice()
+	assert.Equal(t, expected, actual)
+}
+
 func TestFromIterable(t *testing.T) {
 	s := foo{f1: 1, f2: true, f3: "string"}
 	w := []interface{}{1, true, "string"}
