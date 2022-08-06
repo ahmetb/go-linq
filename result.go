@@ -408,6 +408,17 @@ func (q Query) Last() (r interface{}) {
 	return
 }
 
+func (q QueryG[T]) Last() (r T, got bool) {
+	next := q.Iterate()
+	got = false
+	for item, ok := next(); ok; item, ok = next() {
+		got = true
+		r = item
+	}
+
+	return
+}
+
 // LastWith returns the last element of a collection that satisfies a specified
 // condition.
 func (q Query) LastWith(predicate func(interface{}) bool) (r interface{}) {

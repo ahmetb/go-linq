@@ -426,6 +426,14 @@ func TestLast(t *testing.T) {
 	}
 }
 
+func TestLastG(t *testing.T) {
+	last, got := FromSliceG([]int{1, 2, 2, 3, 5}).Last()
+	assert.Equal(t, 5, last)
+	assert.True(t, got)
+	_, got = FromSliceG([]int{}).Last()
+	assert.False(t, got)
+}
+
 func TestLastWith(t *testing.T) {
 	tests := []struct {
 		input interface{}
