@@ -490,6 +490,11 @@ func (q Query) Max() (r interface{}) {
 	return
 }
 
+func (q QueryG[T]) Max() (T, bool) {
+	r, ok := q.AsQuery().Max().(T)
+	return r, ok
+}
+
 // Min returns the minimum value in a collection of values.
 func (q Query) Min() (r interface{}) {
 	next := q.Iterate()
@@ -508,6 +513,11 @@ func (q Query) Min() (r interface{}) {
 	}
 
 	return
+}
+
+func (q QueryG[T]) Min() (T, bool) {
+	r, ok := q.AsQuery().Min().(T)
+	return r, ok
 }
 
 // Results iterates over a collection and returnes slice of interfaces

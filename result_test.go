@@ -480,19 +480,46 @@ func TestMax(t *testing.T) {
 	}
 }
 
-func TestMin(t *testing.T) {
+func TestMaxG(t *testing.T) {
 	tests := []struct {
-		input interface{}
-		want  interface{}
+		input []int
+		want  int
+		ok    bool
 	}{
-		{[]int{1, 2, 2, 3, 0}, 0},
-		{[]int{1}, 1},
-		{[]int{}, nil},
+		{[]int{1, 2, 2, 3, 1}, 3, true},
+		{[]int{1}, 1, true},
+		{[]int{}, 0, false},
 	}
 
 	for _, test := range tests {
-		if r := From(test.input).Min(); r != test.want {
-			t.Errorf("From(%v).Min()=%v expected %v", test.input, r, test.want)
+		max, ok := FromSliceG(test.input).Max()
+		if !test.ok {
+			assert.False(t, ok)
+		} else {
+			assert.Equal(t, test.want, max)
+			assert.True(t, ok)
+		}
+	}
+}
+
+func TestMin(t *testing.T) {
+	tests := []struct {
+		input []int
+		want  int
+		ok    bool
+	}{
+		{[]int{1, 2, 2, 3, 0}, 0, true},
+		{[]int{1}, 1, true},
+		{[]int{}, 0, false},
+	}
+
+	for _, test := range tests {
+		min, ok := FromSliceG(test.input).Min()
+		if !test.ok {
+			assert.False(t, ok)
+		} else {
+			assert.Equal(t, test.want, min)
+			assert.True(t, ok)
 		}
 	}
 }
