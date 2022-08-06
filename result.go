@@ -254,6 +254,12 @@ func (q Query) First() interface{} {
 	return item
 }
 
+// First returns the first element of a collection.
+func (q QueryG[T]) First() T {
+	item, _ := q.Iterate()()
+	return item
+}
+
 // FirstWith returns the first element of a collection that satisfies a
 // specified condition.
 func (q Query) FirstWith(predicate func(interface{}) bool) interface{} {
