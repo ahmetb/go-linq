@@ -444,6 +444,19 @@ func TestLastWith(t *testing.T) {
 	}
 }
 
+func TestLastWithG(t *testing.T) {
+	greaterThanTwo := func(i int) bool {
+		return i > 2
+	}
+	last, got := FromSliceG([]int{1, 2, 2, 3, 1, 4, 2, 5, 1, 1}).LastWith(greaterThanTwo)
+	assert.Equal(t, 5, last)
+	assert.True(t, got)
+	_, got = FromSliceG([]int{}).LastWith(greaterThanTwo)
+	assert.False(t, got)
+	_, got = FromSliceG([]int{1, 1, 1, 1, 1}).LastWith(greaterThanTwo)
+	assert.False(t, got)
+}
+
 func TestLastWithT_PanicWhenPredicateFnIsInvalid(t *testing.T) {
 	mustPanicWithError(t, "LastWithT: parameter [predicateFn] has a invalid function signature. Expected: 'func(T)bool', actual: 'func(int)int'", func() {
 		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).LastWithT(func(item int) int { return item + 2 })

@@ -433,6 +433,21 @@ func (q Query) LastWith(predicate func(interface{}) bool) (r interface{}) {
 	return
 }
 
+// LastWith returns the last element of a collection that satisfies a specified
+// condition.
+func (q QueryG[T]) LastWith(predicate func(T) bool) (r T, got bool) {
+	next := q.Iterate()
+	got = false
+	for item, ok := next(); ok; item, ok = next() {
+		if predicate(item) {
+			got = true
+			r = item
+		}
+	}
+
+	return
+}
+
 // LastWithT is the typed version of LastWith.
 //
 //   - predicateFn is of type "func(TSource) bool"
