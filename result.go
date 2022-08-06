@@ -155,6 +155,10 @@ func (q Query) Average() (r float64) {
 	return r / float64(n)
 }
 
+func (q QueryG[T]) Average() float64 {
+	return q.AsQuery().Average()
+}
+
 // Contains determines whether a collection contains a specified element.
 func (q Query) Contains(value interface{}) bool {
 	next := q.Iterate()

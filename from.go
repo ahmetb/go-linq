@@ -17,6 +17,18 @@ type QueryG[T any] struct {
 	Iterate func() IteratorG[T]
 }
 
+func (q QueryG[T]) AsQuery() Query {
+	return Query{
+		Iterate: func() Iterator {
+			next := q.Iterate()
+			return func() (item interface{}, ok bool) {
+				i, ok := next()
+				return i, ok
+			}
+		},
+	}
+}
+
 // KeyValue is a type that is used to iterate over a map (if query is created
 // from a map). This type is also used by ToMap() method to output result of a
 // query into a map.

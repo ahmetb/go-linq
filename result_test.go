@@ -129,6 +129,11 @@ func TestAverage(t *testing.T) {
 	}
 }
 
+func TestAverageG(t *testing.T) {
+	assert.Equal(t, 1.8, FromSliceG([]int{1, 2, 2, 3, 1}).Average())
+	assert.Equal(t, 1., FromSliceG([]float32{1., 1}).Average())
+}
+
 func TestAverageForNaN(t *testing.T) {
 	if r := From([]int{}).Average(); !math.IsNaN(r) {
 		t.Errorf("From([]int{}).Average()=%v expected %v", r, math.NaN())
