@@ -36,6 +36,12 @@ type Iterable interface {
 	Iterate() Iterator
 }
 
+// IterableG is an interface that has to be implemented by a custom collection in
+// order to work with linq.
+type IterableG[T any] interface {
+	Iterate() IteratorG[T]
+}
+
 // From initializes a linq query with passed slice, array or map as the source.
 // String, channel or struct implementing Iterable interface can be used as an
 // input. In this case From delegates it to FromString, FromChannel and
@@ -234,6 +240,15 @@ func FromStringG(source string) QueryG[rune] {
 // that has to implement Comparable interface or be basic types.
 func FromIterable(source Iterable) Query {
 	return Query{
+		Iterate: source.Iterate,
+	}
+}
+
+// FromIterableG initializes a linq query with custom collection passed. This
+// collection has to implement Iterable interface, linq iterates over items,
+// that has to implement Comparable interface or be basic types.
+func FromIterableG[T any](source IterableG[T]) QueryG[T] {
+	return QueryG[T]{
 		Iterate: source.Iterate,
 	}
 }

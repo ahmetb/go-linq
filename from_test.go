@@ -134,6 +134,13 @@ func TestFromIterable(t *testing.T) {
 	}
 }
 
+func TestFromIterableG(t *testing.T) {
+	s := fooG{f1: 1, f2: 2, f3: 3}
+	expected := []int{1, 2, 3}
+	actual := FromIterableG[int](s).ToSlice()
+	assert.Equal(t, expected, actual)
+}
+
 func TestRange(t *testing.T) {
 	w := []interface{}{-2, -1, 0, 1, 2}
 
