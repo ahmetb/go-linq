@@ -65,6 +65,12 @@ func TestAny(t *testing.T) {
 	}
 }
 
+func TestAnyG(t *testing.T) {
+	assert.True(t, FromSliceG([]int{1, 2, 3}).Any())
+	assert.True(t, FromStringG("string").Any())
+	assert.False(t, FromSliceG([]int{}).Any())
+}
+
 func TestAnyWith(t *testing.T) {
 	tests := []struct {
 		input interface{}

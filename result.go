@@ -71,6 +71,12 @@ func (q Query) AnyWith(predicate func(interface{}) bool) bool {
 	return false
 }
 
+// Any determines whether any element of a collection exists.
+func (q QueryG[T]) Any() bool {
+	_, ok := q.Iterate()()
+	return ok
+}
+
 // AnyWithT is the typed version of AnyWith.
 //
 //   - predicateFn is of type "func(TSource) bool"
