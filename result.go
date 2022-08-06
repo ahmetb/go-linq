@@ -317,6 +317,14 @@ func (q Query) ForEach(action func(interface{})) {
 	}
 }
 
+func (q QueryG[T]) ForEach(action func(T)) {
+	next := q.Iterate()
+
+	for item, ok := next(); ok; item, ok = next() {
+		action(item)
+	}
+}
+
 // ForEachT is the typed version of ForEach.
 //
 //   - actionFn is of type "func(TSource)"

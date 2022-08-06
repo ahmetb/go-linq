@@ -339,6 +339,25 @@ func TestForEach(t *testing.T) {
 	}
 }
 
+func TestForEachG(t *testing.T) {
+	tests := []struct {
+		input []int
+		want  []int
+	}{
+		{[]int{1, 2, 2, 35, 111}, []int{2, 4, 4, 70, 222}},
+		{[]int{}, []int{}},
+	}
+
+	for _, test := range tests {
+		output := []int{}
+		FromSliceG(test.input).ForEach(func(item int) {
+			output = append(output, item*2)
+		})
+
+		assert.Equal(t, test.want, output)
+	}
+}
+
 func TestForEachT_PanicWhenActionFnIsInvalid(t *testing.T) {
 	mustPanicWithError(t, "ForEachT: parameter [actionFn] has a invalid function signature. Expected: 'func(T)', actual: 'func(int,int)'", func() {
 		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).ForEachT(func(item, idx int) { item = item + 2 })
