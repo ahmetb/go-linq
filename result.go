@@ -168,6 +168,19 @@ func (q Query) Contains(value interface{}) bool {
 	return false
 }
 
+// Contains determines whether a collection contains a specified element.
+func (q QueryG[T]) Contains(value T) bool {
+	next := q.Iterate()
+
+	for item, ok := next(); ok; item, ok = next() {
+		if reflect.DeepEqual(item, value) {
+			return true
+		}
+	}
+
+	return false
+}
+
 // Count returns the number of elements in a collection.
 func (q Query) Count() (r int) {
 	next := q.Iterate()

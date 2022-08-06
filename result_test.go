@@ -153,6 +153,32 @@ func TestContains(t *testing.T) {
 	}
 }
 
+func TestContainsG(t *testing.T) {
+	assert.False(t, FromSliceG([]int{1, 2, 2, 3, 1}).Contains(10), false)
+	assert.True(t, FromSliceG([]uint{1, 2, 5, 7, 10}).Contains(uint(5)))
+	assert.False(t, FromSliceG([]float32{}).Contains(1.))
+	assert.True(t, FromSliceG([]struct {
+		f1 int
+		f2 string
+	}{
+		{1, "1"},
+		{2, "2"},
+	}).Contains(struct {
+		f1 int
+		f2 string
+	}{
+		2, "2",
+	}))
+	assert.True(t, FromSliceG([][]int{
+		{1, 2, 3},
+		{4, 5, 6},
+	}).Contains([]int{4, 5, 6}))
+	assert.False(t, FromSliceG([][]int{
+		{1, 2, 3},
+		{4, 5, 6},
+	}).Contains([]int{4, 5}))
+}
+
 func TestCount(t *testing.T) {
 	tests := []struct {
 		input interface{}
