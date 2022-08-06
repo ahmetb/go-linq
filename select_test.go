@@ -45,6 +45,16 @@ func TestSelectG(t *testing.T) {
 	assert.Equal(t, expected, stringSlice)
 }
 
+func TestSelectIndexedG(t *testing.T) {
+	input := []int{0, 1, 2}
+	expected := []string{"0", "1", "2"}
+	stringSlice := FromSliceG(input).SelectIndexed(MapWithIndex[int, string](func(index, i int) string {
+		assert.Equal(t, index, i)
+		return strconv.Itoa(i)
+	})).(QueryG[string]).ToSlice()
+	assert.Equal(t, expected, stringSlice)
+}
+
 func TestSelectT_PanicWhenSelectorFnIsInvalid(t *testing.T) {
 	mustPanicWithError(t, "SelectT: parameter [selectorFn] has a invalid function signature. Expected: 'func(T)T', actual: 'func(int,int)int'", func() {
 		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).SelectT(func(item, idx int) int { return item + 2 })

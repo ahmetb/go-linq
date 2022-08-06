@@ -148,3 +148,46 @@ func (q Query) SelectIndexedT(selectorFn interface{}) Query {
 
 	return q.SelectIndexed(selectorFunc)
 }
+
+type MapperWithIndex[T any] interface {
+	Map(QueryG[T]) interface{}
+}
+
+type mapperWithIndex[TIn, TOut any] struct {
+	selector func(int, TIn) TOut
+}
+
+func (m mapperWithIndex[TIn, TOut]) Map(q QueryG[TIn]) interface{} {
+	return SelectIndexedG(q, m.selector)
+}
+
+func MapWithIndex[TIn, TOut any](selector func(int, TIn) TOut) Mapper[TIn] {
+	return mapperWithIndex[TIn, TOut]{
+		selector: selector,
+	}
+}
+
+func (q QueryG[T]) SelectIndexed(m MapperWithIndex[T]) interface{} {
+	return m.Map(q)
+}
+
+func SelectIndexedG[TIn, TOut any](q QueryG[TIn], selector func(int, TIn) TOut) QueryG[TOut] {
+	o := QueryG[TOut]{
+		Iterate: func() IteratorG[TOut] {
+			next := q.Iterate()
+			index := 0
+			return func() (outItem TOut, ok bool) {
+				item, hasNext := next()
+				if hasNext {
+					outItem = selector(index, item)
+					ok = true
+					index++
+					return
+				}
+				ok = false
+				return
+			}
+		},
+	}
+	return o
+}
