@@ -25,7 +25,7 @@ type KeyValue struct {
 	Value interface{}
 }
 
-type KeyValueG[K, V interface{}] struct {
+type KeyValueG[K comparable, V any] struct {
 	Key   K
 	Value V
 }

@@ -632,6 +632,46 @@ func (q Query) ToMapByT(result interface{},
 	q.ToMapBy(result, keySelectorFunc, valueSelectorFunc)
 }
 
+type T2KVMap[T any] interface {
+	Map(q QueryG[T]) interface{}
+}
+
+type t2kvMapper[K comparable, V, T any] struct {
+	keySelector   func(T) K
+	valueSelector func(T) V
+}
+
+func (t t2kvMapper[K, V, T]) Map(q QueryG[T]) interface{} {
+	return ToMapBy[K, V, T](q, t.keySelector, t.valueSelector)
+}
+
+func T2KV[K comparable, V, T any](keySelector func(T) K, valueSelector func(T) V) T2KVMap[T] {
+	return t2kvMapper[K, V, T]{
+		keySelector:   keySelector,
+		valueSelector: valueSelector,
+	}
+}
+
+func (q QueryG[T]) ToMapBy(m T2KVMap[T]) interface{} {
+	return m.Map(q)
+}
+
+// ToMapBy iterates over a collection and populates the result map with
+// elements. Functions keySelector and valueSelector are executed for each
+// element of the collection to generate key and value for the map. Generated
+// key and value types must be assignable to the map's key and value types.
+// ToMapBy doesn't empty the result map before populating it.
+func ToMapBy[K comparable, V, T any](q QueryG[T],
+	keySelector func(T) K,
+	valueSelector func(T) V) map[K]V {
+	r := make(map[K]V)
+	next := q.Iterate()
+	for item, ok := next(); ok; item, ok = next() {
+		r[keySelector(item)] = valueSelector(item)
+	}
+	return r
+}
+
 // ToSlice iterates over a collection and saves the results in the slice pointed
 // by v. It overwrites the existing slice, starting from index 0.
 //

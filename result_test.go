@@ -3,6 +3,7 @@ package linq
 import (
 	"math"
 	"reflect"
+	"strconv"
 	"testing"
 	"unsafe"
 
@@ -494,6 +495,29 @@ func TestToMap(t *testing.T) {
 	if !reflect.DeepEqual(result, input) {
 		t.Errorf("From(%v).ToMap()=%v expected %v", input, result, input)
 	}
+}
+
+func TestToMapG(t *testing.T) {
+	input := make(map[int]bool)
+	input[1] = true
+	input[2] = false
+	input[3] = true
+
+	expected := map[int]string{
+		1: "true",
+		2: "false",
+		3: "true",
+	}
+
+	actual := FromMapG(input).ToMapBy(T2KV[int, string, KeyValueG[int, bool]](
+		func(pair KeyValueG[int, bool]) int {
+			return pair.Key
+		},
+		func(pair KeyValueG[int, bool]) string {
+			return strconv.FormatBool(pair.Value)
+		})).(map[int]string)
+
+	assert.Equal(t, expected, actual)
 }
 
 func TestToMapBy(t *testing.T) {
