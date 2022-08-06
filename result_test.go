@@ -224,6 +224,23 @@ func TestCountWith(t *testing.T) {
 	}
 }
 
+func TestCountWithG(t *testing.T) {
+	tests := []struct {
+		input []int
+		want  int
+	}{
+		{[]int{1, 2, 2, 3, 1}, 4},
+		{[]int{}, 0},
+	}
+
+	for _, test := range tests {
+		r := From(test.input).CountWith(func(i interface{}) bool {
+			return i.(int) <= 2
+		})
+		assert.Equal(t, test.want, r)
+	}
+}
+
 func TestCountWithT_PanicWhenPredicateFnIsInvalid(t *testing.T) {
 	mustPanicWithError(t, "CountWithT: parameter [predicateFn] has a invalid function signature. Expected: 'func(T)bool', actual: 'func(int)int'", func() {
 		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).CountWithT(func(item int) int { return item + 2 })

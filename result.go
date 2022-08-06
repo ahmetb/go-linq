@@ -214,6 +214,18 @@ func (q Query) CountWith(predicate func(interface{}) bool) (r int) {
 	return
 }
 
+func (q QueryG[T]) CountWith(predicate func(T) bool) (r int) {
+	next := q.Iterate()
+
+	for item, ok := next(); ok; item, ok = next() {
+		if predicate(item) {
+			r++
+		}
+	}
+
+	return
+}
+
 // CountWithT is the typed version of CountWith.
 //
 //   - predicateFn is of type "func(TSource) bool"
