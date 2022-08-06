@@ -742,6 +742,18 @@ func (q Query) ToChannel(result chan<- interface{}) {
 	close(result)
 }
 
+// ToChannel iterates over a collection and outputs each element to a channel,
+// then closes it.
+func (q QueryG[T]) ToChannel(result chan<- T) {
+	next := q.Iterate()
+
+	for item, ok := next(); ok; item, ok = next() {
+		result <- item
+	}
+
+	close(result)
+}
+
 // ToChannelT is the typed version of ToChannel.
 //
 //   - result is of type "chan TSource"

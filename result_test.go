@@ -733,6 +733,22 @@ func TestToChannel(t *testing.T) {
 	}
 }
 
+func TestToChannelG(t *testing.T) {
+	c := make(chan int)
+	input := []int{1, 2, 3, 4, 5}
+
+	go func() {
+		FromSliceG(input).ToChannel(c)
+	}()
+
+	result := []int{}
+	for value := range c {
+		result = append(result, value)
+	}
+
+	assert.Equal(t, input, result)
+}
+
 func TestToChannelT(t *testing.T) {
 	c := make(chan string)
 	input := []string{"1", "2", "3", "4", "5"}
