@@ -274,6 +274,18 @@ func (q Query) FirstWith(predicate func(interface{}) bool) interface{} {
 	return nil
 }
 
+func (q QueryG[T]) FirstWithG(predicate func(T) bool) (T, bool) {
+	next := q.Iterate()
+
+	for item, ok := next(); ok; item, ok = next() {
+		if predicate(item) {
+			return item, true
+		}
+	}
+
+	return *new(T), false
+}
+
 // FirstWithT is the typed version of FirstWith.
 //
 //   - predicateFn is of type "func(TSource) bool"

@@ -297,6 +297,21 @@ func TestFirstWith(t *testing.T) {
 	}
 }
 
+func TestFirstWithG(t *testing.T) {
+	item, _ := FromSliceG([]int{1, 2, 2, 3, 1}).FirstWithG(func(i int) bool {
+		return i > 2
+	})
+	assert.Equal(t, 3, item)
+	_, ok := FromSliceG([]int{1, 2, 2, 3, 1}).FirstWithG(func(i int) bool {
+		return i > 4
+	})
+	assert.False(t, ok)
+	_, ok = FromSliceG([]int{}).FirstWithG(func(i int) bool {
+		return i > 4
+	})
+	assert.False(t, ok)
+}
+
 func TestFirstWithT_PanicWhenPredicateFnIsInvalid(t *testing.T) {
 	mustPanicWithError(t, "FirstWithT: parameter [predicateFn] has a invalid function signature. Expected: 'func(T)bool', actual: 'func(int)int'", func() {
 		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).FirstWithT(func(item int) int { return item + 2 })
