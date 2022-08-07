@@ -169,3 +169,9 @@ func TestRepeatG(t *testing.T) {
 	actual := RepeatG(1, 5).ToSlice()
 	assert.Equal(t, expected, actual)
 }
+
+func TestConvertToQueryG(t *testing.T) {
+	input := []int{1, 2, 3}
+	actual := AsQueryG[int](From(input)).ToSlice()
+	assert.Equal(t, input, actual)
+}

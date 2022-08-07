@@ -1,6 +1,9 @@
 package linq
 
-import "testing"
+import (
+	"github.com/stretchr/testify/assert"
+	"testing"
+)
 
 func TestDistinct(t *testing.T) {
 	tests := []struct {
@@ -17,6 +20,12 @@ func TestDistinct(t *testing.T) {
 			t.Errorf("From(%v).Distinct()=%v expected %v", test.input, toSlice(q), test.output)
 		}
 	}
+}
+
+func TestDistinctG(t *testing.T) {
+	assert.Equal(t, []int{1, 2, 3}, FromSliceG([]int{1, 2, 2, 3, 1}).Distinct().ToSlice())
+	assert.Equal(t, []int{1, 2, 3, 4}, FromSliceG([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).Distinct().ToSlice())
+	assert.Equal(t, []rune{'s', 't', 'r'}, FromStringG("sstr").Distinct().ToSlice())
 }
 
 func TestDistinctForOrderedQuery(t *testing.T) {
@@ -52,6 +61,20 @@ func TestDistinctBy(t *testing.T) {
 	}); !validateQuery(q, want) {
 		t.Errorf("From(%v).DistinctBy()=%v expected %v", users, toSlice(q), want)
 	}
+}
+
+func TestDistinctByG(t *testing.T) {
+	type user struct {
+		id   int
+		name string
+	}
+
+	users := []user{{1, "Foo"}, {2, "Bar"}, {3, "Foo"}}
+	want := []user{user{1, "Foo"}, user{2, "Bar"}}
+
+	assert.Equal(t, want, FromSliceG(users).Expend(To2[user, string]()).(Expended[user, string]).DistinctBy(func(u user) string {
+		return u.name
+	}).ToSlice())
 }
 
 func TestDistinctByT_PanicWhenSelectorFnIsInvalid(t *testing.T) {

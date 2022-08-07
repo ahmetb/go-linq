@@ -22,6 +22,10 @@ func (q Query) Distinct() Query {
 	}
 }
 
+func (q QueryG[T]) Distinct() QueryG[T] {
+	return AsQueryG[T](q.AsQuery().Distinct())
+}
+
 // Distinct method returns distinct elements from a collection. The result is an
 // ordered collection that contains no duplicate values.
 //
@@ -72,6 +76,12 @@ func (q Query) DistinctBy(selector func(interface{}) interface{}) Query {
 			}
 		},
 	}
+}
+
+func (e *expender[T1, T2]) DistinctBy(selector func(T1) T2) QueryG[T1] {
+	return AsQueryG[T1](e.q.AsQuery().DistinctBy(func(i interface{}) interface{} {
+		return selector(i.(T1))
+	}))
 }
 
 // DistinctByT is the typed version of DistinctBy.

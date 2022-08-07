@@ -18,6 +18,7 @@ type Expended[T1, T2 any] interface {
 	SelectIndexed(selector func(int, T1) T2) QueryG[T2]
 	SelectMany(selector func(T1) QueryG[T2]) QueryG[T2]
 	SelectManyIndexed(selector func(int, T1) QueryG[T2]) QueryG[T2]
+	DistinctBy(selector func(T1) T2) QueryG[T1]
 }
 
 type Expended3[T1, T2, T3 any] interface {
