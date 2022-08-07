@@ -167,6 +167,42 @@ func (q Query) SkipWhileIndexed(predicate func(int, interface{}) bool) Query {
 	}
 }
 
+// SkipWhileIndexed bypasses elements in a collection as long as a specified
+// condition is true and then returns the remaining elements. The element's
+// index is used in the logic of the predicate function.
+//
+// This method tests each element by using predicate and skips the element if
+// the result is true. After the predicate function returns false for an
+// element, that element and the remaining elements in source are returned and
+// there are no more invocations of predicate.
+func (q QueryG[T]) SkipWhileIndexed(predicate func(int, T) bool) QueryG[T] {
+	return QueryG[T]{
+		Iterate: func() IteratorG[T] {
+			next := q.Iterate()
+			ready := false
+			index := 0
+
+			return func() (item T, ok bool) {
+				for !ready {
+					item, ok = next()
+					if !ok {
+						return
+					}
+
+					ready = !predicate(index, item)
+					if ready {
+						return
+					}
+
+					index++
+				}
+
+				return next()
+			}
+		},
+	}
+}
+
 // SkipWhileIndexedT is the typed version of SkipWhileIndexed.
 //
 //   - predicateFn is of type "func(int,TSource)bool"

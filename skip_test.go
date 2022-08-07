@@ -105,6 +105,21 @@ func TestSkipWhileIndexed(t *testing.T) {
 	}
 }
 
+func TestSkipWhileIndexedG(t *testing.T) {
+	assert.Empty(t, FromSliceG([]int{1, 2}).SkipWhileIndexed(func(i int, x int) bool {
+		return x < 3
+	}).ToSlice())
+	assert.Equal(t, []int{4, 1, 2}, FromSliceG([]int{4, 1, 2}).SkipWhileIndexed(func(i int, x int) bool {
+		return x < 3
+	}).ToSlice())
+	assert.Equal(t, []int{2, 3, 4, 2}, FromSliceG([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).SkipWhileIndexed(func(i int, x int) bool {
+		return x < 2 || i < 5
+	}).ToSlice())
+	assert.Equal(t, []rune{'s', 't', 'r'}, FromStringG("sstr").SkipWhileIndexed(func(i int, x rune) bool {
+		return x == 's' && i < 1
+	}).ToSlice())
+}
+
 func TestSkipWhileIndexedT_PanicWhenPredicateFnIsInvalid(t *testing.T) {
 	mustPanicWithError(t, "SkipWhileIndexedT: parameter [predicateFn] has a invalid function signature. Expected: 'func(int,T)bool', actual: 'func(int,int,int)bool'", func() {
 		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).SkipWhileIndexedT(func(item int, x int, y int) bool { return item == 1 })
