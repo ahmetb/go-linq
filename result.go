@@ -910,7 +910,7 @@ func (q Query) ToSlice(v interface{}) {
 }
 
 func (q QueryG[T]) ToSlice() []T {
-	var r []T
+	var r = make([]T, 0)
 	next := q.Iterate()
 	for item, ok := next(); ok; item, ok = next() {
 		r = append(r, item)

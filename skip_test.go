@@ -1,6 +1,9 @@
 package linq
 
-import "testing"
+import (
+	"github.com/stretchr/testify/assert"
+	"testing"
+)
 
 func TestSkip(t *testing.T) {
 	tests := []struct {
@@ -18,6 +21,13 @@ func TestSkip(t *testing.T) {
 			t.Errorf("From(%v).Skip(3)=%v expected %v", test.input, toSlice(q), test.output)
 		}
 	}
+}
+
+func TestSkipG(t *testing.T) {
+	assert.Equal(t, []int{}, FromSliceG([]int{1, 2}).Skip(3).ToSlice())
+	assert.Equal(t, []int{3, 1}, FromSliceG([]int{1, 2, 2, 3, 1}).Skip(3).ToSlice())
+	assert.Equal(t, []int{2, 1, 2, 3, 4, 2}, FromSliceG([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).Skip(3).ToSlice())
+	assert.Equal(t, []rune{'r'}, FromStringG("sstr").Skip(3).ToSlice())
 }
 
 func TestSkipWhile(t *testing.T) {

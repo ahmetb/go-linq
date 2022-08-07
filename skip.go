@@ -22,6 +22,29 @@ func (q Query) Skip(count int) Query {
 	}
 }
 
+// Skip bypasses a specified number of elements in a collection and then returns
+// the remaining elements.
+func (q QueryG[T]) Skip(count int) QueryG[T] {
+	return QueryG[T]{
+		Iterate: func() IteratorG[T] {
+			next := q.Iterate()
+			n := count
+
+			return func() (item T, ok bool) {
+				for ; n > 0; n-- {
+					item, ok = next()
+					if !ok {
+						return
+					}
+				}
+
+				item, ok = next()
+				return
+			}
+		},
+	}
+}
+
 // SkipWhile bypasses elements in a collection as long as a specified condition
 // is true and then returns the remaining elements.
 //
