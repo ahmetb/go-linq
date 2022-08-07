@@ -34,7 +34,7 @@ func (q Query) SelectMany(selector func(interface{}) Query) Query {
 	}
 }
 
-func (e *expender[T1, T2]) SelectMany(selector func(T1) QueryG[T2]) QueryG[T2] {
+func (e *expander[T1, T2]) SelectMany(selector func(T1) QueryG[T2]) QueryG[T2] {
 	return QueryG[T2]{
 		Iterate: func() IteratorG[T2] {
 			outernext := e.q.Iterate()
@@ -136,7 +136,7 @@ func (q Query) SelectManyIndexed(selector func(int, interface{}) Query) Query {
 // index, for example. It can also be useful if you want to retrieve the index
 // of one or more elements. The second argument to selector represents the
 // element to process.
-func (e *expender[T1, T2]) SelectManyIndexed(selector func(int, T1) QueryG[T2]) QueryG[T2] {
+func (e *expander[T1, T2]) SelectManyIndexed(selector func(int, T1) QueryG[T2]) QueryG[T2] {
 	return QueryG[T2]{
 		Iterate: func() IteratorG[T2] {
 			outernext := e.q.Iterate()
@@ -226,7 +226,7 @@ func (q Query) SelectManyBy(selector func(interface{}) Query,
 	}
 }
 
-func (e *expender3[T1, T2, T3]) SelectManyBy(selector func(T1) QueryG[T2],
+func (e *expander3[T1, T2, T3]) SelectManyBy(selector func(T1) QueryG[T2],
 	resultSelector func(T2, T1) T3) QueryG[T3] {
 	return QueryG[T3]{
 		Iterate: func() IteratorG[T3] {
@@ -334,7 +334,7 @@ func (q Query) SelectManyByIndexed(selector func(int, interface{}) Query,
 	}
 }
 
-func (e *expender3[T1, T2, T3]) SelectManyByIndexed(selector func(int, T1) QueryG[T2],
+func (e *expander3[T1, T2, T3]) SelectManyByIndexed(selector func(int, T1) QueryG[T2],
 	resultSelector func(T2, T1) T3) QueryG[T3] {
 	return QueryG[T3]{
 		Iterate: func() IteratorG[T3] {

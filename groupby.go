@@ -52,7 +52,7 @@ func (q Query) GroupBy(keySelector func(interface{}) interface{},
 // GroupBy method groups the elements of a collection according to a specified
 // key selector function and projects the elements for each group by using a
 // specified function.
-func (e *expender3[T, TK, TE]) GroupBy(keySelector func(T) TK,
+func (e *expander3[T, TK, TE]) GroupBy(keySelector func(T) TK,
 	elementSelector func(T) TE) QueryG[GroupG[TK, TE]] {
 	return QueryG[GroupG[TK, TE]]{
 		func() IteratorG[GroupG[TK, TE]] {

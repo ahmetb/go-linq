@@ -108,7 +108,7 @@ func (q Query) SelectIndexed(selector func(int, interface{}) interface{}) Query 
 	}
 }
 
-func (e *expender[TIn, TOut]) Select(selector func(TIn) TOut) QueryG[TOut] {
+func (e *expander[TIn, TOut]) Select(selector func(TIn) TOut) QueryG[TOut] {
 	o := QueryG[TOut]{
 		Iterate: func() IteratorG[TOut] {
 			next := e.q.Iterate()
@@ -127,7 +127,7 @@ func (e *expender[TIn, TOut]) Select(selector func(TIn) TOut) QueryG[TOut] {
 	return o
 }
 
-func (e *expender[T1, T2]) SelectIndexed(selector func(int, T1) T2) QueryG[T2] {
+func (e *expander[T1, T2]) SelectIndexed(selector func(int, T1) T2) QueryG[T2] {
 	o := QueryG[T2]{
 		Iterate: func() IteratorG[T2] {
 			next := e.q.Iterate()

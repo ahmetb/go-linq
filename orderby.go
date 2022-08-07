@@ -65,7 +65,7 @@ func asOrderQueryG[T any](q OrderedQuery) OrderedQueryG[T] {
 	}
 }
 
-func (e *expender[T1, T2]) OrderBy(selector func(T1) T2) OrderedQueryG[T1] {
+func (e *expander[T1, T2]) OrderBy(selector func(T1) T2) OrderedQueryG[T1] {
 	orderBy := e.q.AsQuery().OrderBy(func(i interface{}) interface{} {
 		return selector(i.(T1))
 	})
@@ -119,7 +119,7 @@ func (q Query) OrderByDescending(selector func(interface{}) interface{}) Ordered
 	}
 }
 
-func (e *expender[T1, T2]) OrderByDescending(selector func(T1) T2) OrderedQueryG[T1] {
+func (e *expander[T1, T2]) OrderByDescending(selector func(T1) T2) OrderedQueryG[T1] {
 	orderBy := e.q.AsQuery().OrderByDescending(func(i interface{}) interface{} {
 		return selector(i.(T1))
 	})
