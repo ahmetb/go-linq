@@ -35,11 +35,6 @@ type Expended[T1, T2 any] interface {
 	ExceptBy(q QueryG[T1], selector func(T1) T2) QueryG[T1]
 }
 
-type OrderedExpended[T1 any, T2 comparable] interface {
-	ThenBy(selector func(T1) T2) OrderedQueryG[T1]
-	ThenByDescending(selector func(T1) T2) OrderedQueryG[T1]
-}
-
 type Expended3[T1, T2, T3 any] interface {
 	Zip(q2 QueryG[T2],
 		resultSelector func(T1, T2) T3) QueryG[T3]
@@ -47,6 +42,13 @@ type Expended3[T1, T2, T3 any] interface {
 		resultSelector func(T2, T1) T3) QueryG[T3]
 	SelectManyByIndexed(selector func(int, T1) QueryG[T2],
 		resultSelector func(T2, T1) T3) QueryG[T3]
+	GroupBy(keySelector func(T1) T2,
+		elementSelector func(T1) T3) QueryG[GroupG[T2, T3]]
+}
+
+type OrderedExpended[T1 any, T2 comparable] interface {
+	ThenBy(selector func(T1) T2) OrderedQueryG[T1]
+	ThenByDescending(selector func(T1) T2) OrderedQueryG[T1]
 }
 
 type expender[T1, T2 any] struct {
