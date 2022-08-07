@@ -3,10 +3,6 @@ package linq
 var _ Expander[int] = &Expended[int, int]{}
 var _ Expander3[int] = &Expended3[int, int, int]{}
 var _ Expander4[int] = &Expended4[int, int, int, int]{}
-
-//var _ Expended[int, int] = &Expended[int, int]{}
-//var _ Expended3[int, int, int] = &Expended3[int, int, int]{}
-//var _ Expended4[int, int, int, int] = &Expended4[int, int, int, int]{}
 var _ OrderedExpander[int] = &orderedExtender[int, int]{}
 var _ OrderedExpended[int, int] = &orderedExtender[int, int]{}
 
@@ -48,42 +44,6 @@ type Expander4[T any] interface {
 	Expend(q QueryG[T]) any
 	Expander4()
 }
-
-//type Expended[T1, T2 any] interface {
-//	Select(selector func(T1) T2) QueryG[T2]
-//	SelectIndexed(selector func(int, T1) T2) QueryG[T2]
-//	SelectMany(selector func(T1) QueryG[T2]) QueryG[T2]
-//	SelectManyIndexed(selector func(int, T1) QueryG[T2]) QueryG[T2]
-//	DistinctBy(selector func(T1) T2) QueryG[T1]
-//	OrderBy(selector func(T1) T2) OrderedQueryG[T1]
-//	OrderByDescending(selector func(T1) T2) OrderedQueryG[T1]
-//	ExceptBy(q QueryG[T1], selector func(T1) T2) QueryG[T1]
-//	Expander()
-//}
-//
-//type Expended3[T1, T2, T3 any] interface {
-//	Zip(q2 QueryG[T2],
-//		resultSelector func(T1, T2) T3) QueryG[T3]
-//	SelectManyBy(selector func(T1) QueryG[T2],
-//		resultSelector func(T2, T1) T3) QueryG[T3]
-//	SelectManyByIndexed(selector func(int, T1) QueryG[T2],
-//		resultSelector func(T2, T1) T3) QueryG[T3]
-//	GroupBy(keySelector func(T1) T2,
-//		elementSelector func(T1) T3) QueryG[GroupG[T2, T3]]
-//	Expander3()
-//}
-//
-//type Expended4[T1, T2, T3, T4 any] interface {
-//	Join(inner QueryG[T2],
-//		outerKeySelector func(T1) T3,
-//		innerKeySelector func(T2) T3,
-//		resultSelector func(outer T1, inner T2) T4) QueryG[T4]
-//	GroupJoin(inner QueryG[T2],
-//		outerKeySelector func(T1) T3,
-//		innerKeySelector func(T2) T3,
-//		resultSelector func(outer T1, inners []T2) T4) QueryG[T4]
-//	Expander4()
-//}
 
 type OrderedExpended[T1 any, T2 comparable] interface {
 	ThenBy(selector func(T1) T2) OrderedQueryG[T1]
