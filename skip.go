@@ -77,6 +77,38 @@ func (q Query) SkipWhile(predicate func(interface{}) bool) Query {
 	}
 }
 
+// SkipWhile bypasses elements in a collection as long as a specified condition
+// is true and then returns the remaining elements.
+//
+// This method tests each element by using predicate and skips the element if
+// the result is true. After the predicate function returns false for an
+// element, that element and the remaining elements in source are returned and
+// there are no more invocations of predicate.
+func (q QueryG[T]) SkipWhile(predicate func(T) bool) QueryG[T] {
+	return QueryG[T]{
+		Iterate: func() IteratorG[T] {
+			next := q.Iterate()
+			ready := false
+
+			return func() (item T, ok bool) {
+				for !ready {
+					item, ok = next()
+					if !ok {
+						return
+					}
+
+					ready = !predicate(item)
+					if ready {
+						return
+					}
+				}
+
+				return next()
+			}
+		},
+	}
+}
+
 // SkipWhileT is the typed version of SkipWhile.
 //
 //   - predicateFn is of type "func(TSource)bool"
