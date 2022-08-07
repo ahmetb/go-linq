@@ -54,6 +54,10 @@ type Expended4[T1, T2, T3, T4 any] interface {
 		outerKeySelector func(T1) T3,
 		innerKeySelector func(T2) T3,
 		resultSelector func(outer T1, inner T2) T4) QueryG[T4]
+	GroupJoin(inner QueryG[T2],
+		outerKeySelector func(T1) T3,
+		innerKeySelector func(T2) T3,
+		resultSelector func(outer T1, inners []T2) T4) QueryG[T4]
 }
 
 type OrderedExpended[T1 any, T2 comparable] interface {
