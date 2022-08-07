@@ -50,28 +50,6 @@ func (q Query) SelectT(selectorFn interface{}) Query {
 	return q.Select(selectorFunc)
 }
 
-func (q QueryG[T]) Select(m Mapper[T]) interface{} {
-	return m.Map(q)
-}
-
-type Mapper[T any] interface {
-	Map(QueryG[T]) interface{}
-}
-
-type mapper[TIn, TOut any] struct {
-	selector func(TIn) TOut
-}
-
-func (m mapper[TIn, TOut]) Map(q QueryG[TIn]) interface{} {
-	return Select(q, m.selector)
-}
-
-func Map[TIn, TOut any](selector func(TIn) TOut) Mapper[TIn] {
-	return mapper[TIn, TOut]{
-		selector: selector,
-	}
-}
-
 func Select[TIn, TOut any](q QueryG[TIn], selector func(TIn) TOut) QueryG[TOut] {
 	o := QueryG[TOut]{
 		Iterate: func() IteratorG[TOut] {
@@ -130,6 +108,46 @@ func (q Query) SelectIndexed(selector func(int, interface{}) interface{}) Query 
 	}
 }
 
+func (e *expender[TIn, TOut]) Select(selector func(TIn) TOut) QueryG[TOut] {
+	o := QueryG[TOut]{
+		Iterate: func() IteratorG[TOut] {
+			next := e.q.Iterate()
+			return func() (outItem TOut, ok bool) {
+				item, hasNext := next()
+				if hasNext {
+					outItem = selector(item)
+					ok = true
+					return
+				}
+				ok = false
+				return
+			}
+		},
+	}
+	return o
+}
+
+func (e *expender[T1, T2]) SelectIndexed(selector func(int, T1) T2) QueryG[T2] {
+	o := QueryG[T2]{
+		Iterate: func() IteratorG[T2] {
+			next := e.q.Iterate()
+			index := 0
+			return func() (outItem T2, ok bool) {
+				item, hasNext := next()
+				if hasNext {
+					outItem = selector(index, item)
+					ok = true
+					index++
+					return
+				}
+				ok = false
+				return
+			}
+		},
+	}
+	return o
+}
+
 // SelectIndexedT is the typed version of SelectIndexed.
 //   - selectorFn is of type "func(int,TSource)TResult"
 // NOTE: SelectIndexed has better performance than SelectIndexedT.
@@ -147,47 +165,4 @@ func (q Query) SelectIndexedT(selectorFn interface{}) Query {
 	}
 
 	return q.SelectIndexed(selectorFunc)
-}
-
-type MapperWithIndex[T any] interface {
-	Map(QueryG[T]) interface{}
-}
-
-type mapperWithIndex[TIn, TOut any] struct {
-	selector func(int, TIn) TOut
-}
-
-func (m mapperWithIndex[TIn, TOut]) Map(q QueryG[TIn]) interface{} {
-	return SelectIndexedG(q, m.selector)
-}
-
-func MapWithIndex[TIn, TOut any](selector func(int, TIn) TOut) Mapper[TIn] {
-	return mapperWithIndex[TIn, TOut]{
-		selector: selector,
-	}
-}
-
-func (q QueryG[T]) SelectIndexed(m MapperWithIndex[T]) interface{} {
-	return m.Map(q)
-}
-
-func SelectIndexedG[TIn, TOut any](q QueryG[TIn], selector func(int, TIn) TOut) QueryG[TOut] {
-	o := QueryG[TOut]{
-		Iterate: func() IteratorG[TOut] {
-			next := q.Iterate()
-			index := 0
-			return func() (outItem TOut, ok bool) {
-				item, hasNext := next()
-				if hasNext {
-					outItem = selector(index, item)
-					ok = true
-					index++
-					return
-				}
-				ok = false
-				return
-			}
-		},
-	}
-	return o
 }
