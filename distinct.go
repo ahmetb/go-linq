@@ -54,6 +54,10 @@ func (oq OrderedQuery) Distinct() OrderedQuery {
 	}
 }
 
+func (q OrderedQueryG[T]) Distinct() OrderedQueryG[T] {
+	return asOrderQueryG[T](q.orderedQuery.Distinct())
+}
+
 // DistinctBy method returns distinct elements from a collection. This method
 // executes selector function for each element to determine a value to compare.
 // The result is an unordered collection that contains no duplicate values.
