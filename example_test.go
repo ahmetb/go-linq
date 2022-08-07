@@ -2,6 +2,7 @@ package linq
 
 import (
 	"fmt"
+	"log"
 	"strings"
 	"time"
 )
@@ -2243,6 +2244,51 @@ func ExampleQuery_SelectManyByT() {
 }
 
 // The following code example demonstrates how to use SelectManyT
+// to perform a one-to-many projection over a slice
+func ExampleQuery_SelectManyByG() {
+
+	type Pet struct {
+		Name string
+	}
+
+	type Person struct {
+		Name string
+		Pets []Pet
+	}
+
+	magnus := Person{
+		Name: "Hedlund, Magnus",
+		Pets: []Pet{{Name: "Daisy"}},
+	}
+
+	terry := Person{
+		Name: "Adams, Terry",
+		Pets: []Pet{{Name: "Barley"}, {Name: "Boots"}},
+	}
+	charlotte := Person{
+		Name: "Weiss, Charlotte",
+		Pets: []Pet{{Name: "Whiskers"}},
+	}
+
+	people := []Person{magnus, terry, charlotte}
+	results := FromSliceG(people).Expend(To3[Person, Pet, string]()).(Expended3[Person, Pet, string]).
+		SelectManyBy(func(person Person) QueryG[Pet] {
+			return FromSliceG(person.Pets)
+		}, func(pet Pet, person Person) string {
+			return fmt.Sprintf("Owner: %s, Pet: %s", person.Name, pet.Name)
+		}).ToSlice()
+
+	for _, result := range results {
+		fmt.Println(result)
+	}
+	// Output:
+	// Owner: Hedlund, Magnus, Pet: Daisy
+	// Owner: Adams, Terry, Pet: Barley
+	// Owner: Adams, Terry, Pet: Boots
+	// Owner: Weiss, Charlotte, Pet: Whiskers
+}
+
+// The following code example demonstrates how to use SelectManyT
 // to perform a projection over a list of sentences and rank the
 // top 5 most used words
 func ExampleQuery_SelectManyT() {
@@ -2339,6 +2385,62 @@ func ExampleQuery_SelectManyIndexedT() {
 		ToSlice(&results)
 
 	for _, result := range results {
+		fmt.Println(result)
+	}
+	// Output:
+	// File:[1] - file1.log => line: 1 - INFO: 2013/11/05 18:11:01 main.go:44: Special Information
+	// File:[1] - file1.log => line: 2 - WARNING: 2013/11/05 18:11:01 main.go:45: There is something you need to know about
+	// File:[1] - file1.log => line: 3 - ERROR: 2013/11/05 18:11:01 main.go:46: Something has failed
+	// File:[2] - file2.log => line: 1 - INFO: 2013/11/05 18:11:01 main.go:46: Everything is ok
+	// File:[3] - file3.log => line: 1 - 2013/11/05 18:42:26 Hello World
+
+}
+
+// The following code example demonstrates how to use SelectManyIndexedT
+// to perform a one-to-many projection over an slice of log files and
+// print out their contents.
+func ExampleQuery_SelectManyIndexedG() {
+	type LogFile struct {
+		Name  string
+		Lines []string
+	}
+
+	file1 := LogFile{
+		Name: "file1.log",
+		Lines: []string{
+			"INFO: 2013/11/05 18:11:01 main.go:44: Special Information",
+			"WARNING: 2013/11/05 18:11:01 main.go:45: There is something you need to know about",
+			"ERROR: 2013/11/05 18:11:01 main.go:46: Something has failed",
+		},
+	}
+
+	file2 := LogFile{
+		Name: "file2.log",
+		Lines: []string{
+			"INFO: 2013/11/05 18:11:01 main.go:46: Everything is ok",
+		},
+	}
+
+	file3 := LogFile{
+		Name: "file3.log",
+		Lines: []string{
+			"2013/11/05 18:42:26 Hello World",
+		},
+	}
+
+	logFiles := []LogFile{file1, file2, file3}
+	var results []string
+
+	results = FromSliceG(logFiles).Expend(To2[LogFile, string]()).(Expended[LogFile, string]).
+		SelectManyIndexed(func(fileIndex int, file LogFile) QueryG[string] {
+			return FromSliceG(file.Lines).Expend(To2[string, string]()).(Expended[string, string]).SelectIndexed(
+				func(lineIndex int, line string) string {
+					return fmt.Sprintf("File:[%d] - %s => line: %d - %s", fileIndex+1, file.Name, lineIndex+1, line)
+				})
+		}).ToSlice()
+
+	for _, result := range results {
+		log.Print(result)
 		fmt.Println(result)
 	}
 	// Output:

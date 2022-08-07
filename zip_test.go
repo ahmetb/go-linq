@@ -23,7 +23,7 @@ func TestZipG(t *testing.T) {
 	input2 := []int{2, 4, 5, 1}
 	want := []string{"3", "6", "8"}
 
-	slice := FromSliceG(input1).Expend(Expend3[int, int, string]()).(Expended3[int, int, string]).Zip(FromSliceG(input2), func(i1, i2 int) string {
+	slice := FromSliceG(input1).Expend(To3[int, int, string]()).(Expended3[int, int, string]).Zip(FromSliceG(input2), func(i1, i2 int) string {
 		return strconv.Itoa(i1 + i2)
 	}).ToSlice()
 	assert.Equal(t, want, slice)

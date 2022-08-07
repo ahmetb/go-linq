@@ -16,11 +16,17 @@ type Expender[T any] interface {
 type Expended[T1, T2 any] interface {
 	Select(selector func(T1) T2) QueryG[T2]
 	SelectIndexed(selector func(int, T1) T2) QueryG[T2]
+	SelectMany(selector func(T1) QueryG[T2]) QueryG[T2]
+	SelectManyIndexed(selector func(int, T1) QueryG[T2]) QueryG[T2]
 }
 
 type Expended3[T1, T2, T3 any] interface {
 	Zip(q2 QueryG[T2],
 		resultSelector func(T1, T2) T3) QueryG[T3]
+	SelectManyBy(selector func(T1) QueryG[T2],
+		resultSelector func(T2, T1) T3) QueryG[T3]
+	SelectManyByIndexed(selector func(int, T1) QueryG[T2],
+		resultSelector func(T2, T1) T3) QueryG[T3]
 }
 
 type expender[T1, T2 any] struct {
@@ -32,7 +38,7 @@ func (e *expender[T1, T2]) Expend(q QueryG[T1]) any {
 	return e
 }
 
-func Expend[T1, T2 any]() Expender[T1] {
+func To2[T1, T2 any]() Expender[T1] {
 	return &expender[T1, T2]{}
 }
 
@@ -45,6 +51,6 @@ func (e *expender3[T1, T2, T3]) Expend(q QueryG[T1]) any {
 	return e
 }
 
-func Expend3[T1, T2, T3 any]() Expender[T1] {
+func To3[T1, T2, T3 any]() Expender[T1] {
 	return &expender3[T1, T2, T3]{}
 }

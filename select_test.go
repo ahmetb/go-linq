@@ -39,7 +39,7 @@ func TestSelectGFunc(t *testing.T) {
 func TestSelectG(t *testing.T) {
 	input := []int{1, 2, 3}
 	expected := []string{"1", "2", "3"}
-	stringSlice := FromSliceG(input).Expend(Expend[int, string]()).(Expended[int, string]).Select(func(i int) string {
+	stringSlice := FromSliceG(input).Expend(To2[int, string]()).(Expended[int, string]).Select(func(i int) string {
 		return strconv.Itoa(i)
 	}).ToSlice()
 	assert.Equal(t, expected, stringSlice)
@@ -48,7 +48,7 @@ func TestSelectG(t *testing.T) {
 func TestSelectIndexedG(t *testing.T) {
 	input := []int{0, 1, 2}
 	expected := []string{"0", "1", "2"}
-	stringSlice := FromSliceG(input).Expend(Expend[int, string]()).(Expended[int, string]).SelectIndexed(func(index, i int) string {
+	stringSlice := FromSliceG(input).Expend(To2[int, string]()).(Expended[int, string]).SelectIndexed(func(index, i int) string {
 		assert.Equal(t, index, i)
 		return strconv.Itoa(i)
 	}).ToSlice()
