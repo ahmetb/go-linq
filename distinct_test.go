@@ -48,13 +48,13 @@ func TestDistinctForOrderedQuery(t *testing.T) {
 }
 
 func TestDistinctForOrderedQueryG(t *testing.T) {
-	assert.Equal(t, []int{1, 2, 3}, FromSliceG([]int{1, 2, 2, 3, 1}).Expend(To2[int, int]()).(Expended[int, int]).OrderBy(func(i int) int {
+	assert.Equal(t, []int{1, 2, 3}, FromSliceG([]int{1, 2, 2, 3, 1}).Expend(To2[int, int]()).(*Expended[int, int]).OrderBy(func(i int) int {
 		return i
 	}).Distinct().ToSlice())
-	assert.Equal(t, []int{1, 2, 3, 4}, FromSliceG([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).Expend(To2[int, int]()).(Expended[int, int]).OrderBy(func(i int) int {
+	assert.Equal(t, []int{1, 2, 3, 4}, FromSliceG([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).Expend(To2[int, int]()).(*Expended[int, int]).OrderBy(func(i int) int {
 		return i
 	}).Distinct().ToSlice())
-	assert.Equal(t, []rune{'r', 's', 't'}, FromStringG("sstr").Expend(To2[rune, rune]()).(Expended[rune, rune]).OrderBy(func(i rune) rune {
+	assert.Equal(t, []rune{'r', 's', 't'}, FromStringG("sstr").Expend(To2[rune, rune]()).(*Expended[rune, rune]).OrderBy(func(i rune) rune {
 		return i
 	}).Distinct().ToSlice())
 }
@@ -84,7 +84,7 @@ func TestDistinctByG(t *testing.T) {
 	users := []user{{1, "Foo"}, {2, "Bar"}, {3, "Foo"}}
 	want := []user{user{1, "Foo"}, user{2, "Bar"}}
 
-	assert.Equal(t, want, FromSliceG(users).Expend(To2[user, string]()).(Expended[user, string]).DistinctBy(func(u user) string {
+	assert.Equal(t, want, FromSliceG(users).Expend(To2[user, string]()).(*Expended[user, string]).DistinctBy(func(u user) string {
 		return u.name
 	}).ToSlice())
 }

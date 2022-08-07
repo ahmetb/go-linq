@@ -36,7 +36,7 @@ func TestGroupJoinG(t *testing.T) {
 		{2, []uint{}},
 	}
 
-	actual := FromSliceG(outer).Expend(To4[int, uint, int, KeyValueG[int, []uint]]()).(Expended4[int, uint, int, KeyValueG[int, []uint]]).GroupJoin(
+	actual := FromSliceG(outer).Expend4(To4[int, uint, int, KeyValueG[int, []uint]]()).(*Expended4[int, uint, int, KeyValueG[int, []uint]]).GroupJoin(
 		FromSliceG(inner),
 		func(i int) int { return i },
 		func(ui uint) int { return int(ui) % 2 },

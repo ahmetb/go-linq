@@ -44,7 +44,7 @@ func TestGroupByG(t *testing.T) {
 	wantEven := []int{2, 4, 6, 8}
 	wantOdd := []int{1, 3, 5, 7, 9}
 
-	q := FromSliceG(input).Expend(To3[int, int, int]()).(Expended3[int, int, int]).GroupBy(
+	q := FromSliceG(input).Expend3(To3[int, int, int]()).(*Expended3[int, int, int]).GroupBy(
 		func(i int) int {
 			return i % 2
 		}, func(i int) int {

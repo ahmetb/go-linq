@@ -85,7 +85,7 @@ func (q Query) ExceptBy(q2 Query,
 // ExceptBy invokes a transform function on each element of a collection and
 // produces the set difference of two sequences. The set difference is the
 // members of the first sequence that don't appear in the second sequence.
-func (e *expander[T1, T2]) ExceptBy(q2 QueryG[T1],
+func (e *Expended[T1, T2]) ExceptBy(q2 QueryG[T1],
 	selector func(T1) T2) QueryG[T1] {
 	return QueryG[T1]{
 		Iterate: func() IteratorG[T1] {

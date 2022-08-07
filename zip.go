@@ -54,7 +54,7 @@ func (q Query) ZipT(q2 Query,
 	return q.Zip(q2, resultSelectorFunc)
 }
 
-func (e *expander3[T1, T2, T3]) Zip(q2 QueryG[T2], resultSelector func(T1, T2) T3) QueryG[T3] {
+func (e *Expended3[T1, T2, T3]) Zip(q2 QueryG[T2], resultSelector func(T1, T2) T3) QueryG[T3] {
 	return QueryG[T3]{
 		Iterate: func() IteratorG[T3] {
 			next1 := e.q.Iterate()

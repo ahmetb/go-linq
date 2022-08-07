@@ -67,7 +67,7 @@ func (q Query) GroupJoin(inner Query,
 //
 // GroupJoin preserves the order of the elements of outer, and for each element
 // of outer, the order of the matching elements from inner.
-func (e *expander4[TOut, TInner, TKey, TResult]) GroupJoin(inner QueryG[TInner],
+func (e *Expended4[TOut, TInner, TKey, TResult]) GroupJoin(inner QueryG[TInner],
 	outerKeySelector func(TOut) TKey,
 	innerKeySelector func(TInner) TKey,
 	resultSelector func(outer TOut, inners []TInner) TResult) QueryG[TResult] {

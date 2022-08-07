@@ -82,7 +82,7 @@ func (q Query) DistinctBy(selector func(interface{}) interface{}) Query {
 	}
 }
 
-func (e *expander[T1, T2]) DistinctBy(selector func(T1) T2) QueryG[T1] {
+func (e *Expended[T1, T2]) DistinctBy(selector func(T1) T2) QueryG[T1] {
 	return AsQueryG[T1](e.q.AsQuery().DistinctBy(func(i interface{}) interface{} {
 		return selector(i.(T1))
 	}))

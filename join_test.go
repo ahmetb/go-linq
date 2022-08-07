@@ -40,7 +40,7 @@ func TestJoinG(t *testing.T) {
 		{4, 4},
 	}
 
-	q := FromSliceG(outer).Expend(To4[int, uint, int, KeyValueG[int, uint]]()).(Expended4[int, uint, int, KeyValueG[int, uint]]).Join(
+	q := FromSliceG(outer).Expend4(To4[int, uint, int, KeyValueG[int, uint]]()).(*Expended4[int, uint, int, KeyValueG[int, uint]]).Join(
 		FromSliceG(inner), func(i int) int {
 			return i
 		}, func(i uint) int {

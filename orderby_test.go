@@ -17,7 +17,7 @@ func TestEmpty(t *testing.T) {
 }
 
 func TestEmptyG(t *testing.T) {
-	actual := FromSliceG([]string{}).Expend(To2[string, int]()).(Expended[string, int]).OrderBy(func(in string) int {
+	actual := FromSliceG([]string{}).Expend(To2[string, int]()).(*Expended[string, int]).OrderBy(func(in string) int {
 		return 0
 	}).ToSlice()
 
@@ -53,7 +53,7 @@ func TestOrderByG(t *testing.T) {
 		slice[i].f1 = i
 	}
 
-	actual := FromSliceG(slice).Expend(To2[foo, int]()).(Expended[foo, int]).OrderBy(func(i foo) int {
+	actual := FromSliceG(slice).Expend(To2[foo, int]()).(*Expended[foo, int]).OrderBy(func(i foo) int {
 		return i.f1
 	})
 
@@ -103,7 +103,7 @@ func TestOrderByDescendingG(t *testing.T) {
 		slice[i].f1 = i
 	}
 
-	q := FromSliceG(slice).Expend(To2[foo, int]()).(Expended[foo, int]).OrderByDescending(func(i foo) int {
+	q := FromSliceG(slice).Expend(To2[foo, int]()).(*Expended[foo, int]).OrderByDescending(func(i foo) int {
 		return i.f1
 	})
 
@@ -154,7 +154,7 @@ func TestThenByG(t *testing.T) {
 		slice[i].f2 = i%2 == 0
 	}
 
-	q := FromSliceG(slice).Expend(To2[foo, bool]()).(Expended[foo, bool]).OrderBy(func(i foo) bool {
+	q := FromSliceG(slice).Expend(To2[foo, bool]()).(*Expended[foo, bool]).OrderBy(func(i foo) bool {
 		return i.f2
 	}).Expend(OrderedTo2[foo, int]()).(OrderedExpended[foo, int]).ThenBy(func(i foo) int {
 		return i.f1
@@ -206,7 +206,7 @@ func TestThenByDescendingG(t *testing.T) {
 		slice[i].f2 = i%2 == 0
 	}
 
-	q := FromSliceG(slice).Expend(To2[foo, bool]()).(Expended[foo, bool]).OrderBy(func(i foo) bool {
+	q := FromSliceG(slice).Expend(To2[foo, bool]()).(*Expended[foo, bool]).OrderBy(func(i foo) bool {
 		return i.f2
 	}).Expend(OrderedTo2[foo, int]()).(OrderedExpended[foo, int]).ThenByDescending(func(i foo) int {
 		return i.f1

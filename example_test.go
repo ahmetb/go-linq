@@ -2271,7 +2271,7 @@ func ExampleQuery_SelectManyByG() {
 	}
 
 	people := []Person{magnus, terry, charlotte}
-	results := FromSliceG(people).Expend(To3[Person, Pet, string]()).(Expended3[Person, Pet, string]).
+	results := FromSliceG(people).Expend3(To3[Person, Pet, string]()).(*Expended3[Person, Pet, string]).
 		SelectManyBy(func(person Person) QueryG[Pet] {
 			return FromSliceG(person.Pets)
 		}, func(pet Pet, person Person) string {
@@ -2431,9 +2431,9 @@ func ExampleQuery_SelectManyIndexedG() {
 	logFiles := []LogFile{file1, file2, file3}
 	var results []string
 
-	results = FromSliceG(logFiles).Expend(To2[LogFile, string]()).(Expended[LogFile, string]).
+	results = FromSliceG(logFiles).Expend(To2[LogFile, string]()).(*Expended[LogFile, string]).
 		SelectManyIndexed(func(fileIndex int, file LogFile) QueryG[string] {
-			return FromSliceG(file.Lines).Expend(To2[string, string]()).(Expended[string, string]).SelectIndexed(
+			return FromSliceG(file.Lines).Expend(To2[string, string]()).(*Expended[string, string]).SelectIndexed(
 				func(lineIndex int, line string) string {
 					return fmt.Sprintf("File:[%d] - %s => line: %d - %s", fileIndex+1, file.Name, lineIndex+1, line)
 				})

@@ -28,10 +28,10 @@ func TestSelectMany(t *testing.T) {
 }
 
 func TestSelectManyG(t *testing.T) {
-	assert.Equal(t, []int{1, 2, 3, 4, 5, 6, 7}, FromSliceG([][]int{{1, 2, 3}, {4, 5, 6, 7}}).Expend(To2[[]int, int]()).(Expended[[]int, int]).SelectMany(func(s []int) QueryG[int] {
+	assert.Equal(t, []int{1, 2, 3, 4, 5, 6, 7}, FromSliceG([][]int{{1, 2, 3}, {4, 5, 6, 7}}).Expend(To2[[]int, int]()).(*Expended[[]int, int]).SelectMany(func(s []int) QueryG[int] {
 		return FromSliceG(s)
 	}).ToSlice())
-	assert.Equal(t, []rune{'s', 't', 'r', 'i', 'n', 'g'}, FromSliceG([]string{"str", "ing"}).Expend(To2[string, rune]()).(Expended[string, rune]).SelectMany(func(s string) QueryG[rune] {
+	assert.Equal(t, []rune{'s', 't', 'r', 'i', 'n', 'g'}, FromSliceG([]string{"str", "ing"}).Expend(To2[string, rune]()).(*Expended[string, rune]).SelectMany(func(s string) QueryG[rune] {
 		return FromStringG(s)
 	}).ToSlice())
 }
@@ -67,13 +67,13 @@ func TestSelectManyIndexed(t *testing.T) {
 }
 
 func TestSelectManyIndexedG(t *testing.T) {
-	assert.Equal(t, []int{1, 2, 3, 5, 6, 7}, FromSliceG([][]int{{1, 2, 3}, {4, 5, 6, 7}}).Expend(To2[[]int, int]()).(Expended[[]int, int]).SelectManyIndexed(func(i int, s []int) QueryG[int] {
+	assert.Equal(t, []int{1, 2, 3, 5, 6, 7}, FromSliceG([][]int{{1, 2, 3}, {4, 5, 6, 7}}).Expend(To2[[]int, int]()).(*Expended[[]int, int]).SelectManyIndexed(func(i int, s []int) QueryG[int] {
 		if i > 0 {
 			return FromSliceG(s[1:])
 		}
 		return FromSliceG(s)
 	}).ToSlice())
-	assert.Equal(t, []rune{'s', 't', 'r', '0', 'i', 'n', 'g', '1'}, FromSliceG([]string{"str", "ing"}).Expend(To2[string, rune]()).(Expended[string, rune]).SelectManyIndexed(func(i int, s string) QueryG[rune] {
+	assert.Equal(t, []rune{'s', 't', 'r', '0', 'i', 'n', 'g', '1'}, FromSliceG([]string{"str", "ing"}).Expend(To2[string, rune]()).(*Expended[string, rune]).SelectManyIndexed(func(i int, s string) QueryG[rune] {
 		return FromStringG(s + strconv.Itoa(i))
 	}).ToSlice())
 }
@@ -111,12 +111,12 @@ func TestSelectManyBy(t *testing.T) {
 }
 
 func TestSelectManyByG(t *testing.T) {
-	assert.Equal(t, []int{2, 3, 4, 5, 6, 7, 8}, FromSliceG([][]int{{1, 2, 3}, {4, 5, 6, 7}}).Expend(To3[[]int, int, int]()).(Expended3[[]int, int, int]).SelectManyBy(func(s []int) QueryG[int] {
+	assert.Equal(t, []int{2, 3, 4, 5, 6, 7, 8}, FromSliceG([][]int{{1, 2, 3}, {4, 5, 6, 7}}).Expend3(To3[[]int, int, int]()).(*Expended3[[]int, int, int]).SelectManyBy(func(s []int) QueryG[int] {
 		return FromSliceG(s)
 	}, func(i int, _ []int) int {
 		return i + 1
 	}).ToSlice())
-	assert.Equal(t, []string{"s_", "t_", "r_", "i_", "n_", "g_"}, FromSliceG([]string{"str", "ing"}).Expend(To3[string, rune, string]()).(Expended3[string, rune, string]).SelectManyBy(func(s string) QueryG[rune] {
+	assert.Equal(t, []string{"s_", "t_", "r_", "i_", "n_", "g_"}, FromSliceG([]string{"str", "ing"}).Expend3(To3[string, rune, string]()).(*Expended3[string, rune, string]).SelectManyBy(func(s string) QueryG[rune] {
 		return FromStringG(s)
 	}, func(x rune, _ string) string {
 		return string(x) + "_"
@@ -171,7 +171,7 @@ func TestSelectManyIndexedBy(t *testing.T) {
 }
 
 func TestSelectManyIndexedByG(t *testing.T) {
-	assert.Equal(t, []int{11, 21, 31, 5, 6, 7, 8}, FromSliceG([][]int{{1, 2, 3}, {4, 5, 6, 7}}).Expend(To3[[]int, int, int]()).(Expended3[[]int, int, int]).SelectManyByIndexed(
+	assert.Equal(t, []int{11, 21, 31, 5, 6, 7, 8}, FromSliceG([][]int{{1, 2, 3}, {4, 5, 6, 7}}).Expend3(To3[[]int, int, int]()).(*Expended3[[]int, int, int]).SelectManyByIndexed(
 		func(i int, x []int) QueryG[int] {
 			if i == 0 {
 				return FromSliceG([]int{10, 20, 30})
@@ -181,7 +181,7 @@ func TestSelectManyIndexedByG(t *testing.T) {
 			return x + 1
 		}).ToSlice())
 	assert.Equal(t, []string{"s_", "t_", "r_", "i_", "n_", "g_"},
-		FromSliceG([]string{"st", "ng"}).Expend(To3[string, rune, string]()).(Expended3[string, rune, string]).SelectManyByIndexed(
+		FromSliceG([]string{"st", "ng"}).Expend3(To3[string, rune, string]()).(*Expended3[string, rune, string]).SelectManyByIndexed(
 			func(i int, x string) QueryG[rune] {
 				if i == 0 {
 					return FromStringG(x + "r")

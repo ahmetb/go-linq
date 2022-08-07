@@ -41,7 +41,7 @@ func TestExceptByG(t *testing.T) {
 	input2 := []int{1}
 	want := []int{2, 4, 2}
 
-	assert.Equal(t, want, FromSliceG(input1).Expend(To2[int, int]()).(Expended[int, int]).ExceptBy(FromSliceG(input2), func(i int) int {
+	assert.Equal(t, want, FromSliceG(input1).Expend(To2[int, int]()).(*Expended[int, int]).ExceptBy(FromSliceG(input2), func(i int) int {
 		return i % 2
 	}).ToSlice())
 }

@@ -63,7 +63,7 @@ func (q Query) Join(inner Query,
 //
 // Join preserves the order of the elements of outer collection, and for each of
 // these elements, the order of the matching elements of inner.
-func (e *expander4[TOut, TInner, TKey, TResult]) Join(inner QueryG[TInner],
+func (e *Expended4[TOut, TInner, TKey, TResult]) Join(inner QueryG[TInner],
 	outerKeySelector func(TOut) TKey,
 	innerKeySelector func(TInner) TKey,
 	resultSelector func(outer TOut, inner TInner) TResult) QueryG[TResult] {
