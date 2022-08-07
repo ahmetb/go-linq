@@ -32,6 +32,7 @@ type Expended[T1, T2 any] interface {
 	DistinctBy(selector func(T1) T2) QueryG[T1]
 	OrderBy(selector func(T1) T2) OrderedQueryG[T1]
 	OrderByDescending(selector func(T1) T2) OrderedQueryG[T1]
+	ExceptBy(q QueryG[T1], selector func(T1) T2) QueryG[T1]
 }
 
 type OrderedExpended[T1 any, T2 comparable] interface {
