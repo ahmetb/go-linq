@@ -27,15 +27,6 @@ func TestSelect(t *testing.T) {
 	}
 }
 
-func TestSelectGFunc(t *testing.T) {
-	input := []int{1, 2, 3}
-	expected := []string{"1", "2", "3"}
-	stringSlice := Select[int, string](FromSliceG(input), func(i int) string {
-		return strconv.Itoa(i)
-	}).ToSlice()
-	assert.Equal(t, expected, stringSlice)
-}
-
 func TestSelectG(t *testing.T) {
 	input := []int{1, 2, 3}
 	expected := []string{"1", "2", "3"}
