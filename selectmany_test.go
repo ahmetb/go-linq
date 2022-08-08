@@ -1,6 +1,7 @@
 package linq
 
 import (
+	"github.com/stretchr/testify/assert"
 	"strconv"
 	"testing"
 )
@@ -24,6 +25,15 @@ func TestSelectMany(t *testing.T) {
 			t.Errorf("From(%v).SelectMany()=%v expected %v", test.input, toSlice(q), test.output)
 		}
 	}
+}
+
+func TestSelectManyG(t *testing.T) {
+	assert.Equal(t, []int{1, 2, 3, 4, 5, 6, 7}, FromSliceG([][]int{{1, 2, 3}, {4, 5, 6, 7}}).Expend(To2[[]int, int]()).(*Expended[[]int, int]).SelectMany(func(s []int) QueryG[int] {
+		return FromSliceG(s)
+	}).ToSlice())
+	assert.Equal(t, []rune{'s', 't', 'r', 'i', 'n', 'g'}, FromSliceG([]string{"str", "ing"}).Expend(To2[string, rune]()).(*Expended[string, rune]).SelectMany(func(s string) QueryG[rune] {
+		return FromStringG(s)
+	}).ToSlice())
 }
 
 func TestSelectManyT_PanicWhenSelectorFnIsInvalid(t *testing.T) {
@@ -56,6 +66,18 @@ func TestSelectManyIndexed(t *testing.T) {
 	}
 }
 
+func TestSelectManyIndexedG(t *testing.T) {
+	assert.Equal(t, []int{1, 2, 3, 5, 6, 7}, FromSliceG([][]int{{1, 2, 3}, {4, 5, 6, 7}}).Expend(To2[[]int, int]()).(*Expended[[]int, int]).SelectManyIndexed(func(i int, s []int) QueryG[int] {
+		if i > 0 {
+			return FromSliceG(s[1:])
+		}
+		return FromSliceG(s)
+	}).ToSlice())
+	assert.Equal(t, []rune{'s', 't', 'r', '0', 'i', 'n', 'g', '1'}, FromSliceG([]string{"str", "ing"}).Expend(To2[string, rune]()).(*Expended[string, rune]).SelectManyIndexed(func(i int, s string) QueryG[rune] {
+		return FromStringG(s + strconv.Itoa(i))
+	}).ToSlice())
+}
+
 func TestSelectManyIndexedT_PanicWhenSelectorFnIsInvalid(t *testing.T) {
 	mustPanicWithError(t, "SelectManyIndexedT: parameter [selectorFn] has a invalid function signature. Expected: 'func(int,T)linq.Query', actual: 'func(int)int'", func() {
 		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).SelectManyIndexedT(func(item int) int { return item + 2 })
@@ -86,6 +108,19 @@ func TestSelectManyBy(t *testing.T) {
 			t.Errorf("From(%v).SelectManyBy()=%v expected %v", test.input, toSlice(q), test.output)
 		}
 	}
+}
+
+func TestSelectManyByG(t *testing.T) {
+	assert.Equal(t, []int{2, 3, 4, 5, 6, 7, 8}, FromSliceG([][]int{{1, 2, 3}, {4, 5, 6, 7}}).Expend3(To3[[]int, int, int]()).(*Expended3[[]int, int, int]).SelectManyBy(func(s []int) QueryG[int] {
+		return FromSliceG(s)
+	}, func(i int, _ []int) int {
+		return i + 1
+	}).ToSlice())
+	assert.Equal(t, []string{"s_", "t_", "r_", "i_", "n_", "g_"}, FromSliceG([]string{"str", "ing"}).Expend3(To3[string, rune, string]()).(*Expended3[string, rune, string]).SelectManyBy(func(s string) QueryG[rune] {
+		return FromStringG(s)
+	}, func(x rune, _ string) string {
+		return string(x) + "_"
+	}).ToSlice())
 }
 
 func TestSelectManyByT_PanicWhenSelectorFnIsInvalid(t *testing.T) {
@@ -133,6 +168,28 @@ func TestSelectManyIndexedBy(t *testing.T) {
 			t.Errorf("From(%v).SelectManyIndexedBy()=%v expected %v", test.input, toSlice(q), test.output)
 		}
 	}
+}
+
+func TestSelectManyIndexedByG(t *testing.T) {
+	assert.Equal(t, []int{11, 21, 31, 5, 6, 7, 8}, FromSliceG([][]int{{1, 2, 3}, {4, 5, 6, 7}}).Expend3(To3[[]int, int, int]()).(*Expended3[[]int, int, int]).SelectManyByIndexed(
+		func(i int, x []int) QueryG[int] {
+			if i == 0 {
+				return FromSliceG([]int{10, 20, 30})
+			}
+			return FromSliceG(x)
+		}, func(x int, _ []int) int {
+			return x + 1
+		}).ToSlice())
+	assert.Equal(t, []string{"s_", "t_", "r_", "i_", "n_", "g_"},
+		FromSliceG([]string{"st", "ng"}).Expend3(To3[string, rune, string]()).(*Expended3[string, rune, string]).SelectManyByIndexed(
+			func(i int, x string) QueryG[rune] {
+				if i == 0 {
+					return FromStringG(x + "r")
+				}
+				return FromStringG("i" + x)
+			}, func(x rune, _ string) string {
+				return string(x) + "_"
+			}).ToSlice())
 }
 
 func TestSelectManyIndexedByT_PanicWhenSelectorFnIsInvalid(t *testing.T) {

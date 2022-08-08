@@ -53,6 +53,59 @@ func (q Query) Join(inner Query,
 	}
 }
 
+// Join correlates the elements of two collection based on matching keys.
+//
+// A join refers to the operation of correlating the elements of two sources of
+// information based on a common key. Join brings the two information sources
+// and the keys by which they are matched together in one method call. This
+// differs from the use of SelectMany, which requires more than one method call
+// to perform the same operation.
+//
+// Join preserves the order of the elements of outer collection, and for each of
+// these elements, the order of the matching elements of inner.
+func (e *Expended4[TOut, TInner, TKey, TResult]) Join(inner QueryG[TInner],
+	outerKeySelector func(TOut) TKey,
+	innerKeySelector func(TInner) TKey,
+	resultSelector func(outer TOut, inner TInner) TResult) QueryG[TResult] {
+
+	return QueryG[TResult]{
+		Iterate: func() IteratorG[TResult] {
+			outernext := e.q.Iterate()
+			innernext := inner.Iterate()
+
+			innerLookup := make(map[interface{}][]TInner)
+			for innerItem, ok := innernext(); ok; innerItem, ok = innernext() {
+				innerKey := innerKeySelector(innerItem)
+				innerLookup[innerKey] = append(innerLookup[innerKey], innerItem)
+			}
+
+			var outerItem TOut
+			var innerGroup []TInner
+			innerLen, innerIndex := 0, 0
+
+			return func() (item TResult, ok bool) {
+				if innerIndex >= innerLen {
+					has := false
+					for !has {
+						outerItem, ok = outernext()
+						if !ok {
+							return
+						}
+
+						innerGroup, has = innerLookup[outerKeySelector(outerItem)]
+						innerLen = len(innerGroup)
+						innerIndex = 0
+					}
+				}
+
+				item = resultSelector(outerItem, innerGroup[innerIndex])
+				innerIndex++
+				return item, true
+			}
+		},
+	}
+}
+
 // JoinT is the typed version of Join.
 //
 //   - outerKeySelectorFn is of type "func(TOuter) TKey"

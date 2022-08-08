@@ -1,6 +1,9 @@
 package linq
 
-import "testing"
+import (
+	"github.com/stretchr/testify/assert"
+	"testing"
+)
 
 func TestJoin(t *testing.T) {
 	outer := []int{0, 1, 2, 3, 4, 5, 8}
@@ -24,6 +27,33 @@ func TestJoin(t *testing.T) {
 	if !validateQuery(q, want) {
 		t.Errorf("From().Join()=%v expected %v", toSlice(q), want)
 	}
+}
+
+func TestJoinG(t *testing.T) {
+	outer := []int{0, 1, 2, 3, 4, 5, 8}
+	inner := []uint{1, 2, 1, 4, 7, 6, 7, 2}
+	want := []KeyValueG[int, uint]{
+		{1, 1},
+		{1, 1},
+		{2, 2},
+		{2, 2},
+		{4, 4},
+	}
+
+	q := FromSliceG(outer).Expend4(To4[int, uint, int, KeyValueG[int, uint]]()).(*Expended4[int, uint, int, KeyValueG[int, uint]]).Join(
+		FromSliceG(inner), func(i int) int {
+			return i
+		}, func(i uint) int {
+			return int(i)
+		}, func(i int, ui uint) KeyValueG[int, uint] {
+			return KeyValueG[int, uint]{
+				Key:   i,
+				Value: ui,
+			}
+		},
+	)
+
+	assert.Equal(t, want, q.ToSlice())
 }
 
 func TestJoinT_PanicWhenOuterKeySelectorFnIsInvalid(t *testing.T) {

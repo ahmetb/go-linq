@@ -1,6 +1,7 @@
 package linq
 
 import (
+	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
@@ -44,6 +45,18 @@ func TestIndexOf(t *testing.T) {
 			t.Errorf("From(%v).IndexOfT() expected %v received %v", test.input, test.expected, index)
 		}
 	}
+}
+
+func TestIndexOfG(t *testing.T) {
+	assert.Equal(t, 2, FromSliceG([]int{1, 2, 3, 4, 5, 6, 7, 8, 9}).IndexOf(func(i int) bool {
+		return i == 3
+	}))
+	assert.Equal(t, 3, FromStringG("sstr").IndexOf(func(i rune) bool {
+		return i == 'r'
+	}))
+	assert.Equal(t, -1, FromStringG("gadsgsadgsda").IndexOf(func(i rune) bool {
+		return i == 'z'
+	}))
 }
 
 func TestIndexOfT_PanicWhenPredicateFnIsInvalid(t *testing.T) {

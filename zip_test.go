@@ -1,6 +1,10 @@
 package linq
 
-import "testing"
+import (
+	"github.com/stretchr/testify/assert"
+	"strconv"
+	"testing"
+)
 
 func TestZip(t *testing.T) {
 	input1 := []int{1, 2, 3}
@@ -12,6 +16,17 @@ func TestZip(t *testing.T) {
 	}); !validateQuery(q, want) {
 		t.Errorf("From(%v).Zip(%v)=%v expected %v", input1, input2, toSlice(q), want)
 	}
+}
+
+func TestZipG(t *testing.T) {
+	input1 := []int{1, 2, 3}
+	input2 := []int{2, 4, 5, 1}
+	want := []string{"3", "6", "8"}
+
+	slice := FromSliceG(input1).Expend3(To3[int, int, string]()).(*Expended3[int, int, string]).Zip(FromSliceG(input2), func(i1, i2 int) string {
+		return strconv.Itoa(i1 + i2)
+	}).ToSlice()
+	assert.Equal(t, want, slice)
 }
 
 func TestZipT_PanicWhenResultSelectorFnIsInvalid(t *testing.T) {

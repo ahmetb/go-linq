@@ -11,6 +11,39 @@ type Query struct {
 	Iterate func() Iterator
 }
 
+type IteratorG[T any] func() (item T, ok bool)
+
+type QueryG[T any] struct {
+	Iterate func() IteratorG[T]
+}
+
+func (q QueryG[T]) AsQuery() Query {
+	return Query{
+		Iterate: func() Iterator {
+			next := q.Iterate()
+			return func() (item interface{}, ok bool) {
+				i, ok := next()
+				return i, ok
+			}
+		},
+	}
+}
+
+func AsQueryG[T any](q Query) QueryG[T] {
+	return QueryG[T]{
+		Iterate: func() IteratorG[T] {
+			next := q.Iterate()
+			return func() (T, bool) {
+				item, ok := next()
+				if ok {
+					return item.(T), true
+				}
+				return *new(T), false
+			}
+		},
+	}
+}
+
 // KeyValue is a type that is used to iterate over a map (if query is created
 // from a map). This type is also used by ToMap() method to output result of a
 // query into a map.
@@ -19,10 +52,21 @@ type KeyValue struct {
 	Value interface{}
 }
 
+type KeyValueG[K comparable, V any] struct {
+	Key   K
+	Value V
+}
+
 // Iterable is an interface that has to be implemented by a custom collection in
 // order to work with linq.
 type Iterable interface {
 	Iterate() Iterator
+}
+
+// IterableG is an interface that has to be implemented by a custom collection in
+// order to work with linq.
+type IterableG[T any] interface {
+	Iterate() IteratorG[T]
 }
 
 // From initializes a linq query with passed slice, array or map as the source.
@@ -88,6 +132,50 @@ func From(source interface{}) Query {
 	}
 }
 
+func FromSliceG[T any](source []T) QueryG[T] {
+	return QueryG[T]{
+		Iterate: func() IteratorG[T] {
+			index := 0
+			return func() (item T, ok bool) {
+				ok = index < len(source)
+				if ok {
+					item = source[index]
+					index++
+					return
+				}
+				return
+			}
+		},
+	}
+}
+
+func FromMapG[K comparable, V any](source map[K]V) QueryG[KeyValueG[K, V]] {
+	return QueryG[KeyValueG[K, V]]{
+		Iterate: func() IteratorG[KeyValueG[K, V]] {
+			index := 0
+			length := len(source)
+			var keys []K
+			for k, _ := range source {
+				keys = append(keys, k)
+			}
+			return func() (item KeyValueG[K, V], next bool) {
+				if index == length {
+					next = false
+					return
+				}
+				key := keys[index]
+				item = KeyValueG[K, V]{
+					Key:   key,
+					Value: source[key],
+				}
+				next = true
+				index++
+				return
+			}
+		},
+	}
+}
+
 // FromChannel initializes a linq query with passed channel, linq iterates over
 // channel until it is closed.
 func FromChannel(source <-chan interface{}) Query {
@@ -118,6 +206,19 @@ func FromChannelT(source interface{}) Query {
 	}
 }
 
+// FromChannelG initializes a linq query with passed channel, linq iterates over
+// channel until it is closed.
+func FromChannelG[T any](source <-chan T) QueryG[T] {
+	return QueryG[T]{
+		Iterate: func() IteratorG[T] {
+			return func() (item T, ok bool) {
+				item, ok = <-source
+				return
+			}
+		},
+	}
+}
+
 // FromString initializes a linq query with passed string, linq iterates over
 // runes of string.
 func FromString(source string) Query {
@@ -141,11 +242,40 @@ func FromString(source string) Query {
 	}
 }
 
+func FromStringG(source string) QueryG[rune] {
+	runes := []rune(source)
+	length := len(runes)
+
+	return QueryG[rune]{
+		Iterate: func() IteratorG[rune] {
+			index := 0
+
+			return func() (item rune, ok bool) {
+				ok = index < length
+				if ok {
+					item = runes[index]
+					index++
+				}
+				return
+			}
+		},
+	}
+}
+
 // FromIterable initializes a linq query with custom collection passed. This
 // collection has to implement Iterable interface, linq iterates over items,
 // that has to implement Comparable interface or be basic types.
 func FromIterable(source Iterable) Query {
 	return Query{
+		Iterate: source.Iterate,
+	}
+}
+
+// FromIterableG initializes a linq query with custom collection passed. This
+// collection has to implement Iterable interface, linq iterates over items,
+// that has to implement Comparable interface or be basic types.
+func FromIterableG[T any](source IterableG[T]) QueryG[T] {
+	return QueryG[T]{
 		Iterate: source.Iterate,
 	}
 }
@@ -172,6 +302,28 @@ func Range(start, count int) Query {
 	}
 }
 
+// RangeG generates a sequence of integral numbers within a specified range.
+func RangeG(start, count int) QueryG[int] {
+	return QueryG[int]{
+		Iterate: func() IteratorG[int] {
+			index := 0
+			current := start
+
+			return func() (item int, ok bool) {
+				if index >= count {
+					return 0, false
+				}
+
+				item, ok = current, true
+
+				index++
+				current++
+				return
+			}
+		},
+	}
+}
+
 // Repeat generates a sequence that contains one repeated value.
 func Repeat(value interface{}, count int) Query {
 	return Query{
@@ -181,6 +333,25 @@ func Repeat(value interface{}, count int) Query {
 			return func() (item interface{}, ok bool) {
 				if index >= count {
 					return nil, false
+				}
+
+				item, ok = value, true
+
+				index++
+				return
+			}
+		},
+	}
+}
+
+func RepeatG[T any](value T, count int) QueryG[T] {
+	return QueryG[T]{
+		Iterate: func() IteratorG[T] {
+			index := 0
+
+			return func() (item T, ok bool) {
+				if index >= count {
+					return *new(T), false
 				}
 
 				item, ok = value, true

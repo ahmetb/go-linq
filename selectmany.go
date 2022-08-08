@@ -1,5 +1,7 @@
 package linq
 
+import "reflect"
+
 // SelectMany projects each element of a collection to a Query, iterates and
 // flattens the resulting collection into one collection.
 func (q Query) SelectMany(selector func(interface{}) Query) Query {
@@ -23,6 +25,36 @@ func (q Query) SelectMany(selector func(interface{}) Query) Query {
 					item, ok = innernext()
 					if !ok {
 						inner = nil
+					}
+				}
+
+				return
+			}
+		},
+	}
+}
+
+func (e *Expended[T1, T2]) SelectMany(selector func(T1) QueryG[T2]) QueryG[T2] {
+	return QueryG[T2]{
+		Iterate: func() IteratorG[T2] {
+			outernext := e.q.Iterate()
+			var inner T1
+			var innernext IteratorG[T2]
+
+			return func() (item T2, ok bool) {
+				for !ok {
+					if reflect.DeepEqual(inner, *new(T1)) {
+						inner, ok = outernext()
+						if !ok {
+							return
+						}
+
+						innernext = selector(inner).Iterate()
+					}
+
+					item, ok = innernext()
+					if !ok {
+						inner = *new(T1)
 					}
 				}
 
@@ -95,6 +127,47 @@ func (q Query) SelectManyIndexed(selector func(int, interface{}) Query) Query {
 	}
 }
 
+// SelectManyIndexed projects each element of a collection to a Query, iterates
+// and flattens the resulting collection into one collection.
+//
+// The first argument to selector represents the zero-based index of that
+// element in the source collection. This can be useful if the elements are in a
+// known order and you want to do something with an element at a particular
+// index, for example. It can also be useful if you want to retrieve the index
+// of one or more elements. The second argument to selector represents the
+// element to process.
+func (e *Expended[T1, T2]) SelectManyIndexed(selector func(int, T1) QueryG[T2]) QueryG[T2] {
+	return QueryG[T2]{
+		Iterate: func() IteratorG[T2] {
+			outernext := e.q.Iterate()
+			index := 0
+			var inner T1
+			var innernext IteratorG[T2]
+
+			return func() (item T2, ok bool) {
+				for !ok {
+					if reflect.DeepEqual(inner, *new(T1)) {
+						inner, ok = outernext()
+						if !ok {
+							return
+						}
+
+						innernext = selector(index, inner).Iterate()
+						index++
+					}
+
+					item, ok = innernext()
+					if !ok {
+						inner = *new(T1)
+					}
+				}
+
+				return
+			}
+		},
+	}
+}
+
 // SelectManyIndexedT is the typed version of SelectManyIndexed.
 //
 //   - selectorFn is of type "func(int,TSource)Query"
@@ -147,6 +220,39 @@ func (q Query) SelectManyBy(selector func(interface{}) Query,
 				}
 
 				item = resultSelector(item, outer)
+				return
+			}
+		},
+	}
+}
+
+func (e *Expended3[T1, T2, T3]) SelectManyBy(selector func(T1) QueryG[T2],
+	resultSelector func(T2, T1) T3) QueryG[T3] {
+	return QueryG[T3]{
+		Iterate: func() IteratorG[T3] {
+			outernext := e.q.Iterate()
+			var outer T1
+			var innernext IteratorG[T2]
+
+			return func() (item T3, ok bool) {
+				var product T2
+				for !ok {
+					if reflect.DeepEqual(outer, *new(T1)) {
+						outer, ok = outernext()
+						if !ok {
+							return
+						}
+
+						innernext = selector(outer).Iterate()
+					}
+
+					product, ok = innernext()
+					if !ok {
+						outer = *new(T1)
+					}
+				}
+
+				item = resultSelector(product, outer)
 				return
 			}
 		},
@@ -222,6 +328,41 @@ func (q Query) SelectManyByIndexed(selector func(int, interface{}) Query,
 				}
 
 				item = resultSelector(item, outer)
+				return
+			}
+		},
+	}
+}
+
+func (e *Expended3[T1, T2, T3]) SelectManyByIndexed(selector func(int, T1) QueryG[T2],
+	resultSelector func(T2, T1) T3) QueryG[T3] {
+	return QueryG[T3]{
+		Iterate: func() IteratorG[T3] {
+			outernext := e.q.Iterate()
+			index := 0
+			var outer T1
+			var innernext IteratorG[T2]
+
+			return func() (item T3, ok bool) {
+				var product T2
+				for !ok {
+					if reflect.DeepEqual(outer, *new(T1)) {
+						outer, ok = outernext()
+						if !ok {
+							return
+						}
+
+						innernext = selector(index, outer).Iterate()
+						index++
+					}
+
+					product, ok = innernext()
+					if !ok {
+						outer = *new(T1)
+					}
+				}
+
+				item = resultSelector(product, outer)
 				return
 			}
 		},

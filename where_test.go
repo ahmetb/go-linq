@@ -1,6 +1,9 @@
 package linq
 
-import "testing"
+import (
+	"github.com/stretchr/testify/assert"
+	"testing"
+)
 
 func TestWhere(t *testing.T) {
 	tests := []struct {
@@ -21,6 +24,16 @@ func TestWhere(t *testing.T) {
 			t.Errorf("From(%v).Where()=%v expected %v", test.input, toSlice(q), test.output)
 		}
 	}
+}
+
+func TestWhereG(t *testing.T) {
+	inputs := []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
+	q := FromSliceG(inputs)
+	greaterThanFive := q.Where(func(item int) bool {
+		return item > 5
+	}).ToSlice()
+	expected := []int{6, 7, 8, 9, 10}
+	assert.Equal(t, expected, greaterThanFive)
 }
 
 func TestWhereT_PanicWhenPredicateFnIsInvalid(t *testing.T) {
@@ -51,6 +64,18 @@ func TestWhereIndexed(t *testing.T) {
 			t.Errorf("From(%v).WhereIndexed()=%v expected %v", test.input, toSlice(q), test.output)
 		}
 	}
+}
+
+func TestWhereIndexedG(t *testing.T) {
+	assert.Equal(t, []int{2, 3, 2}, FromSliceG([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).WhereIndexed(func(i, x int) bool {
+		return x < 4 && i > 4
+	}).ToSlice())
+	assert.Equal(t, []rune{'s', 't', 'r'}, FromStringG("sstr").WhereIndexed(func(i int, x rune) bool {
+		return x != 's' || i == 1
+	}).ToSlice())
+	assert.Equal(t, []rune{'a', 'b'}, FromStringG("abcde").WhereIndexed(func(i int, x rune) bool {
+		return i < 2
+	}).ToSlice())
 }
 
 func TestWhereIndexedT_PanicWhenPredicateFnIsInvalid(t *testing.T) {

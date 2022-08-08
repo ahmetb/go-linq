@@ -1,6 +1,9 @@
 package linq
 
-import "testing"
+import (
+	"reflect"
+	"testing"
+)
 
 import "fmt"
 
@@ -45,6 +48,35 @@ func (f foo) CompareTo(c Comparable) int {
 	return 0
 }
 
+type fooG struct {
+	f1 int
+	f2 int
+	f3 int
+}
+
+func (f fooG) Iterate() IteratorG[int] {
+	i := 0
+
+	return func() (item int, ok bool) {
+		switch i {
+		case 0:
+			item = f.f1
+			ok = true
+		case 1:
+			item = f.f2
+			ok = true
+		case 2:
+			item = f.f3
+			ok = true
+		default:
+			ok = false
+		}
+
+		i++
+		return
+	}
+}
+
 func toSlice(q Query) (result []interface{}) {
 	next := q.Iterate()
 
@@ -69,6 +101,21 @@ func validateQuery(q Query, output []interface{}) bool {
 	_, ok := next()
 	_, ok2 := next()
 	return !(ok || ok2)
+}
+
+func validateQueryG[T interface{}](g QueryG[T], output []T) bool {
+	next := g.Iterate()
+	for _, o := range output {
+		q, ok := next()
+		if !ok {
+			return false
+		}
+		if !reflect.DeepEqual(q, o) {
+			return false
+		}
+	}
+	_, ok := next()
+	return !ok
 }
 
 func mustPanicWithError(t *testing.T, expectedErr string, f func()) {

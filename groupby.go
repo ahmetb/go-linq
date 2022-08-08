@@ -6,6 +6,11 @@ type Group struct {
 	Group []interface{}
 }
 
+type GroupG[T1, T2 any] struct {
+	Key   T1
+	Group []T2
+}
+
 // GroupBy method groups the elements of a collection according to a specified
 // key selector function and projects the elements for each group by using a
 // specified function.
@@ -33,6 +38,44 @@ func (q Query) GroupBy(keySelector func(interface{}) interface{},
 
 			return func() (item interface{}, ok bool) {
 				ok = index < len
+				if ok {
+					item = groups[index]
+					index++
+				}
+
+				return
+			}
+		},
+	}
+}
+
+// GroupBy method groups the elements of a collection according to a specified
+// key selector function and projects the elements for each group by using a
+// specified function.
+func (e *Expended3[T, TK, TE]) GroupBy(keySelector func(T) TK,
+	elementSelector func(T) TE) QueryG[GroupG[TK, TE]] {
+	return QueryG[GroupG[TK, TE]]{
+		func() IteratorG[GroupG[TK, TE]] {
+			next := e.q.Iterate()
+			set := make(map[interface{}][]TE)
+
+			for item, ok := next(); ok; item, ok = next() {
+				key := keySelector(item)
+				set[key] = append(set[key], elementSelector(item))
+			}
+
+			length := len(set)
+			idx := 0
+			groups := make([]GroupG[TK, TE], length)
+			for k, v := range set {
+				groups[idx] = GroupG[TK, TE]{Key: k.(TK), Group: v}
+				idx++
+			}
+
+			index := 0
+
+			return func() (item GroupG[TK, TE], ok bool) {
+				ok = index < length
 				if ok {
 					item = groups[index]
 					index++

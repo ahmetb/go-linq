@@ -38,3 +38,42 @@ func (q Query) Union(q2 Query) Query {
 		},
 	}
 }
+
+// Union produces the set union of two collections.
+//
+// This method excludes duplicates from the return set. This is different
+// behavior to the Concat method, which returns all the elements in the input
+// collection including duplicates.
+func (q QueryG[T]) Union(q2 QueryG[T]) QueryG[T] {
+	return QueryG[T]{
+		Iterate: func() IteratorG[T] {
+			next := q.Iterate()
+			next2 := q2.Iterate()
+
+			set := make(map[interface{}]bool)
+			use1 := true
+
+			return func() (item T, ok bool) {
+				if use1 {
+					for item, ok = next(); ok; item, ok = next() {
+						if _, has := set[item]; !has {
+							set[item] = true
+							return
+						}
+					}
+
+					use1 = false
+				}
+
+				for item, ok = next2(); ok; item, ok = next2() {
+					if _, has := set[item]; !has {
+						set[item] = true
+						return
+					}
+				}
+
+				return
+			}
+		},
+	}
+}

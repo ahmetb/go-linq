@@ -46,6 +46,21 @@ func (q Query) AggregateT(f interface{}) interface{} {
 	return q.Aggregate(fFunc)
 }
 
+func (q QueryG[T]) Aggregate(f func(T, T) T) T {
+	next := q.Iterate()
+
+	result, any := next()
+	if !any {
+		return *new(T)
+	}
+
+	for current, ok := next(); ok; current, ok = next() {
+		result = f(result, current)
+	}
+
+	return result
+}
+
 // AggregateWithSeed applies an accumulator function over a sequence. The
 // specified seed value is used as the initial accumulator value.
 //
@@ -91,6 +106,17 @@ func (q Query) AggregateWithSeedT(seed interface{},
 	}
 
 	return q.AggregateWithSeed(seed, fFunc)
+}
+
+func (q QueryG[T]) AggregateWithSeed(seed T, f func(T, T) T) T {
+	next := q.Iterate()
+	result := seed
+
+	for current, ok := next(); ok; current, ok = next() {
+		result = f(result, current)
+	}
+
+	return result
 }
 
 // AggregateWithSeedBy applies an accumulator function over a sequence. The
@@ -155,4 +181,8 @@ func (q Query) AggregateWithSeedByT(seed interface{},
 	}
 
 	return q.AggregateWithSeedBy(seed, fFunc, resultSelectorFunc)
+}
+
+func (q QueryG[T]) AggregateWithSeedBy(seed T, f func(T, T) T, resultSelector func(T) interface{}) interface{} {
+	return resultSelector(q.AggregateWithSeed(seed, f))
 }

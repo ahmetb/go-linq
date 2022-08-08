@@ -1,6 +1,9 @@
 package linq
 
-import "testing"
+import (
+	"github.com/stretchr/testify/assert"
+	"testing"
+)
 
 func TestAppend(t *testing.T) {
 	input := []int{1, 2, 3, 4}
@@ -9,6 +12,13 @@ func TestAppend(t *testing.T) {
 	if q := From(input).Append(5); !validateQuery(q, want) {
 		t.Errorf("From(%v).Append()=%v expected %v", input, toSlice(q), want)
 	}
+}
+
+func TestAppendG(t *testing.T) {
+	input := []int{1, 2, 3, 4}
+	expected := []int{1, 2, 3, 4, 5}
+	actual := FromSliceG(input).Append(5).ToSlice()
+	assert.Equal(t, expected, actual)
 }
 
 func TestConcat(t *testing.T) {
@@ -21,6 +31,14 @@ func TestConcat(t *testing.T) {
 	}
 }
 
+func TestConcatG(t *testing.T) {
+	input1 := []int{1, 2, 3}
+	input2 := []int{4, 5}
+	expected := []int{1, 2, 3, 4, 5}
+	actual := FromSliceG(input1).Concat(FromSliceG(input2)).ToSlice()
+	assert.Equal(t, expected, actual)
+}
+
 func TestPrepend(t *testing.T) {
 	input := []int{1, 2, 3, 4}
 	want := []interface{}{0, 1, 2, 3, 4}
@@ -28,4 +46,11 @@ func TestPrepend(t *testing.T) {
 	if q := From(input).Prepend(0); !validateQuery(q, want) {
 		t.Errorf("From(%v).Prepend()=%v expected %v", input, toSlice(q), want)
 	}
+}
+
+func TestPrependG(t *testing.T) {
+	input := []int{1, 2, 3, 4}
+	want := []int{0, 1, 2, 3, 4}
+	actual := FromSliceG(input).Prepend(0).ToSlice()
+	assert.Equal(t, want, actual)
 }

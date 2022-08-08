@@ -1,6 +1,9 @@
 package linq
 
-import "testing"
+import (
+	"github.com/stretchr/testify/assert"
+	"testing"
+)
 
 func TestReverse(t *testing.T) {
 	tests := []struct {
@@ -15,4 +18,9 @@ func TestReverse(t *testing.T) {
 			t.Errorf("From(%v).Reverse()=%v expected %v", test.input, toSlice(q), test.want)
 		}
 	}
+}
+
+func TestReverseG(t *testing.T) {
+	input := []int{1, 2, 3}
+	assert.Equal(t, []int{3, 2, 1}, FromSliceG(input).Reverse().ToSlice())
 }

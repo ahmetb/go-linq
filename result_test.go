@@ -3,8 +3,11 @@ package linq
 import (
 	"math"
 	"reflect"
+	"strconv"
 	"testing"
 	"unsafe"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestAll(t *testing.T) {
@@ -24,6 +27,18 @@ func TestAll(t *testing.T) {
 	if r2 {
 		t.Errorf("From(%v).All()=%v", input, r2)
 	}
+}
+
+func TestAllG(t *testing.T) {
+	input := []int{2, 4, 6, 8}
+	allEven := FromSliceG(input).All(func(i int) bool {
+		return i%2 == 0
+	})
+	allOdd := FromSliceG(input).All(func(i int) bool {
+		return i%2 != 0
+	})
+	assert.True(t, allEven)
+	assert.False(t, allOdd)
 }
 
 func TestAllT_PanicWhenPredicateFnIsInvalid(t *testing.T) {
@@ -50,6 +65,12 @@ func TestAny(t *testing.T) {
 	}
 }
 
+func TestAnyG(t *testing.T) {
+	assert.True(t, FromSliceG([]int{1, 2, 3}).Any())
+	assert.True(t, FromStringG("string").Any())
+	assert.False(t, FromSliceG([]int{}).Any())
+}
+
 func TestAnyWith(t *testing.T) {
 	tests := []struct {
 		input interface{}
@@ -66,6 +87,22 @@ func TestAnyWith(t *testing.T) {
 		}); r != test.want {
 			t.Errorf("From(%v).Any()=%v expected %v", test.input, r, test.want)
 		}
+	}
+}
+
+func TestAnyWithG(t *testing.T) {
+	tests := []struct {
+		input []int
+		want  bool
+	}{
+		{[]int{1, 2, 2, 3, 1}, false},
+		{[]int{}, false},
+	}
+
+	for _, test := range tests {
+		assert.Equal(t, test.want, FromSliceG(test.input).AnyWith(func(i int) bool {
+			return i == 4
+		}))
 	}
 }
 
@@ -92,6 +129,11 @@ func TestAverage(t *testing.T) {
 	}
 }
 
+func TestAverageG(t *testing.T) {
+	assert.Equal(t, 1.8, FromSliceG([]int{1, 2, 2, 3, 1}).Average())
+	assert.Equal(t, 1., FromSliceG([]float32{1., 1}).Average())
+}
+
 func TestAverageForNaN(t *testing.T) {
 	if r := From([]int{}).Average(); !math.IsNaN(r) {
 		t.Errorf("From([]int{}).Average()=%v expected %v", r, math.NaN())
@@ -116,6 +158,32 @@ func TestContains(t *testing.T) {
 	}
 }
 
+func TestContainsG(t *testing.T) {
+	assert.False(t, FromSliceG([]int{1, 2, 2, 3, 1}).Contains(10), false)
+	assert.True(t, FromSliceG([]uint{1, 2, 5, 7, 10}).Contains(uint(5)))
+	assert.False(t, FromSliceG([]float32{}).Contains(1.))
+	assert.True(t, FromSliceG([]struct {
+		f1 int
+		f2 string
+	}{
+		{1, "1"},
+		{2, "2"},
+	}).Contains(struct {
+		f1 int
+		f2 string
+	}{
+		2, "2",
+	}))
+	assert.True(t, FromSliceG([][]int{
+		{1, 2, 3},
+		{4, 5, 6},
+	}).Contains([]int{4, 5, 6}))
+	assert.False(t, FromSliceG([][]int{
+		{1, 2, 3},
+		{4, 5, 6},
+	}).Contains([]int{4, 5}))
+}
+
 func TestCount(t *testing.T) {
 	tests := []struct {
 		input interface{}
@@ -133,6 +201,11 @@ func TestCount(t *testing.T) {
 	}
 }
 
+func TestCountG(t *testing.T) {
+	assert.Equal(t, 5, FromSliceG([]int{1, 2, 2, 3, 1}).Count())
+	assert.Equal(t, 0, FromSliceG([]float32{}).Count())
+}
+
 func TestCountWith(t *testing.T) {
 	tests := []struct {
 		input interface{}
@@ -148,6 +221,23 @@ func TestCountWith(t *testing.T) {
 		}); r != test.want {
 			t.Errorf("From(%v).CountWith()=%v expected %v", test.input, r, test.want)
 		}
+	}
+}
+
+func TestCountWithG(t *testing.T) {
+	tests := []struct {
+		input []int
+		want  int
+	}{
+		{[]int{1, 2, 2, 3, 1}, 4},
+		{[]int{}, 0},
+	}
+
+	for _, test := range tests {
+		r := From(test.input).CountWith(func(i interface{}) bool {
+			return i.(int) <= 2
+		})
+		assert.Equal(t, test.want, r)
 	}
 }
 
@@ -173,6 +263,14 @@ func TestFirst(t *testing.T) {
 	}
 }
 
+func TestFirstG(t *testing.T) {
+	first, got := FromSliceG([]int{1, 2, 2, 3, 5}).First()
+	assert.Equal(t, 1, first)
+	assert.True(t, got)
+	_, got = FromSliceG([]string{}).First()
+	assert.False(t, got)
+}
+
 func TestFirstWith(t *testing.T) {
 	tests := []struct {
 		input interface{}
@@ -189,6 +287,21 @@ func TestFirstWith(t *testing.T) {
 			t.Errorf("From(%v).FirstWith()=%v expected %v", test.input, r, test.want)
 		}
 	}
+}
+
+func TestFirstWithG(t *testing.T) {
+	item, _ := FromSliceG([]int{1, 2, 2, 3, 1}).FirstWithG(func(i int) bool {
+		return i > 2
+	})
+	assert.Equal(t, 3, item)
+	_, ok := FromSliceG([]int{1, 2, 2, 3, 1}).FirstWithG(func(i int) bool {
+		return i > 4
+	})
+	assert.False(t, ok)
+	_, ok = FromSliceG([]int{}).FirstWithG(func(i int) bool {
+		return i > 4
+	})
+	assert.False(t, ok)
 }
 
 func TestFirstWithT_PanicWhenPredicateFnIsInvalid(t *testing.T) {
@@ -215,6 +328,25 @@ func TestForEach(t *testing.T) {
 		if !reflect.DeepEqual(output, test.want) {
 			t.Fatalf("From(%#v).ForEach()=%#v expected=%#v", test.input, output, test.want)
 		}
+	}
+}
+
+func TestForEachG(t *testing.T) {
+	tests := []struct {
+		input []int
+		want  []int
+	}{
+		{[]int{1, 2, 2, 35, 111}, []int{2, 4, 4, 70, 222}},
+		{[]int{}, []int{}},
+	}
+
+	for _, test := range tests {
+		output := []int{}
+		FromSliceG(test.input).ForEach(func(item int) {
+			output = append(output, item*2)
+		})
+
+		assert.Equal(t, test.want, output)
 	}
 }
 
@@ -245,6 +377,25 @@ func TestForEachIndexed(t *testing.T) {
 	}
 }
 
+func TestForEachIndexedG(t *testing.T) {
+	tests := []struct {
+		input []int
+		want  []int
+	}{
+		{[]int{1, 2, 2, 35, 111}, []int{1, 3, 4, 38, 115}},
+		{[]int{}, []int{}},
+	}
+
+	for _, test := range tests {
+		output := []int{}
+		FromSliceG(test.input).ForEachIndexed(func(index int, item int) {
+			output = append(output, item+index)
+		})
+
+		assert.Equal(t, test.want, output)
+	}
+}
+
 func TestForEachIndexedT_PanicWhenActionFnIsInvalid(t *testing.T) {
 	mustPanicWithError(t, "ForEachIndexedT: parameter [actionFn] has a invalid function signature. Expected: 'func(int,T)', actual: 'func(int)'", func() {
 		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).ForEachIndexedT(func(item int) { item = item + 2 })
@@ -267,6 +418,14 @@ func TestLast(t *testing.T) {
 	}
 }
 
+func TestLastG(t *testing.T) {
+	last, got := FromSliceG([]int{1, 2, 2, 3, 5}).Last()
+	assert.Equal(t, 5, last)
+	assert.True(t, got)
+	_, got = FromSliceG([]int{}).Last()
+	assert.False(t, got)
+}
+
 func TestLastWith(t *testing.T) {
 	tests := []struct {
 		input interface{}
@@ -283,6 +442,19 @@ func TestLastWith(t *testing.T) {
 			t.Errorf("From(%v).LastWith()=%v expected %v", test.input, r, test.want)
 		}
 	}
+}
+
+func TestLastWithG(t *testing.T) {
+	greaterThanTwo := func(i int) bool {
+		return i > 2
+	}
+	last, got := FromSliceG([]int{1, 2, 2, 3, 1, 4, 2, 5, 1, 1}).LastWith(greaterThanTwo)
+	assert.Equal(t, 5, last)
+	assert.True(t, got)
+	_, got = FromSliceG([]int{}).LastWith(greaterThanTwo)
+	assert.False(t, got)
+	_, got = FromSliceG([]int{1, 1, 1, 1, 1}).LastWith(greaterThanTwo)
+	assert.False(t, got)
 }
 
 func TestLastWithT_PanicWhenPredicateFnIsInvalid(t *testing.T) {
@@ -308,19 +480,46 @@ func TestMax(t *testing.T) {
 	}
 }
 
-func TestMin(t *testing.T) {
+func TestMaxG(t *testing.T) {
 	tests := []struct {
-		input interface{}
-		want  interface{}
+		input []int
+		want  int
+		ok    bool
 	}{
-		{[]int{1, 2, 2, 3, 0}, 0},
-		{[]int{1}, 1},
-		{[]int{}, nil},
+		{[]int{1, 2, 2, 3, 1}, 3, true},
+		{[]int{1}, 1, true},
+		{[]int{}, 0, false},
 	}
 
 	for _, test := range tests {
-		if r := From(test.input).Min(); r != test.want {
-			t.Errorf("From(%v).Min()=%v expected %v", test.input, r, test.want)
+		max, ok := FromSliceG(test.input).Max()
+		if !test.ok {
+			assert.False(t, ok)
+		} else {
+			assert.Equal(t, test.want, max)
+			assert.True(t, ok)
+		}
+	}
+}
+
+func TestMin(t *testing.T) {
+	tests := []struct {
+		input []int
+		want  int
+		ok    bool
+	}{
+		{[]int{1, 2, 2, 3, 0}, 0, true},
+		{[]int{1}, 1, true},
+		{[]int{}, 0, false},
+	}
+
+	for _, test := range tests {
+		min, ok := FromSliceG(test.input).Min()
+		if !test.ok {
+			assert.False(t, ok)
+		} else {
+			assert.Equal(t, test.want, min)
+			assert.True(t, ok)
 		}
 	}
 }
@@ -352,6 +551,22 @@ func TestSequenceEqual(t *testing.T) {
 	}
 }
 
+func TestSequenceEqualG(t *testing.T) {
+	tests := []struct {
+		input  []int
+		input2 []int
+		want   bool
+	}{
+		{[]int{1, 2, 2, 3, 1}, []int{4, 6}, false},
+		{[]int{1, -1, 100}, []int{1, -1, 100}, true},
+		{[]int{}, []int{}, true},
+	}
+
+	for _, test := range tests {
+		assert.Equal(t, test.want, FromSliceG(test.input).SequenceEqual(FromSliceG(test.input2)))
+	}
+}
+
 func TestSingle(t *testing.T) {
 	tests := []struct {
 		input interface{}
@@ -365,6 +580,28 @@ func TestSingle(t *testing.T) {
 	for _, test := range tests {
 		if r := From(test.input).Single(); r != test.want {
 			t.Errorf("From(%v).Single()=%v expected %v", test.input, r, test.want)
+		}
+	}
+}
+
+func TestSingleG(t *testing.T) {
+	tests := []struct {
+		input []int
+		want  int
+		ok    bool
+	}{
+		{[]int{1, 2, 2, 3, 1}, 0, false},
+		{[]int{1}, 1, true},
+		{[]int{}, 0, false},
+	}
+
+	for _, test := range tests {
+		single, ok := FromSliceG(test.input).Single()
+		if !test.ok {
+			assert.False(t, ok)
+		} else {
+			assert.True(t, ok)
+			assert.Equal(t, test.want, single)
 		}
 	}
 }
@@ -389,10 +626,43 @@ func TestSingleWith(t *testing.T) {
 	}
 }
 
+func TestSingleWithG(t *testing.T) {
+	tests := []struct {
+		input []int
+		want  int
+		ok    bool
+	}{
+		{[]int{1, 2, 2, 3, 1}, 3, true},
+		{[]int{1, 1, 1}, 0, false},
+		{[]int{5, 1, 1, 10, 2, 2}, 0, false},
+		{[]int{}, 0, false},
+	}
+
+	for _, test := range tests {
+		item, found := FromSliceG(test.input).SingleWith(func(i int) bool {
+			return i > 2
+		})
+		if !test.ok {
+			assert.False(t, found)
+		} else {
+			assert.True(t, found)
+			assert.Equal(t, test.want, item)
+		}
+	}
+}
+
 func TestSingleWithT_PanicWhenPredicateFnIsInvalid(t *testing.T) {
 	mustPanicWithError(t, "SingleWithT: parameter [predicateFn] has a invalid function signature. Expected: 'func(T)bool', actual: 'func(int)int'", func() {
 		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).SingleWithT(func(item int) int { return item + 2 })
 	})
+}
+
+func TestSumG(t *testing.T) {
+	assert.Equal(t, 9, FromSliceG([]int{1, 2, 2, 3, 1}).Sum())
+	assert.Equal(t, int8(9), FromSliceG([]int8{int8(4), int8(5)}).Sum())
+	assert.Equal(t, 1, FromSliceG([]int{1}).Sum())
+	assert.Equal(t, 0, FromSliceG([]int{}).Sum())
+	assert.Equal(t, float64(9.), FromSliceG([]float64{1., 2., 2., 3., 1.}).Sum())
 }
 
 func TestSumInts(t *testing.T) {
@@ -464,6 +734,22 @@ func TestToChannel(t *testing.T) {
 	}
 }
 
+func TestToChannelG(t *testing.T) {
+	c := make(chan int)
+	input := []int{1, 2, 3, 4, 5}
+
+	go func() {
+		FromSliceG(input).ToChannel(c)
+	}()
+
+	result := []int{}
+	for value := range c {
+		result = append(result, value)
+	}
+
+	assert.Equal(t, input, result)
+}
+
 func TestToChannelT(t *testing.T) {
 	c := make(chan string)
 	input := []string{"1", "2", "3", "4", "5"}
@@ -492,6 +778,29 @@ func TestToMap(t *testing.T) {
 	if !reflect.DeepEqual(result, input) {
 		t.Errorf("From(%v).ToMap()=%v expected %v", input, result, input)
 	}
+}
+
+func TestToMapG(t *testing.T) {
+	input := make(map[int]bool)
+	input[1] = true
+	input[2] = false
+	input[3] = true
+
+	expected := map[int]string{
+		1: "true",
+		2: "false",
+		3: "true",
+	}
+
+	actual := FromMapG(input).ToMapBy(T2KV[int, string, KeyValueG[int, bool]](
+		func(pair KeyValueG[int, bool]) int {
+			return pair.Key
+		},
+		func(pair KeyValueG[int, bool]) string {
+			return strconv.FormatBool(pair.Value)
+		})).(map[int]string)
+
+	assert.Equal(t, expected, actual)
 }
 
 func TestToMapBy(t *testing.T) {
@@ -619,4 +928,11 @@ func TestToSlice(t *testing.T) {
 			t.Fatalf("case #%d: isNewSlice=%v (in=0x%X out=0x%X) expected=%v", c, isNewSlice, inPtr, outPtr, test.outputIsANewSlice)
 		}
 	}
+}
+
+func TestToSliceG(t *testing.T) {
+	slice := []int{1, 2, 3}
+	q := FromSliceG(slice)
+	to := q.ToSlice()
+	assert.Equal(t, slice, to)
 }

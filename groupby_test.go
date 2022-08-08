@@ -1,6 +1,7 @@
 package linq
 
 import (
+	"github.com/stretchr/testify/assert"
 	"reflect"
 	"testing"
 )
@@ -35,6 +36,32 @@ func TestGroupBy(t *testing.T) {
 
 	if !eq {
 		t.Errorf("From(%v).GroupBy()=%v", input, toSlice(q))
+	}
+}
+
+func TestGroupByG(t *testing.T) {
+	input := []int{1, 2, 3, 4, 5, 6, 7, 8, 9}
+	wantEven := []int{2, 4, 6, 8}
+	wantOdd := []int{1, 3, 5, 7, 9}
+
+	q := FromSliceG(input).Expend3(To3[int, int, int]()).(*Expended3[int, int, int]).GroupBy(
+		func(i int) int {
+			return i % 2
+		}, func(i int) int {
+			return i
+		})
+
+	next := q.Iterate()
+	for item, ok := next(); ok; item, ok = next() {
+		group := item
+		switch group.Key {
+		case 0:
+			assert.Equal(t, wantEven, group.Group)
+		case 1:
+			assert.Equal(t, wantOdd, group.Group)
+		default:
+			assert.Fail(t, "Unexpected result")
+		}
 	}
 }
 

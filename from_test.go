@@ -1,6 +1,10 @@
 package linq
 
-import "testing"
+import (
+	"github.com/stretchr/testify/assert"
+	"strconv"
+	"testing"
+)
 
 func TestFrom(t *testing.T) {
 	c := make(chan interface{}, 3)
@@ -44,6 +48,27 @@ func TestFrom(t *testing.T) {
 	}
 }
 
+func TestFromSliceG(t *testing.T) {
+	slice := []int{1, 2, 3}
+	q := FromSliceG(slice)
+	if !validateQueryG(q, slice) {
+		t.Fatalf("FromSliceG")
+	}
+}
+
+func TestFromMapG(t *testing.T) {
+	source := map[string]int{
+		"1": 1,
+		"2": 2,
+		"3": 3,
+	}
+
+	slice := FromMapG(source).ToSlice()
+	for _, pair := range slice {
+		assert.Equal(t, pair.Key, strconv.Itoa(pair.Value))
+	}
+}
+
 func TestFromChannel(t *testing.T) {
 	c := make(chan interface{}, 3)
 	c <- 10
@@ -72,6 +97,18 @@ func TestFromChannelT(t *testing.T) {
 	}
 }
 
+func TestFromChannelG(t *testing.T) {
+	c := make(chan int, 3)
+	c <- 10
+	c <- 15
+	c <- -3
+	close(c)
+
+	expected := []int{10, 15, -3}
+	actual := FromChannelG(c).ToSlice()
+	assert.Equal(t, expected, actual)
+}
+
 func TestFromString(t *testing.T) {
 	s := "string"
 	w := []interface{}{'s', 't', 'r', 'i', 'n', 'g'}
@@ -79,6 +116,13 @@ func TestFromString(t *testing.T) {
 	if q := FromString(s); !validateQuery(q, w) {
 		t.Errorf("FromString(%v)!=%v", s, w)
 	}
+}
+
+func TestFromStringG(t *testing.T) {
+	source := "string"
+	expected := []rune{'s', 't', 'r', 'i', 'n', 'g'}
+	actual := FromStringG(source).ToSlice()
+	assert.Equal(t, expected, actual)
 }
 
 func TestFromIterable(t *testing.T) {
@@ -90,6 +134,13 @@ func TestFromIterable(t *testing.T) {
 	}
 }
 
+func TestFromIterableG(t *testing.T) {
+	s := fooG{f1: 1, f2: 2, f3: 3}
+	expected := []int{1, 2, 3}
+	actual := FromIterableG[int](s).ToSlice()
+	assert.Equal(t, expected, actual)
+}
+
 func TestRange(t *testing.T) {
 	w := []interface{}{-2, -1, 0, 1, 2}
 
@@ -98,10 +149,29 @@ func TestRange(t *testing.T) {
 	}
 }
 
+func TestRangeG(t *testing.T) {
+	expected := []int{-2, -1, 0, 1, 2}
+
+	actual := RangeG(-2, 5).ToSlice()
+	assert.Equal(t, expected, actual)
+}
+
 func TestRepeat(t *testing.T) {
 	w := []interface{}{1, 1, 1, 1, 1}
 
 	if q := Repeat(1, 5); !validateQuery(q, w) {
 		t.Errorf("Repeat(1, 5)=%v expected %v", toSlice(q), w)
 	}
+}
+
+func TestRepeatG(t *testing.T) {
+	expected := []int{1, 1, 1, 1, 1}
+	actual := RepeatG(1, 5).ToSlice()
+	assert.Equal(t, expected, actual)
+}
+
+func TestConvertToQueryG(t *testing.T) {
+	input := []int{1, 2, 3}
+	actual := AsQueryG[int](From(input)).ToSlice()
+	assert.Equal(t, input, actual)
 }

@@ -1,6 +1,9 @@
 package linq
 
-import "testing"
+import (
+	"github.com/stretchr/testify/assert"
+	"testing"
+)
 
 func TestTake(t *testing.T) {
 	tests := []struct {
@@ -17,6 +20,12 @@ func TestTake(t *testing.T) {
 			t.Errorf("From(%v).Take(3)=%v expected %v", test.input, toSlice(q), test.output)
 		}
 	}
+}
+
+func TestTakeG(t *testing.T) {
+	assert.Equal(t, []int{1, 2, 2}, FromSliceG([]int{1, 2, 2, 3, 1}).Take(3).ToSlice())
+	assert.Equal(t, []int{1, 1, 1}, FromSliceG([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).Take(3).ToSlice())
+	assert.Equal(t, []rune{'s', 's', 't'}, FromStringG("sstr").Take(3).ToSlice())
 }
 
 func TestTakeWhile(t *testing.T) {
@@ -41,6 +50,18 @@ func TestTakeWhile(t *testing.T) {
 			t.Errorf("From(%v).TakeWhile()=%v expected %v", test.input, toSlice(q), test.output)
 		}
 	}
+}
+
+func TestTakeWhileG(t *testing.T) {
+	assert.Equal(t, []int{1, 1, 1, 2, 1, 2}, FromSliceG([]int{1, 1, 1, 2, 1, 2}).TakeWhile(func(i int) bool {
+		return i < 3
+	}).ToSlice())
+	assert.Equal(t, []int{1, 1, 1, 2, 1, 2}, FromSliceG([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).TakeWhile(func(i int) bool {
+		return i < 3
+	}).ToSlice())
+	assert.Equal(t, []rune{'s', 's'}, FromStringG("sstr").TakeWhile(func(i rune) bool {
+		return i == 's'
+	}).ToSlice())
 }
 
 func TestTakeWhileT_PanicWhenPredicateFnIsInvalid(t *testing.T) {
@@ -71,6 +92,18 @@ func TestTakeWhileIndexed(t *testing.T) {
 			t.Errorf("From(%v).TakeWhileIndexed()=%v expected %v", test.input, toSlice(q), test.output)
 		}
 	}
+}
+
+func TestTakeWhileIndexedG(t *testing.T) {
+	assert.Equal(t, []int{1, 1, 1, 2}, FromSliceG([]int{1, 1, 1, 2}).TakeWhileIndexed(func(i int, x int) bool {
+		return x < 2 || i < 5
+	}).ToSlice())
+	assert.Equal(t, []int{1, 1, 1, 2, 1}, FromSliceG([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).TakeWhileIndexed(func(i int, x int) bool {
+		return x < 2 || i < 5
+	}).ToSlice())
+	assert.Equal(t, []rune{'s'}, FromStringG("sstr").TakeWhileIndexed(func(i int, x rune) bool {
+		return x == 's' && i < 1
+	}).ToSlice())
 }
 
 func TestTakeWhileIndexedT_PanicWhenPredicateFnIsInvalid(t *testing.T) {

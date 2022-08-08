@@ -17,6 +17,23 @@ func (q Query) IndexOf(predicate func(interface{}) bool) int {
 	return -1
 }
 
+// IndexOf searches for an element that matches the conditions defined by a specified predicate
+// and returns the zero-based index of the first occurrence within the collection. This method
+// returns -1 if an item that matches the conditions is not found.
+func (q QueryG[T]) IndexOf(predicate func(T) bool) int {
+	index := 0
+	next := q.Iterate()
+
+	for item, ok := next(); ok; item, ok = next() {
+		if predicate(item) {
+			return index
+		}
+		index++
+	}
+
+	return -1
+}
+
 // IndexOfT is the typed version of IndexOf.
 //
 //   - predicateFn is of type "func(int,TSource)bool"
