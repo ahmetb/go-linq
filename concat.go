@@ -2,24 +2,21 @@ package linq
 
 // Append inserts an item to the end of a collection, so it becomes the last
 // item.
-func (q Query) Append(item interface{}) Query {
+func (q Query) Append(item any) Query {
 	return Query{
-		Iterate: func() Iterator {
-			next := q.Iterate()
-			appended := false
+		Iterate: func(yield func(any) bool) {
+			stopped := false
 
-			return func() (interface{}, bool) {
-				i, ok := next()
-				if ok {
-					return i, ok
+			q.Iterate(func(originalItem any) bool {
+				if !yield(originalItem) {
+					stopped = true
+					return false
 				}
+				return true
+			})
 
-				if !appended {
-					appended = true
-					return item, true
-				}
-
-				return nil, false
+			if !stopped {
+				yield(item)
 			}
 		},
 	}
@@ -32,22 +29,21 @@ func (q Query) Append(item interface{}) Query {
 // returns only unique elements.
 func (q Query) Concat(q2 Query) Query {
 	return Query{
-		Iterate: func() Iterator {
-			next := q.Iterate()
-			next2 := q2.Iterate()
-			use1 := true
+		Iterate: func(yield func(any) bool) {
+			stopped := false
 
-			return func() (item interface{}, ok bool) {
-				if use1 {
-					item, ok = next()
-					if ok {
-						return
-					}
-
-					use1 = false
+			q.Iterate(func(item any) bool {
+				if !yield(item) {
+					stopped = true
+					return false
 				}
+				return true
+			})
 
-				return next2()
+			if !stopped {
+				q2.Iterate(func(item any) bool {
+					return yield(item)
+				})
 			}
 		},
 	}
@@ -55,20 +51,16 @@ func (q Query) Concat(q2 Query) Query {
 
 // Prepend inserts an item to the beginning of a collection, so it becomes the
 // first item.
-func (q Query) Prepend(item interface{}) Query {
+func (q Query) Prepend(item any) Query {
 	return Query{
-		Iterate: func() Iterator {
-			next := q.Iterate()
-			prepended := false
-
-			return func() (interface{}, bool) {
-				if prepended {
-					return next()
-				}
-
-				prepended = true
-				return item, true
+		Iterate: func(yield func(any) bool) {
+			if !yield(item) {
+				return
 			}
+
+			q.Iterate(func(item any) bool {
+				return yield(item)
+			})
 		},
 	}
 }

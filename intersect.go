@@ -6,24 +6,19 @@ package linq
 // other elements.
 func (q Query) Intersect(q2 Query) Query {
 	return Query{
-		Iterate: func() Iterator {
-			next := q.Iterate()
-			next2 := q2.Iterate()
-
-			set := make(map[interface{}]bool)
-			for item, ok := next2(); ok; item, ok = next2() {
-				set[item] = true
+		Iterate: func(yield func(any) bool) {
+			set := make(map[any]struct{})
+			for item := range q2.Iterate {
+				set[item] = struct{}{}
 			}
 
-			return func() (item interface{}, ok bool) {
-				for item, ok = next(); ok; item, ok = next() {
-					if _, has := set[item]; has {
-						delete(set, item)
+			for item := range q.Iterate {
+				if _, exists := set[item]; exists {
+					delete(set, item)
+					if !yield(item) {
 						return
 					}
 				}
-
-				return
 			}
 		},
 	}
@@ -36,29 +31,24 @@ func (q Query) Intersect(q2 Query) Query {
 //
 // IntersectBy invokes a transform function on each element of both collections.
 func (q Query) IntersectBy(q2 Query,
-	selector func(interface{}) interface{}) Query {
+	selector func(any) any) Query {
 
 	return Query{
-		Iterate: func() Iterator {
-			next := q.Iterate()
-			next2 := q2.Iterate()
-
-			set := make(map[interface{}]bool)
-			for item, ok := next2(); ok; item, ok = next2() {
-				s := selector(item)
-				set[s] = true
+		Iterate: func(yield func(any) bool) {
+			set := make(map[any]struct{})
+			for item := range q2.Iterate {
+				key := selector(item)
+				set[key] = struct{}{}
 			}
 
-			return func() (item interface{}, ok bool) {
-				for item, ok = next(); ok; item, ok = next() {
-					s := selector(item)
-					if _, has := set[s]; has {
-						delete(set, s)
+			for item := range q.Iterate {
+				key := selector(item)
+				if _, exists := set[key]; exists {
+					delete(set, key)
+					if !yield(item) {
 						return
 					}
 				}
-
-				return
 			}
 		},
 	}
@@ -70,7 +60,7 @@ func (q Query) IntersectBy(q2 Query,
 //
 // NOTE: IntersectBy has better performance than IntersectByT.
 func (q Query) IntersectByT(q2 Query,
-	selectorFn interface{}) Query {
+	selectorFn any) Query {
 	selectorGenericFunc, err := newGenericFunc(
 		"IntersectByT", "selectorFn", selectorFn,
 		simpleParamValidator(newElemTypeSlice(new(genericType)), newElemTypeSlice(new(genericType))),
@@ -79,7 +69,7 @@ func (q Query) IntersectByT(q2 Query,
 		panic(err)
 	}
 
-	selectorFunc := func(item interface{}) interface{} {
+	selectorFunc := func(item any) any {
 		return selectorGenericFunc.Call(item)
 	}
 

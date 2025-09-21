@@ -4,20 +4,17 @@ package linq
 // unordered collection that contains no duplicate values.
 func (q Query) Distinct() Query {
 	return Query{
-		Iterate: func() Iterator {
-			next := q.Iterate()
-			set := make(map[interface{}]bool)
+		Iterate: func(yield func(any) bool) {
+			set := make(map[any]struct{})
 
-			return func() (item interface{}, ok bool) {
-				for item, ok = next(); ok; item, ok = next() {
-					if _, has := set[item]; !has {
-						set[item] = true
-						return
-					}
+			q.Iterate(func(item any) bool {
+				if _, seen := set[item]; !seen {
+					set[item] = struct{}{}
+					return yield(item)
 				}
 
-				return
-			}
+				return true
+			})
 		},
 	}
 }
@@ -31,20 +28,19 @@ func (oq OrderedQuery) Distinct() OrderedQuery {
 	return OrderedQuery{
 		orders: oq.orders,
 		Query: Query{
-			Iterate: func() Iterator {
-				next := oq.Iterate()
-				var prev interface{}
+			Iterate: func(yield func(any) bool) {
+				var previous any
+				isFirst := true
 
-				return func() (item interface{}, ok bool) {
-					for item, ok = next(); ok; item, ok = next() {
-						if item != prev {
-							prev = item
-							return
-						}
+				oq.Iterate(func(item any) bool {
+					if isFirst || item != previous {
+						previous = item
+						isFirst = false
+						return yield(item)
 					}
 
-					return
-				}
+					return true
+				})
 			},
 		},
 	}
@@ -53,23 +49,21 @@ func (oq OrderedQuery) Distinct() OrderedQuery {
 // DistinctBy method returns distinct elements from a collection. This method
 // executes selector function for each element to determine a value to compare.
 // The result is an unordered collection that contains no duplicate values.
-func (q Query) DistinctBy(selector func(interface{}) interface{}) Query {
+func (q Query) DistinctBy(selector func(any) any) Query {
 	return Query{
-		Iterate: func() Iterator {
-			next := q.Iterate()
-			set := make(map[interface{}]bool)
+		Iterate: func(yield func(any) bool) {
+			set := make(map[any]struct{})
 
-			return func() (item interface{}, ok bool) {
-				for item, ok = next(); ok; item, ok = next() {
-					s := selector(item)
-					if _, has := set[s]; !has {
-						set[s] = true
-						return
-					}
+			q.Iterate(func(item any) bool {
+				key := selector(item)
+
+				if _, seen := set[key]; !seen {
+					set[key] = struct{}{}
+					return yield(item)
 				}
 
-				return
-			}
+				return true
+			})
 		},
 	}
 }
@@ -79,8 +73,8 @@ func (q Query) DistinctBy(selector func(interface{}) interface{}) Query {
 //   - selectorFn is of type "func(TSource) TSource".
 //
 // NOTE: DistinctBy has better performance than DistinctByT.
-func (q Query) DistinctByT(selectorFn interface{}) Query {
-	selectorFunc, ok := selectorFn.(func(interface{}) interface{})
+func (q Query) DistinctByT(selectorFn any) Query {
+	selectorFunc, ok := selectorFn.(func(any) any)
 	if !ok {
 		selectorGenericFunc, err := newGenericFunc(
 			"DistinctByT", "selectorFn", selectorFn,
@@ -90,7 +84,7 @@ func (q Query) DistinctByT(selectorFn interface{}) Query {
 			panic(err)
 		}
 
-		selectorFunc = func(item interface{}) interface{} {
+		selectorFunc = func(item any) any {
 			return selectorGenericFunc.Call(item)
 		}
 	}

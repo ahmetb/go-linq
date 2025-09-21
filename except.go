@@ -4,24 +4,18 @@ package linq
 // the members of the first sequence that don't appear in the second sequence.
 func (q Query) Except(q2 Query) Query {
 	return Query{
-		Iterate: func() Iterator {
-			next := q.Iterate()
-
-			next2 := q2.Iterate()
-			set := make(map[interface{}]bool)
-			for i, ok := next2(); ok; i, ok = next2() {
-				set[i] = true
+		Iterate: func(yield func(any) bool) {
+			set := make(map[any]struct{})
+			for item := range q2.Iterate {
+				set[item] = struct{}{}
 			}
 
-			return func() (item interface{}, ok bool) {
-				for item, ok = next(); ok; item, ok = next() {
-					if _, has := set[item]; !has {
-						return
-					}
+			q.Iterate(func(item any) bool {
+				if _, seen := set[item]; !seen {
+					return yield(item)
 				}
-
-				return
-			}
+				return true
+			})
 		},
 	}
 }
@@ -29,29 +23,22 @@ func (q Query) Except(q2 Query) Query {
 // ExceptBy invokes a transform function on each element of a collection and
 // produces the set difference of two sequences. The set difference is the
 // members of the first sequence that don't appear in the second sequence.
-func (q Query) ExceptBy(q2 Query,
-	selector func(interface{}) interface{}) Query {
+func (q Query) ExceptBy(q2 Query, selector func(any) any) Query {
 	return Query{
-		Iterate: func() Iterator {
-			next := q.Iterate()
-
-			next2 := q2.Iterate()
-			set := make(map[interface{}]bool)
-			for i, ok := next2(); ok; i, ok = next2() {
-				s := selector(i)
-				set[s] = true
+		Iterate: func(yield func(any) bool) {
+			set := make(map[any]struct{})
+			for item := range q2.Iterate {
+				key := selector(item)
+				set[key] = struct{}{}
 			}
 
-			return func() (item interface{}, ok bool) {
-				for item, ok = next(); ok; item, ok = next() {
-					s := selector(item)
-					if _, has := set[s]; !has {
-						return
-					}
+			q.Iterate(func(item any) bool {
+				key := selector(item)
+				if _, seen := set[key]; !seen {
+					return yield(item)
 				}
-
-				return
-			}
+				return true
+			})
 		},
 	}
 }
@@ -62,7 +49,7 @@ func (q Query) ExceptBy(q2 Query,
 //
 // NOTE: ExceptBy has better performance than ExceptByT.
 func (q Query) ExceptByT(q2 Query,
-	selectorFn interface{}) Query {
+	selectorFn any) Query {
 	selectorGenericFunc, err := newGenericFunc(
 		"ExceptByT", "selectorFn", selectorFn,
 		simpleParamValidator(newElemTypeSlice(new(genericType)), newElemTypeSlice(new(genericType))),
@@ -71,7 +58,7 @@ func (q Query) ExceptByT(q2 Query,
 		panic(err)
 	}
 
-	selectorFunc := func(item interface{}) interface{} {
+	selectorFunc := func(item any) any {
 		return selectorGenericFunc.Call(item)
 	}
 

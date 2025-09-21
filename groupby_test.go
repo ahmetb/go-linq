@@ -15,9 +15,8 @@ func TestGroupBy(t *testing.T) {
 		func(i interface{}) interface{} { return i.(int) },
 	)
 
-	next := q.Iterate()
 	eq := true
-	for item, ok := next(); ok; item, ok = next() {
+	for item := range q.Iterate {
 		group := item.(Group)
 		switch group.Key.(int) {
 		case 0:

@@ -2,31 +2,26 @@ package linq
 
 // DefaultIfEmpty returns the elements of the specified sequence
 // if the sequence is empty.
-func (q Query) DefaultIfEmpty(defaultValue interface{}) Query {
+func (q Query) DefaultIfEmpty(defaultValue any) Query {
 	return Query{
-		Iterate: func() Iterator {
-			next := q.Iterate()
-			state := 1
+		Iterate: func(yield func(any) bool) {
+			var yieldedAnyThing bool
+			var stopped bool
 
-			return func() (item interface{}, ok bool) {
-				switch state {
-				case 1:
-					item, ok = next()
-					if ok {
-						state = 2
-					} else {
-						item = defaultValue
-						ok = true
-						state = -1
-					}
-					return
-				case 2:
-					for item, ok = next(); ok; item, ok = next() {
-						return
-					}
-					return
+			q.Iterate(func(item any) bool {
+				yieldedAnyThing = true
+
+				if !yield(item) {
+					stopped = true
+					return false
 				}
-				return
+				return true
+			})
+
+			// If the iteration wasn't stopped and the source was empty...
+			if !stopped && !yieldedAnyThing {
+				// ...yield the default value.
+				yield(defaultValue)
 			}
 		},
 	}

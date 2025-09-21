@@ -1,6 +1,6 @@
 package linq
 
-// Join correlates the elements of two collection based on matching keys.
+// Join correlates the elements of two collections based on matching keys.
 //
 // A join refers to the operation of correlating the elements of two sources of
 // information based on a common key. Join brings the two information sources
@@ -11,44 +11,31 @@ package linq
 // Join preserves the order of the elements of outer collection, and for each of
 // these elements, the order of the matching elements of inner.
 func (q Query) Join(inner Query,
-	outerKeySelector func(interface{}) interface{},
-	innerKeySelector func(interface{}) interface{},
-	resultSelector func(outer interface{}, inner interface{}) interface{}) Query {
+	outerKeySelector func(any) any,
+	innerKeySelector func(any) any,
+	resultSelector func(outer any, inner any) any) Query {
 
 	return Query{
-		Iterate: func() Iterator {
-			outernext := q.Iterate()
-			innernext := inner.Iterate()
-
-			innerLookup := make(map[interface{}][]interface{})
-			for innerItem, ok := innernext(); ok; innerItem, ok = innernext() {
+		Iterate: func(yield func(any) bool) {
+			innerLookup := make(map[any][]any)
+			for innerItem := range inner.Iterate {
 				innerKey := innerKeySelector(innerItem)
 				innerLookup[innerKey] = append(innerLookup[innerKey], innerItem)
 			}
 
-			var outerItem interface{}
-			var innerGroup []interface{}
-			innerLen, innerIndex := 0, 0
+			q.Iterate(func(outerItem any) bool {
+				outerKey := outerKeySelector(outerItem)
 
-			return func() (item interface{}, ok bool) {
-				if innerIndex >= innerLen {
-					has := false
-					for !has {
-						outerItem, ok = outernext()
-						if !ok {
-							return
+				if innerGroup, ok := innerLookup[outerKey]; ok {
+					for _, innerItem := range innerGroup {
+						result := resultSelector(outerItem, innerItem)
+						if !yield(result) {
+							return false
 						}
-
-						innerGroup, has = innerLookup[outerKeySelector(outerItem)]
-						innerLen = len(innerGroup)
-						innerIndex = 0
 					}
 				}
-
-				item = resultSelector(outerItem, innerGroup[innerIndex])
-				innerIndex++
-				return item, true
-			}
+				return true
+			})
 		},
 	}
 }
@@ -61,9 +48,9 @@ func (q Query) Join(inner Query,
 //
 // NOTE: Join has better performance than JoinT.
 func (q Query) JoinT(inner Query,
-	outerKeySelectorFn interface{},
-	innerKeySelectorFn interface{},
-	resultSelectorFn interface{}) Query {
+	outerKeySelectorFn any,
+	innerKeySelectorFn any,
+	resultSelectorFn any) Query {
 	outerKeySelectorGenericFunc, err := newGenericFunc(
 		"JoinT", "outerKeySelectorFn", outerKeySelectorFn,
 		simpleParamValidator(newElemTypeSlice(new(genericType)), newElemTypeSlice(new(genericType))),
@@ -72,7 +59,7 @@ func (q Query) JoinT(inner Query,
 		panic(err)
 	}
 
-	outerKeySelectorFunc := func(item interface{}) interface{} {
+	outerKeySelectorFunc := func(item any) any {
 		return outerKeySelectorGenericFunc.Call(item)
 	}
 
@@ -85,7 +72,7 @@ func (q Query) JoinT(inner Query,
 		panic(err)
 	}
 
-	innerKeySelectorFunc := func(item interface{}) interface{} {
+	innerKeySelectorFunc := func(item any) any {
 		return innerKeySelectorFuncGenericFunc.Call(item)
 	}
 
@@ -97,7 +84,7 @@ func (q Query) JoinT(inner Query,
 		panic(err)
 	}
 
-	resultSelectorFunc := func(outer interface{}, inner interface{}) interface{} {
+	resultSelectorFunc := func(outer any, inner any) any {
 		return resultSelectorGenericFunc.Call(outer, inner)
 	}
 

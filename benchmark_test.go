@@ -61,33 +61,3 @@ func BenchmarkZipSkipTake_generics(b *testing.B) {
 		}).Skip(2).Take(5)
 	}
 }
-
-func BenchmarkFromChannel(b *testing.B) {
-	for n := 0; n < b.N; n++ {
-		ch := make(chan interface{})
-		go func() {
-			for i := 0; i < size; i++ {
-				ch <- i
-			}
-
-			close(ch)
-		}()
-
-		FromChannel(ch).All(func(i interface{}) bool { return true })
-	}
-}
-
-func BenchmarkFromChannelT(b *testing.B) {
-	for n := 0; n < b.N; n++ {
-		ch := make(chan interface{})
-		go func() {
-			for i := 0; i < size; i++ {
-				ch <- i
-			}
-
-			close(ch)
-		}()
-
-		FromChannelT(ch).All(func(i interface{}) bool { return true })
-	}
-}

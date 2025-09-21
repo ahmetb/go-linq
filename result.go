@@ -1,15 +1,15 @@
 package linq
 
 import (
+	"iter"
 	"math"
 	"reflect"
+	"slices"
 )
 
 // All determines whether all elements of a collection satisfy a condition.
-func (q Query) All(predicate func(interface{}) bool) bool {
-	next := q.Iterate()
-
-	for item, ok := next(); ok; item, ok = next() {
+func (q Query) All(predicate func(any) bool) bool {
+	for item := range q.Iterate {
 		if !predicate(item) {
 			return false
 		}
@@ -23,7 +23,7 @@ func (q Query) All(predicate func(interface{}) bool) bool {
 //   - predicateFn is of type "func(TSource) bool"
 //
 // NOTE: All has better performance than AllT.
-func (q Query) AllT(predicateFn interface{}) bool {
+func (q Query) AllT(predicateFn any) bool {
 
 	predicateGenericFunc, err := newGenericFunc(
 		"AllT", "predicateFn", predicateFn,
@@ -32,7 +32,7 @@ func (q Query) AllT(predicateFn interface{}) bool {
 	if err != nil {
 		panic(err)
 	}
-	predicateFunc := func(item interface{}) bool {
+	predicateFunc := func(item any) bool {
 		return predicateGenericFunc.Call(item).(bool)
 	}
 
@@ -41,15 +41,16 @@ func (q Query) AllT(predicateFn interface{}) bool {
 
 // Any determines whether any element of a collection exists.
 func (q Query) Any() bool {
-	_, ok := q.Iterate()()
-	return ok
+	for range q.Iterate {
+		return true
+	}
+
+	return false
 }
 
 // AnyWith determines whether any element of a collection satisfies a condition.
-func (q Query) AnyWith(predicate func(interface{}) bool) bool {
-	next := q.Iterate()
-
-	for item, ok := next(); ok; item, ok = next() {
+func (q Query) AnyWith(predicate func(any) bool) bool {
+	for item := range q.Iterate {
 		if predicate(item) {
 			return true
 		}
@@ -63,7 +64,7 @@ func (q Query) AnyWith(predicate func(interface{}) bool) bool {
 //   - predicateFn is of type "func(TSource) bool"
 //
 // NOTE: AnyWith has better performance than AnyWithT.
-func (q Query) AnyWithT(predicateFn interface{}) bool {
+func (q Query) AnyWithT(predicateFn any) bool {
 
 	predicateGenericFunc, err := newGenericFunc(
 		"AnyWithT", "predicateFn", predicateFn,
@@ -73,7 +74,7 @@ func (q Query) AnyWithT(predicateFn interface{}) bool {
 		panic(err)
 	}
 
-	predicateFunc := func(item interface{}) bool {
+	predicateFunc := func(item any) bool {
 		return predicateGenericFunc.Call(item).(bool)
 	}
 
@@ -81,8 +82,12 @@ func (q Query) AnyWithT(predicateFn interface{}) bool {
 }
 
 // Average computes the average of a collection of numeric values.
+// It panics if the sequence contains non-numeric types.
+// It returns math.NaN() if the sequence is empty.
 func (q Query) Average() (r float64) {
-	next := q.Iterate()
+	next, stop := iter.Pull(q.Iterate)
+	defer stop()
+
 	item, ok := next()
 	if !ok {
 		return math.NaN()
@@ -124,41 +129,34 @@ func (q Query) Average() (r float64) {
 }
 
 // Contains determines whether a collection contains a specified element.
-func (q Query) Contains(value interface{}) bool {
-	next := q.Iterate()
-
-	for item, ok := next(); ok; item, ok = next() {
+func (q Query) Contains(value any) bool {
+	for item := range q.Iterate {
 		if item == value {
 			return true
 		}
 	}
-
 	return false
 }
 
 // Count returns the number of elements in a collection.
-func (q Query) Count() (r int) {
-	next := q.Iterate()
-
-	for _, ok := next(); ok; _, ok = next() {
-		r++
+func (q Query) Count() int {
+	count := 0
+	for range q.Iterate {
+		count++
 	}
-
-	return
+	return count
 }
 
 // CountWith returns a number that represents how many elements in the specified
 // collection satisfy a condition.
-func (q Query) CountWith(predicate func(interface{}) bool) (r int) {
-	next := q.Iterate()
-
-	for item, ok := next(); ok; item, ok = next() {
+func (q Query) CountWith(predicate func(any) bool) int {
+	count := 0
+	for item := range q.Iterate {
 		if predicate(item) {
-			r++
+			count++
 		}
 	}
-
-	return
+	return count
 }
 
 // CountWithT is the typed version of CountWith.
@@ -166,7 +164,7 @@ func (q Query) CountWith(predicate func(interface{}) bool) (r int) {
 //   - predicateFn is of type "func(TSource) bool"
 //
 // NOTE: CountWith has better performance than CountWithT.
-func (q Query) CountWithT(predicateFn interface{}) int {
+func (q Query) CountWithT(predicateFn any) int {
 
 	predicateGenericFunc, err := newGenericFunc(
 		"CountWithT", "predicateFn", predicateFn,
@@ -176,7 +174,7 @@ func (q Query) CountWithT(predicateFn interface{}) int {
 		panic(err)
 	}
 
-	predicateFunc := func(item interface{}) bool {
+	predicateFunc := func(item any) bool {
 		return predicateGenericFunc.Call(item).(bool)
 	}
 
@@ -184,17 +182,18 @@ func (q Query) CountWithT(predicateFn interface{}) int {
 }
 
 // First returns the first element of a collection.
-func (q Query) First() interface{} {
-	item, _ := q.Iterate()()
-	return item
+func (q Query) First() any {
+	for item := range q.Iterate {
+		return item
+	}
+
+	return nil
 }
 
 // FirstWith returns the first element of a collection that satisfies a
 // specified condition.
-func (q Query) FirstWith(predicate func(interface{}) bool) interface{} {
-	next := q.Iterate()
-
-	for item, ok := next(); ok; item, ok = next() {
+func (q Query) FirstWith(predicate func(any) bool) any {
+	for item := range q.Iterate {
 		if predicate(item) {
 			return item
 		}
@@ -208,7 +207,7 @@ func (q Query) FirstWith(predicate func(interface{}) bool) interface{} {
 //   - predicateFn is of type "func(TSource) bool"
 //
 // NOTE: FirstWith has better performance than FirstWithT.
-func (q Query) FirstWithT(predicateFn interface{}) interface{} {
+func (q Query) FirstWithT(predicateFn any) any {
 
 	predicateGenericFunc, err := newGenericFunc(
 		"FirstWithT", "predicateFn", predicateFn,
@@ -218,7 +217,7 @@ func (q Query) FirstWithT(predicateFn interface{}) interface{} {
 		panic(err)
 	}
 
-	predicateFunc := func(item interface{}) bool {
+	predicateFunc := func(item any) bool {
 		return predicateGenericFunc.Call(item).(bool)
 	}
 
@@ -226,10 +225,8 @@ func (q Query) FirstWithT(predicateFn interface{}) interface{} {
 }
 
 // ForEach performs the specified action on each element of a collection.
-func (q Query) ForEach(action func(interface{})) {
-	next := q.Iterate()
-
-	for item, ok := next(); ok; item, ok = next() {
+func (q Query) ForEach(action func(any)) {
+	for item := range q.Iterate {
 		action(item)
 	}
 }
@@ -239,7 +236,7 @@ func (q Query) ForEach(action func(interface{})) {
 //   - actionFn is of type "func(TSource)"
 //
 // NOTE: ForEach has better performance than ForEachT.
-func (q Query) ForEachT(actionFn interface{}) {
+func (q Query) ForEachT(actionFn any) {
 	actionGenericFunc, err := newGenericFunc(
 		"ForEachT", "actionFn", actionFn,
 		simpleParamValidator(newElemTypeSlice(new(genericType)), nil),
@@ -249,7 +246,7 @@ func (q Query) ForEachT(actionFn interface{}) {
 		panic(err)
 	}
 
-	actionFunc := func(item interface{}) {
+	actionFunc := func(item any) {
 		actionGenericFunc.Call(item)
 	}
 
@@ -264,11 +261,9 @@ func (q Query) ForEachT(actionFn interface{}) {
 // index, for example. It can also be useful if you want to retrieve the index
 // of one or more elements. The second argument to action represents the
 // element to process.
-func (q Query) ForEachIndexed(action func(int, interface{})) {
-	next := q.Iterate()
+func (q Query) ForEachIndexed(action func(int, any)) {
 	index := 0
-
-	for item, ok := next(); ok; item, ok = next() {
+	for item := range q.Iterate {
 		action(index, item)
 		index++
 	}
@@ -279,7 +274,7 @@ func (q Query) ForEachIndexed(action func(int, interface{})) {
 //   - actionFn is of type "func(int, TSource)"
 //
 // NOTE: ForEachIndexed has better performance than ForEachIndexedT.
-func (q Query) ForEachIndexedT(actionFn interface{}) {
+func (q Query) ForEachIndexedT(actionFn any) {
 	actionGenericFunc, err := newGenericFunc(
 		"ForEachIndexedT", "actionFn", actionFn,
 		simpleParamValidator(newElemTypeSlice(new(int), new(genericType)), nil),
@@ -289,7 +284,7 @@ func (q Query) ForEachIndexedT(actionFn interface{}) {
 		panic(err)
 	}
 
-	actionFunc := func(index int, item interface{}) {
+	actionFunc := func(index int, item any) {
 		actionGenericFunc.Call(index, item)
 	}
 
@@ -297,11 +292,8 @@ func (q Query) ForEachIndexedT(actionFn interface{}) {
 }
 
 // Last returns the last element of a collection.
-func (q Query) Last() (r interface{}) {
-	next := q.Iterate()
-
-	for item, ok := next(); ok; item, ok = next() {
-		r = item
+func (q Query) Last() (r any) {
+	for r = range q.Iterate {
 	}
 
 	return
@@ -309,10 +301,8 @@ func (q Query) Last() (r interface{}) {
 
 // LastWith returns the last element of a collection that satisfies a specified
 // condition.
-func (q Query) LastWith(predicate func(interface{}) bool) (r interface{}) {
-	next := q.Iterate()
-
-	for item, ok := next(); ok; item, ok = next() {
+func (q Query) LastWith(predicate func(any) bool) (r any) {
+	for item := range q.Iterate {
 		if predicate(item) {
 			r = item
 		}
@@ -326,7 +316,7 @@ func (q Query) LastWith(predicate func(interface{}) bool) (r interface{}) {
 //   - predicateFn is of type "func(TSource) bool"
 //
 // NOTE: LastWith has better performance than LastWithT.
-func (q Query) LastWithT(predicateFn interface{}) interface{} {
+func (q Query) LastWithT(predicateFn any) any {
 
 	predicateGenericFunc, err := newGenericFunc(
 		"LastWithT", "predicateFn", predicateFn,
@@ -336,7 +326,7 @@ func (q Query) LastWithT(predicateFn interface{}) interface{} {
 		panic(err)
 	}
 
-	predicateFunc := func(item interface{}) bool {
+	predicateFunc := func(item any) bool {
 		return predicateGenericFunc.Call(item).(bool)
 	}
 
@@ -344,15 +334,16 @@ func (q Query) LastWithT(predicateFn interface{}) interface{} {
 }
 
 // Max returns the maximum value in a collection of values.
-func (q Query) Max() (r interface{}) {
-	next := q.Iterate()
-	item, ok := next()
+func (q Query) Max() any {
+	next, stop := iter.Pull(q.Iterate)
+	defer stop()
+
+	r, ok := next()
 	if !ok {
 		return nil
 	}
 
-	compare := getComparer(item)
-	r = item
+	compare := getComparer(r)
 
 	for item, ok := next(); ok; item, ok = next() {
 		if compare(item, r) > 0 {
@@ -360,19 +351,20 @@ func (q Query) Max() (r interface{}) {
 		}
 	}
 
-	return
+	return r
 }
 
 // Min returns the minimum value in a collection of values.
-func (q Query) Min() (r interface{}) {
-	next := q.Iterate()
-	item, ok := next()
+func (q Query) Min() any {
+	next, stop := iter.Pull(q.Iterate)
+	defer stop()
+
+	r, ok := next()
 	if !ok {
 		return nil
 	}
 
-	compare := getComparer(item)
-	r = item
+	compare := getComparer(r)
 
 	for item, ok := next(); ok; item, ok = next() {
 		if compare(item, r) < 0 {
@@ -380,24 +372,21 @@ func (q Query) Min() (r interface{}) {
 		}
 	}
 
-	return
+	return r
 }
 
-// Results iterates over a collection and returnes slice of interfaces
-func (q Query) Results() (r []interface{}) {
-	next := q.Iterate()
-
-	for item, ok := next(); ok; item, ok = next() {
-		r = append(r, item)
-	}
-
-	return
+// Results collects all items from a query into a slice.
+func (q Query) Results() []any {
+	return slices.Collect(q.Iterate)
 }
 
 // SequenceEqual determines whether two collections are equal.
 func (q Query) SequenceEqual(q2 Query) bool {
-	next := q.Iterate()
-	next2 := q2.Iterate()
+	next, stop := iter.Pull(q.Iterate)
+	defer stop()
+
+	next2, stop2 := iter.Pull(q2.Iterate)
+	defer stop2()
 
 	for item, ok := next(); ok; item, ok = next() {
 		item2, ok2 := next2()
@@ -412,36 +401,36 @@ func (q Query) SequenceEqual(q2 Query) bool {
 
 // Single returns the only element of a collection, and nil if there is not
 // exactly one element in the collection.
-func (q Query) Single() interface{} {
-	next := q.Iterate()
-	item, ok := next()
-	if !ok {
-		return nil
+func (q Query) Single() (r any) {
+	visited := false
+	for item := range q.Iterate {
+		if visited {
+			return nil
+		}
+
+		r = item
+		visited = true
 	}
 
-	_, ok = next()
-	if ok {
-		return nil
-	}
-
-	return item
+	return
 }
 
 // SingleWith returns the only element of a collection that satisfies a
 // specified condition, and nil if more than one such element exists.
-func (q Query) SingleWith(predicate func(interface{}) bool) (r interface{}) {
-	next := q.Iterate()
+func (q Query) SingleWith(predicate func(any) bool) (r any) {
 	found := false
-
-	for item, ok := next(); ok; item, ok = next() {
-		if predicate(item) {
-			if found {
-				return nil
-			}
-
-			found = true
-			r = item
+	for item := range q.Iterate {
+		if !predicate(item) {
+			continue
 		}
+
+		if found {
+			return nil
+		}
+
+		r = item
+		found = true
+
 	}
 
 	return
@@ -452,7 +441,7 @@ func (q Query) SingleWith(predicate func(interface{}) bool) (r interface{}) {
 //   - predicateFn is of type "func(TSource) bool"
 //
 // NOTE: SingleWith has better performance than SingleWithT.
-func (q Query) SingleWithT(predicateFn interface{}) interface{} {
+func (q Query) SingleWithT(predicateFn any) any {
 	predicateGenericFunc, err := newGenericFunc(
 		"SingleWithT", "predicateFn", predicateFn,
 		simpleParamValidator(newElemTypeSlice(new(genericType)), newElemTypeSlice(new(bool))),
@@ -461,7 +450,7 @@ func (q Query) SingleWithT(predicateFn interface{}) interface{} {
 		panic(err)
 	}
 
-	predicateFunc := func(item interface{}) bool {
+	predicateFunc := func(item any) bool {
 		return predicateGenericFunc.Call(item).(bool)
 	}
 
@@ -471,9 +460,11 @@ func (q Query) SingleWithT(predicateFn interface{}) interface{} {
 // SumInts computes the sum of a collection of numeric values.
 //
 // Values can be of any integer type: int, int8, int16, int32, int64. The result
-// is int64. Method returns zero if collection contains no elements.
+// is int64. Method returns zero if the collection contains no elements.
 func (q Query) SumInts() (r int64) {
-	next := q.Iterate()
+	next, stop := iter.Pull(q.Iterate)
+	defer stop()
+
 	item, ok := next()
 	if !ok {
 		return 0
@@ -492,10 +483,12 @@ func (q Query) SumInts() (r int64) {
 // SumUInts computes the sum of a collection of numeric values.
 //
 // Values can be of any unsigned integer type: uint, uint8, uint16, uint32,
-// uint64. The result is uint64. Method returns zero if collection contains no
+// uint64. The result is uint64. Method returns zero if the collection contains no
 // elements.
 func (q Query) SumUInts() (r uint64) {
-	next := q.Iterate()
+	next, stop := iter.Pull(q.Iterate)
+	defer stop()
+
 	item, ok := next()
 	if !ok {
 		return 0
@@ -514,9 +507,11 @@ func (q Query) SumUInts() (r uint64) {
 // SumFloats computes the sum of a collection of numeric values.
 //
 // Values can be of any float type: float32 or float64. The result is float64.
-// Method returns zero if collection contains no elements.
+// Method returns zero if the collection contains no elements.
 func (q Query) SumFloats() (r float64) {
-	next := q.Iterate()
+	next, stop := iter.Pull(q.Iterate)
+	defer stop()
+
 	item, ok := next()
 	if !ok {
 		return 0
@@ -534,14 +529,12 @@ func (q Query) SumFloats() (r float64) {
 
 // ToChannel iterates over a collection and outputs each element to a channel,
 // then closes it.
-func (q Query) ToChannel(result chan<- interface{}) {
-	next := q.Iterate()
+func (q Query) ToChannel(result chan<- any) {
+	defer close(result)
 
-	for item, ok := next(); ok; item, ok = next() {
+	for item := range q.Iterate {
 		result <- item
 	}
-
-	close(result)
 }
 
 // ToChannelT is the typed version of ToChannel.
@@ -549,28 +542,27 @@ func (q Query) ToChannel(result chan<- interface{}) {
 //   - result is of type "chan TSource"
 //
 // NOTE: ToChannel has better performance than ToChannelT.
-func (q Query) ToChannelT(result interface{}) {
+func (q Query) ToChannelT(result any) {
 	r := reflect.ValueOf(result)
-	next := q.Iterate()
 
-	for item, ok := next(); ok; item, ok = next() {
+	for item := range q.Iterate {
 		r.Send(reflect.ValueOf(item))
 	}
 
 	r.Close()
 }
 
-// ToMap iterates over a collection and populates result map with elements.
+// ToMap iterates over a collection and populates a result map with elements.
 // Collection elements have to be of KeyValue type to use this method. To
-// populate a map with elements of different type use ToMapBy method. ToMap
+// populate a map with elements of different types, use the ToMapBy method. ToMap
 // doesn't empty the result map before populating it.
-func (q Query) ToMap(result interface{}) {
+func (q Query) ToMap(result any) {
 	q.ToMapBy(
 		result,
-		func(i interface{}) interface{} {
+		func(i any) any {
 			return i.(KeyValue).Key
 		},
-		func(i interface{}) interface{} {
+		func(i any) any {
 			return i.(KeyValue).Value
 		})
 }
@@ -580,14 +572,13 @@ func (q Query) ToMap(result interface{}) {
 // element of the collection to generate key and value for the map. Generated
 // key and value types must be assignable to the map's key and value types.
 // ToMapBy doesn't empty the result map before populating it.
-func (q Query) ToMapBy(result interface{},
-	keySelector func(interface{}) interface{},
-	valueSelector func(interface{}) interface{}) {
+func (q Query) ToMapBy(result any,
+	keySelector func(any) any,
+	valueSelector func(any) any) {
 	res := reflect.ValueOf(result)
 	m := reflect.Indirect(res)
-	next := q.Iterate()
 
-	for item, ok := next(); ok; item, ok = next() {
+	for item := range q.Iterate {
 		key := reflect.ValueOf(keySelector(item))
 		value := reflect.ValueOf(valueSelector(item))
 
@@ -603,8 +594,8 @@ func (q Query) ToMapBy(result interface{},
 //   - valueSelectorFn is of type "func(TSource)TValue"
 //
 // NOTE: ToMapBy has better performance than ToMapByT.
-func (q Query) ToMapByT(result interface{},
-	keySelectorFn interface{}, valueSelectorFn interface{}) {
+func (q Query) ToMapByT(result any,
+	keySelectorFn any, valueSelectorFn any) {
 	keySelectorGenericFunc, err := newGenericFunc(
 		"ToMapByT", "keySelectorFn", keySelectorFn,
 		simpleParamValidator(newElemTypeSlice(new(genericType)), newElemTypeSlice(new(genericType))),
@@ -613,7 +604,7 @@ func (q Query) ToMapByT(result interface{},
 		panic(err)
 	}
 
-	keySelectorFunc := func(item interface{}) interface{} {
+	keySelectorFunc := func(item any) any {
 		return keySelectorGenericFunc.Call(item)
 	}
 
@@ -625,7 +616,7 @@ func (q Query) ToMapByT(result interface{},
 		panic(err)
 	}
 
-	valueSelectorFunc := func(item interface{}) interface{} {
+	valueSelectorFunc := func(item any) any {
 		return valueSelectorGenericFunc.Call(item)
 	}
 
@@ -638,16 +629,15 @@ func (q Query) ToMapByT(result interface{},
 // If the slice pointed by v has sufficient capacity, v will be pointed to a
 // resliced slice. If it does not, a new underlying array will be allocated and
 // v will point to it.
-func (q Query) ToSlice(v interface{}) {
+func (q Query) ToSlice(v any) {
 	res := reflect.ValueOf(v)
 	slice := reflect.Indirect(res)
 
 	cap := slice.Cap()
 	res.Elem().Set(slice.Slice(0, cap)) // make len(slice)==cap(slice) from now on
 
-	next := q.Iterate()
 	index := 0
-	for item, ok := next(); ok; item, ok = next() {
+	for item := range q.Iterate {
 		if index >= cap {
 			slice, cap = grow(slice)
 		}

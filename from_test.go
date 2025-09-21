@@ -2,6 +2,56 @@ package linq
 
 import "testing"
 
+func TestFromSlice(t *testing.T) {
+	s := [3]int{1, 2, 3}
+	w := []interface{}{1, 2, 3}
+
+	if q := FromSlice(s[:]); !validateQuery(q, w) {
+		t.Errorf("FromSlice(%v)!=%v", s, w)
+	}
+}
+
+func TestFromMap(t *testing.T) {
+	s := map[string]bool{"foo": true}
+	w := []interface{}{KeyValue{"foo", true}}
+
+	if q := FromMap(s); !validateQuery(q, w) {
+		t.Errorf("FromMap(%v)!=%v", s, w)
+	}
+}
+
+func TestFromChannel(t *testing.T) {
+	c := make(chan int, 3)
+	c <- 10
+	c <- 15
+	c <- -3
+	close(c)
+
+	w := []interface{}{10, 15, -3}
+
+	if q := FromChannel(c); !validateQuery(q, w) {
+		t.Errorf("FromChannel() failed expected %v", w)
+	}
+}
+
+func TestFromString(t *testing.T) {
+	s := "string"
+	w := []interface{}{'s', 't', 'r', 'i', 'n', 'g'}
+
+	if q := FromString(s); !validateQuery(q, w) {
+		t.Errorf("FromString(%v)!=%v", s, w)
+	}
+}
+
+func TestFromIterable(t *testing.T) {
+	s := foo{f1: 1, f2: true, f3: "string"}
+	w := []interface{}{1, true, "string"}
+
+	if q := FromIterable(s); !validateQuery(q, w) {
+		t.Errorf("FromIterable(%v)!=%v", s, w)
+	}
+}
+
 func TestFrom(t *testing.T) {
 	c := make(chan interface{}, 3)
 	c <- -1
@@ -41,52 +91,6 @@ func TestFrom(t *testing.T) {
 				t.Errorf("From(%v)=%v expected not equal", test.input, test.output)
 			}
 		}
-	}
-}
-
-func TestFromChannel(t *testing.T) {
-	c := make(chan interface{}, 3)
-	c <- 10
-	c <- 15
-	c <- -3
-	close(c)
-
-	w := []interface{}{10, 15, -3}
-
-	if q := FromChannel(c); !validateQuery(q, w) {
-		t.Errorf("FromChannel() failed expected %v", w)
-	}
-}
-
-func TestFromChannelT(t *testing.T) {
-	c := make(chan int, 3)
-	c <- 10
-	c <- 15
-	c <- -3
-	close(c)
-
-	w := []interface{}{10, 15, -3}
-
-	if q := FromChannelT(c); !validateQuery(q, w) {
-		t.Errorf("FromChannelT() failed expected %v", w)
-	}
-}
-
-func TestFromString(t *testing.T) {
-	s := "string"
-	w := []interface{}{'s', 't', 'r', 'i', 'n', 'g'}
-
-	if q := FromString(s); !validateQuery(q, w) {
-		t.Errorf("FromString(%v)!=%v", s, w)
-	}
-}
-
-func TestFromIterable(t *testing.T) {
-	s := foo{f1: 1, f2: true, f3: "string"}
-	w := []interface{}{1, true, "string"}
-
-	if q := FromIterable(s); !validateQuery(q, w) {
-		t.Errorf("FromIterable(%v)!=%v", s, w)
 	}
 }
 

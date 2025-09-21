@@ -1,44 +1,34 @@
 package linq
 
-// Group is a type that is used to store the result of GroupBy method.
+// Group is a type used to store the result of GroupBy method.
 type Group struct {
-	Key   interface{}
-	Group []interface{}
+	Key   any
+	Group []any
 }
 
 // GroupBy method groups the elements of a collection according to a specified
 // key selector function and projects the elements for each group by using a
 // specified function.
-func (q Query) GroupBy(keySelector func(interface{}) interface{},
-	elementSelector func(interface{}) interface{}) Query {
+func (q Query) GroupBy(keySelector func(any) any,
+	elementSelector func(any) any) Query {
 	return Query{
-		func() Iterator {
-			next := q.Iterate()
-			set := make(map[interface{}][]interface{})
+		Iterate: func(yield func(any) bool) {
+			groups := make(map[any][]any)
 
-			for item, ok := next(); ok; item, ok = next() {
+			for item := range q.Iterate {
 				key := keySelector(item)
-				set[key] = append(set[key], elementSelector(item))
+				element := elementSelector(item)
+				groups[key] = append(groups[key], element)
 			}
 
-			len := len(set)
-			idx := 0
-			groups := make([]Group, len)
-			for k, v := range set {
-				groups[idx] = Group{k, v}
-				idx++
-			}
-
-			index := 0
-
-			return func() (item interface{}, ok bool) {
-				ok = index < len
-				if ok {
-					item = groups[index]
-					index++
+			for key, group := range groups {
+				group := Group{
+					Key:   key,
+					Group: group,
 				}
-
-				return
+				if !yield(group) {
+					return
+				}
 			}
 		},
 	}
@@ -50,8 +40,8 @@ func (q Query) GroupBy(keySelector func(interface{}) interface{},
 //   - elementSelectorFn is of type "func(TSource) TElement"
 //
 // NOTE: GroupBy has better performance than GroupByT.
-func (q Query) GroupByT(keySelectorFn interface{},
-	elementSelectorFn interface{}) Query {
+func (q Query) GroupByT(keySelectorFn any,
+	elementSelectorFn any) Query {
 	keySelectorGenericFunc, err := newGenericFunc(
 		"GroupByT", "keySelectorFn", keySelectorFn,
 		simpleParamValidator(newElemTypeSlice(new(genericType)), newElemTypeSlice(new(genericType))),
@@ -60,7 +50,7 @@ func (q Query) GroupByT(keySelectorFn interface{},
 		panic(err)
 	}
 
-	keySelectorFunc := func(item interface{}) interface{} {
+	keySelectorFunc := func(item any) any {
 		return keySelectorGenericFunc.Call(item)
 	}
 
@@ -72,7 +62,7 @@ func (q Query) GroupByT(keySelectorFn interface{},
 		panic(err)
 	}
 
-	elementSelectorFunc := func(item interface{}) interface{} {
+	elementSelectorFunc := func(item any) any {
 		return elementSelectorGenericFunc.Call(item)
 
 	}
