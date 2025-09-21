@@ -6,7 +6,7 @@ import (
 )
 
 func TestEmpty(t *testing.T) {
-	q := From([]string{}).OrderBy(func(in interface{}) interface{} {
+	q := From([]string{}).OrderBy(func(in any) any {
 		return 0
 	})
 
@@ -26,7 +26,7 @@ func TestOrderBy(t *testing.T) {
 		slice[i].f1 = i
 	}
 
-	q := From(slice).OrderBy(func(i interface{}) interface{} {
+	q := From(slice).OrderBy(func(i any) any {
 		return i.(foo).f1
 	})
 
@@ -56,7 +56,7 @@ func TestOrderByDescending(t *testing.T) {
 		slice[i].f1 = i
 	}
 
-	q := From(slice).OrderByDescending(func(i interface{}) interface{} {
+	q := From(slice).OrderByDescending(func(i any) any {
 		return i.(foo).f1
 	})
 
@@ -87,9 +87,9 @@ func TestThenBy(t *testing.T) {
 		slice[i].f2 = i%2 == 0
 	}
 
-	q := From(slice).OrderBy(func(i interface{}) interface{} {
+	q := From(slice).OrderBy(func(i any) any {
 		return i.(foo).f2
-	}).ThenBy(func(i interface{}) interface{} {
+	}).ThenBy(func(i any) any {
 		return i.(foo).f1
 	})
 
@@ -119,9 +119,9 @@ func TestThenByDescending(t *testing.T) {
 		slice[i].f2 = i%2 == 0
 	}
 
-	q := From(slice).OrderBy(func(i interface{}) interface{} {
+	q := From(slice).OrderBy(func(i any) any {
 		return i.(foo).f2
-	}).ThenByDescending(func(i interface{}) interface{} {
+	}).ThenByDescending(func(i any) any {
 		return i.(foo).f1
 	})
 
@@ -150,7 +150,7 @@ func TestSort(t *testing.T) {
 		slice[i].f1 = i
 	}
 
-	q := From(slice).Sort(func(i, j interface{}) bool {
+	q := From(slice).Sort(func(i, j any) bool {
 		return i.(foo).f1 < j.(foo).f1
 	})
 

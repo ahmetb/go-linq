@@ -77,7 +77,7 @@ func ExampleRepeat() {
 }
 
 func ExampleQuery() {
-	query := From([]int{1, 2, 3, 4, 5}).Where(func(i interface{}) bool {
+	query := From([]int{1, 2, 3, 4, 5}).Where(func(i any) bool {
 		return i.(int) <= 3
 	})
 
@@ -97,7 +97,7 @@ func ExampleQuery_Aggregate() {
 	// Determine which string in the slice is the longest.
 	longestName := From(fruits).
 		Aggregate(
-			func(r interface{}, i interface{}) interface{} {
+			func(r any, i any) any {
 				if len(r.(string)) > len(i.(string)) {
 					return r
 				}
@@ -117,7 +117,7 @@ func ExampleQuery_AggregateWithSeed() {
 	// Count the even numbers in the array, using a seed value of 0.
 	numEven := From(ints).
 		AggregateWithSeed(0,
-			func(total, next interface{}) interface{} {
+			func(total, next any) any {
 				if next.(int)%2 == 0 {
 					return total.(int) + 1
 				}
@@ -137,7 +137,7 @@ func ExampleQuery_AggregateWithSeedBy() {
 	// Determine whether any string in the array is longer than "banana".
 	longestName := From(input).
 		AggregateWithSeedBy("banana",
-			func(longest interface{}, next interface{}) interface{} {
+			func(longest any, next any) any {
 				if len(longest.(string)) > len(next.(string)) {
 					return longest
 				}
@@ -145,7 +145,7 @@ func ExampleQuery_AggregateWithSeedBy() {
 
 			},
 			// Return the final result
-			func(result interface{}) interface{} {
+			func(result any) any {
 				return fmt.Sprintf("The fruit with the longest name is %s.", result)
 			},
 		)
@@ -163,7 +163,7 @@ func ExampleOrderedQuery_Distinct() {
 	var distinctAges []int
 	From(ages).
 		OrderBy(
-			func(item interface{}) interface{} { return item },
+			func(item any) any { return item },
 		).
 		Distinct().
 		ToSlice(&distinctAges)
@@ -192,10 +192,10 @@ func ExampleOrderedQuery_DistinctBy() {
 	var noduplicates []Product
 	From(products).
 		OrderBy(
-			func(item interface{}) interface{} { return item.(Product).Name },
+			func(item any) any { return item.(Product).Name },
 		).
 		DistinctBy(
-			func(item interface{}) interface{} { return item.(Product).Code },
+			func(item any) any { return item.(Product).Code },
 		).
 		ToSlice(&noduplicates)
 
@@ -218,10 +218,10 @@ func ExampleOrderedQuery_ThenBy() {
 	var query []string
 	From(fruits).
 		OrderBy(
-			func(fruit interface{}) interface{} { return len(fruit.(string)) },
+			func(fruit any) any { return len(fruit.(string)) },
 		).
 		ThenBy(
-			func(fruit interface{}) interface{} { return fruit },
+			func(fruit any) any { return fruit },
 		).
 		ToSlice(&query)
 
@@ -260,7 +260,7 @@ func ExampleQuery_All() {
 	// in the array start with 'B'.
 	allStartWithB := From(pets).
 		All(
-			func(pet interface{}) bool { return strings.HasPrefix(pet.(Pet).Name, "B") },
+			func(pet any) bool { return strings.HasPrefix(pet.(Pet).Name, "B") },
 		)
 
 	fmt.Printf("All pet names start with 'B'? %t", allStartWithB)
@@ -300,7 +300,7 @@ func ExampleQuery_AnyWith() {
 	// Determine whether any pets over age 1 are also unvaccinated.
 	unvaccinated := From(pets).
 		AnyWith(
-			func(p interface{}) bool {
+			func(p any) bool {
 				return p.(Pet).Age > 1 && p.(Pet).Vaccinated == false
 			},
 		)
@@ -366,7 +366,7 @@ func ExampleQuery_CountWith() {
 
 	evenCount := From(slice).
 		CountWith(
-			func(item interface{}) bool { return item.(int)%2 == 0 },
+			func(item any) bool { return item.(int)%2 == 0 },
 		)
 
 	fmt.Println(evenCount)
@@ -478,7 +478,7 @@ func ExampleQuery_DistinctBy() {
 	var noduplicates []Product
 	From(products).
 		DistinctBy(
-			func(item interface{}) interface{} { return item.(Product).Code },
+			func(item any) any { return item.(Product).Code },
 		).
 		ToSlice(&noduplicates)
 
@@ -540,7 +540,7 @@ func ExampleQuery_ExceptBy() {
 	var except []Product
 	From(fruits1).
 		ExceptBy(From(fruits2),
-			func(item interface{}) interface{} { return item.(Product).Code },
+			func(item any) any { return item.(Product).Code },
 		).
 		ToSlice(&except)
 
@@ -573,7 +573,7 @@ func ExampleQuery_FirstWith() {
 
 	first := From(numbers).
 		FirstWith(
-			func(item interface{}) bool { return item.(int) > 80 },
+			func(item any) bool { return item.(int) > 80 },
 		)
 
 	fmt.Println(first)
@@ -623,7 +623,7 @@ func ExampleQuery_IntersectBy() {
 	var duplicates []Product
 	From(store1).
 		IntersectBy(From(store2),
-			func(p interface{}) interface{} { return p.(Product).Code },
+			func(p any) any { return p.(Product).Code },
 		).
 		ToSlice(&duplicates)
 
@@ -658,7 +658,7 @@ func ExampleQuery_LastWith() {
 
 	last := From(numbers).
 		LastWith(
-			func(n interface{}) bool { return n.(int) > 80 },
+			func(n any) bool { return n.(int) > 80 },
 		)
 
 	fmt.Println(last)
@@ -704,7 +704,7 @@ func ExampleQuery_OrderByDescending() {
 	var result []string
 	From(names).
 		OrderByDescending(
-			func(n interface{}) interface{} { return n },
+			func(n any) any { return n },
 		).ToSlice(&result)
 
 	fmt.Println(result)
@@ -722,13 +722,13 @@ func ExampleOrderedQuery_ThenByDescending() {
 	var query []string
 	From(fruits).
 		OrderBy(
-			func(fruit interface{}) interface{} { return len(fruit.(string)) },
+			func(fruit any) any { return len(fruit.(string)) },
 		).
 		ThenByDescending(
-			func(fruit interface{}) interface{} { return fruit.(string)[0] },
+			func(fruit any) any { return fruit.(string)[0] },
 		).
 		ThenByDescending(
-			func(fruit interface{}) interface{} { return fruit.(string)[3] },
+			func(fruit any) any { return fruit.(string)[3] },
 		).
 		ToSlice(&query)
 
@@ -760,10 +760,10 @@ func ExampleQuery_GroupBy() {
 	input := []int{1, 2, 3, 4, 5, 6, 7, 8, 9}
 
 	q := From(input).GroupBy(
-		func(i interface{}) interface{} { return i.(int) % 2 },
-		func(i interface{}) interface{} { return i.(int) })
+		func(i any) any { return i.(int) % 2 },
+		func(i any) any { return i.(int) })
 
-	fmt.Println(q.OrderBy(func(i interface{}) interface{} {
+	fmt.Println(q.OrderBy(func(i any) any {
 		return i.(Group).Key
 	}).Results())
 	// Output:
@@ -783,9 +783,9 @@ func ExampleQuery_GroupJoin() {
 
 	q := FromString("abc").
 		GroupJoin(From(fruits),
-			func(i interface{}) interface{} { return i },
-			func(i interface{}) interface{} { return []rune(i.(string))[0] },
-			func(outer interface{}, inners []interface{}) interface{} {
+			func(i any) any { return i },
+			func(i any) any { return []rune(i.(string))[0] },
+			func(outer any, inners []any) any {
 				return KeyValue{string(outer.(rune)), inners}
 			},
 		)
@@ -822,7 +822,7 @@ func ExampleQuery_IndexOf() {
 		},
 	}
 
-	index := From(items).IndexOf(func(i interface{}) bool {
+	index := From(items).IndexOf(func(i any) bool {
 		item, ok := i.(Item)
 		return ok && item.Name == "Rickster"
 	})
@@ -849,9 +849,9 @@ func ExampleQuery_Join() {
 
 	q := Range(1, 10).
 		Join(From(fruits),
-			func(i interface{}) interface{} { return i },
-			func(i interface{}) interface{} { return len(i.(string)) },
-			func(outer interface{}, inner interface{}) interface{} {
+			func(i any) any { return i },
+			func(i any) any { return len(i.(string)) },
+			func(outer any, inner any) any {
 				return KeyValue{outer, inner}
 			},
 		)
@@ -866,10 +866,10 @@ func ExampleQuery_Join() {
 func ExampleQuery_OrderBy() {
 	q := Range(1, 10).
 		OrderBy(
-			func(i interface{}) interface{} { return i.(int) % 2 },
+			func(i any) any { return i.(int) % 2 },
 		).
 		ThenByDescending(
-			func(i interface{}) interface{} { return i },
+			func(i any) any { return i },
 		)
 
 	fmt.Println(q.Results())
@@ -912,7 +912,7 @@ func ExampleQuery_Select() {
 
 	Range(1, 10).
 		Select(
-			func(x interface{}) interface{} { return x.(int) * x.(int) },
+			func(x any) any { return x.(int) * x.(int) },
 		).
 		ToSlice(&squares)
 
@@ -926,7 +926,7 @@ func ExampleQuery_SelectMany() {
 
 	q := From(input).
 		SelectMany(
-			func(i interface{}) Query { return From(i) },
+			func(i any) Query { return From(i) },
 		)
 
 	fmt.Println(q.Results())
@@ -942,7 +942,7 @@ func ExampleQuery_SelectIndexed() {
 	result := []string{}
 	From(fruits).
 		SelectIndexed(
-			func(index int, fruit interface{}) interface{} { return fruit.(string)[:index] },
+			func(index int, fruit any) any { return fruit.(string)[:index] },
 		).
 		ToSlice(&result)
 
@@ -983,13 +983,13 @@ func ExampleQuery_SelectManyByIndexed() {
 
 	From(people).
 		SelectManyByIndexed(
-			func(index int, person interface{}) Query {
+			func(index int, person any) Query {
 				return From(person.(Person).Pets).
-					Select(func(pet interface{}) interface{} {
+					Select(func(pet any) any {
 						return fmt.Sprintf("%d - %s", index, pet.(Pet).Name)
 					})
 			},
-			func(indexedPet, person interface{}) interface{} {
+			func(indexedPet, person any) any {
 				return fmt.Sprintf("Pet: %s, Owner: %s", indexedPet, person.(Person).Name)
 			},
 		).
@@ -1092,8 +1092,8 @@ func ExampleQuery_SelectManyBy() {
 	var results []string
 	From(people).
 		SelectManyBy(
-			func(person interface{}) Query { return From(person.(Person).Pets) },
-			func(pet, person interface{}) interface{} {
+			func(person any) Query { return From(person.(Person).Pets) },
+			func(pet, person any) any {
 				return fmt.Sprintf("Owner: %s, Pet: %s", person.(Person).Name, pet.(Pet).Name)
 			},
 		).
@@ -1157,7 +1157,7 @@ func ExampleQuery_SingleWith() {
 
 	fruit := From(fruits).
 		SingleWith(
-			func(f interface{}) bool { return len(f.(string)) > 10 },
+			func(f any) bool { return len(f.(string)) > 10 },
 		)
 
 	fmt.Println(fruit)
@@ -1173,7 +1173,7 @@ func ExampleQuery_Skip() {
 	var lowerGrades []int
 	From(grades).
 		OrderByDescending(
-			func(g interface{}) interface{} { return g },
+			func(g any) any { return g },
 		).
 		Skip(3).
 		ToSlice(&lowerGrades)
@@ -1191,10 +1191,10 @@ func ExampleQuery_SkipWhile() {
 	var lowerGrades []int
 	From(grades).
 		OrderByDescending(
-			func(g interface{}) interface{} { return g },
+			func(g any) any { return g },
 		).
 		SkipWhile(
-			func(g interface{}) bool { return g.(int) >= 80 },
+			func(g any) bool { return g.(int) >= 80 },
 		).
 		ToSlice(&lowerGrades)
 
@@ -1213,7 +1213,7 @@ func ExampleQuery_SkipWhileIndexed() {
 	var query []int
 	From(amounts).
 		SkipWhileIndexed(
-			func(index int, amount interface{}) bool { return amount.(int) > index*1000 },
+			func(index int, amount any) bool { return amount.(int) > index*1000 },
 		).
 		ToSlice(&query)
 
@@ -1231,7 +1231,7 @@ func ExampleQuery_Sort() {
 	var query []int
 	From(amounts).
 		Sort(
-			func(i interface{}, j interface{}) bool { return i.(int) < j.(int) },
+			func(i any, j any) bool { return i.(int) < j.(int) },
 		).
 		ToSlice(&query)
 
@@ -1289,7 +1289,7 @@ func ExampleQuery_Take() {
 	var topThreeGrades []int
 	From(grades).
 		OrderByDescending(
-			func(grade interface{}) interface{} { return grade },
+			func(grade any) any { return grade },
 		).
 		Take(3).
 		ToSlice(&topThreeGrades)
@@ -1307,7 +1307,7 @@ func ExampleQuery_TakeWhile() {
 	var query []string
 	From(fruits).
 		TakeWhile(
-			func(fruit interface{}) bool { return fruit.(string) != "orange" },
+			func(fruit any) bool { return fruit.(string) != "orange" },
 		).
 		ToSlice(&query)
 
@@ -1327,7 +1327,7 @@ func ExampleQuery_TakeWhileIndexed() {
 	var query []string
 	From(fruits).
 		TakeWhileIndexed(
-			func(index int, fruit interface{}) bool { return len(fruit.(string)) >= index },
+			func(index int, fruit any) bool { return len(fruit.(string)) >= index },
 		).
 		ToSlice(&query)
 
@@ -1339,7 +1339,7 @@ func ExampleQuery_TakeWhileIndexed() {
 // The following code example demonstrates how to use ToChannel
 // to send a slice to a channel.
 func ExampleQuery_ToChannel() {
-	c := make(chan interface{})
+	c := make(chan any)
 
 	go func() {
 		Repeat(10, 3).ToChannel(c)
@@ -1403,16 +1403,16 @@ func ExampleQuery_ToMap() {
 // The following code example demonstrates how to use ToMapBy
 // by using a key and value selectors to populate a map.
 func ExampleQuery_ToMapBy() {
-	input := [][]interface{}{{1, true}}
+	input := [][]any{{1, true}}
 
 	result := make(map[int]bool)
 	From(input).
 		ToMapBy(&result,
-			func(i interface{}) interface{} {
-				return i.([]interface{})[0]
+			func(i any) any {
+				return i.([]any)[0]
 			},
-			func(i interface{}) interface{} {
-				return i.([]interface{})[1]
+			func(i any) any {
+				return i.([]any)[1]
 			},
 		)
 
@@ -1449,7 +1449,7 @@ func ExampleQuery_Where() {
 	var query []string
 	From(fruits).
 		Where(
-			func(f interface{}) bool { return len(f.(string)) > 6 },
+			func(f any) bool { return len(f.(string)) > 6 },
 		).
 		ToSlice(&query)
 
@@ -1466,7 +1466,7 @@ func ExampleQuery_WhereIndexed() {
 	var query []int
 	From(numbers).
 		WhereIndexed(
-			func(index int, number interface{}) bool { return number.(int) <= index*10 },
+			func(index int, number any) bool { return number.(int) <= index*10 },
 		).
 		ToSlice(&query)
 
@@ -1483,7 +1483,7 @@ func ExampleQuery_Zip() {
 
 	q := From(number).
 		Zip(From(words),
-			func(a interface{}, b interface{}) interface{} { return []interface{}{a, b} },
+			func(a any, b any) any { return []any{a, b} },
 		)
 
 	fmt.Println(q.Results())
@@ -1812,7 +1812,7 @@ func ExampleQuery_FirstWithT() {
 func ExampleQuery_ForEach() {
 	fruits := []string{"orange", "apple", "lemon", "apple"}
 
-	From(fruits).ForEach(func(fruit interface{}) {
+	From(fruits).ForEach(func(fruit any) {
 		fmt.Println(fruit)
 	})
 	// Output:
@@ -1827,7 +1827,7 @@ func ExampleQuery_ForEach() {
 func ExampleQuery_ForEachIndexed() {
 	fruits := []string{"orange", "apple", "lemon", "apple"}
 
-	From(fruits).ForEachIndexed(func(i int, fruit interface{}) {
+	From(fruits).ForEachIndexed(func(i int, fruit any) {
 		fmt.Printf("%d.%s\n", i, fruit)
 	})
 	// Output:
@@ -2228,7 +2228,7 @@ func ExampleQuery_SelectManyByT() {
 	From(people).
 		SelectManyByT(
 			func(person Person) Query { return From(person.Pets) },
-			func(pet Pet, person Person) interface{} {
+			func(pet Pet, person Person) any {
 				return fmt.Sprintf("Owner: %s, Pet: %s", person.Name, pet.Name)
 			},
 		).
@@ -2604,7 +2604,7 @@ func ExampleQuery_ZipT() {
 
 	q := From(number).
 		ZipT(From(words),
-			func(a int, b string) []interface{} { return []interface{}{a, b} },
+			func(a int, b string) []any { return []any{a, b} },
 		)
 
 	fmt.Println(q.Results())

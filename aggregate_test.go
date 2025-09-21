@@ -5,15 +5,15 @@ import "strings"
 
 func TestAggregate(t *testing.T) {
 	tests := []struct {
-		input interface{}
-		want  interface{}
+		input any
+		want  any
 	}{
 		{[]string{"apple", "mango", "orange", "passionfruit", "grape"}, "passionfruit"},
 		{[]string{}, nil},
 	}
 
 	for _, test := range tests {
-		r := From(test.input).Aggregate(func(r interface{}, i interface{}) interface{} {
+		r := From(test.input).Aggregate(func(r any, i any) any {
 			if len(r.(string)) > len(i.(string)) {
 				return r
 			}
@@ -42,7 +42,7 @@ func TestAggregateWithSeed(t *testing.T) {
 	want := "passionfruit"
 
 	r := From(input).AggregateWithSeed(want,
-		func(r interface{}, i interface{}) interface{} {
+		func(r any, i any) any {
 			if len(r.(string)) > len(i.(string)) {
 				return r
 			}
@@ -70,13 +70,13 @@ func TestAggregateWithSeedBy(t *testing.T) {
 	want := "PASSIONFRUIT"
 
 	r := From(input).AggregateWithSeedBy("banana",
-		func(r interface{}, i interface{}) interface{} {
+		func(r any, i any) any {
 			if len(r.(string)) > len(i.(string)) {
 				return r
 			}
 			return i
 		},
-		func(r interface{}) interface{} {
+		func(r any) any {
 			return strings.ToUpper(r.(string))
 		},
 	)

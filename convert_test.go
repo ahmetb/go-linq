@@ -4,7 +4,7 @@ import "testing"
 
 func TestIntConverter(t *testing.T) {
 	tests := []struct {
-		input interface{}
+		input any
 		want  int64
 	}{
 		{2, 2},
@@ -23,7 +23,7 @@ func TestIntConverter(t *testing.T) {
 
 func TestUIntConverter(t *testing.T) {
 	tests := []struct {
-		input interface{}
+		input any
 		want  uint64
 	}{
 		{uint(2), 2},
@@ -42,7 +42,7 @@ func TestUIntConverter(t *testing.T) {
 
 func TestFloatConverter(t *testing.T) {
 	tests := []struct {
-		input interface{}
+		input any
 		want  float64
 	}{
 		{float32(-1), -1},

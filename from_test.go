@@ -4,7 +4,7 @@ import "testing"
 
 func TestFromSlice(t *testing.T) {
 	s := [3]int{1, 2, 3}
-	w := []interface{}{1, 2, 3}
+	w := []any{1, 2, 3}
 
 	if q := FromSlice(s[:]); !validateQuery(q, w) {
 		t.Errorf("FromSlice(%v)!=%v", s, w)
@@ -13,7 +13,7 @@ func TestFromSlice(t *testing.T) {
 
 func TestFromMap(t *testing.T) {
 	s := map[string]bool{"foo": true}
-	w := []interface{}{KeyValue{"foo", true}}
+	w := []any{KeyValue{"foo", true}}
 
 	if q := FromMap(s); !validateQuery(q, w) {
 		t.Errorf("FromMap(%v)!=%v", s, w)
@@ -27,7 +27,7 @@ func TestFromChannel(t *testing.T) {
 	c <- -3
 	close(c)
 
-	w := []interface{}{10, 15, -3}
+	w := []any{10, 15, -3}
 
 	if q := FromChannel(c); !validateQuery(q, w) {
 		t.Errorf("FromChannel() failed expected %v", w)
@@ -36,7 +36,7 @@ func TestFromChannel(t *testing.T) {
 
 func TestFromString(t *testing.T) {
 	s := "string"
-	w := []interface{}{'s', 't', 'r', 'i', 'n', 'g'}
+	w := []any{'s', 't', 'r', 'i', 'n', 'g'}
 
 	if q := FromString(s); !validateQuery(q, w) {
 		t.Errorf("FromString(%v)!=%v", s, w)
@@ -45,7 +45,7 @@ func TestFromString(t *testing.T) {
 
 func TestFromIterable(t *testing.T) {
 	s := foo{f1: 1, f2: true, f3: "string"}
-	w := []interface{}{1, true, "string"}
+	w := []any{1, true, "string"}
 
 	if q := FromIterable(s); !validateQuery(q, w) {
 		t.Errorf("FromIterable(%v)!=%v", s, w)
@@ -53,7 +53,7 @@ func TestFromIterable(t *testing.T) {
 }
 
 func TestFrom(t *testing.T) {
-	c := make(chan interface{}, 3)
+	c := make(chan any, 3)
 	c <- -1
 	c <- 0
 	c <- 1
@@ -66,21 +66,21 @@ func TestFrom(t *testing.T) {
 	close(ct)
 
 	tests := []struct {
-		input  interface{}
-		output []interface{}
+		input  any
+		output []any
 		want   bool
 	}{
-		{[]int{1, 2, 3}, []interface{}{1, 2, 3}, true},
-		{[]int{1, 2, 4}, []interface{}{1, 2, 3}, false},
-		{[3]int{1, 2, 3}, []interface{}{1, 2, 3}, true},
-		{[3]int{1, 2, 4}, []interface{}{1, 2, 3}, false},
-		{"str", []interface{}{'s', 't', 'r'}, true},
-		{"str", []interface{}{'s', 't', 'g'}, false},
-		{map[string]bool{"foo": true}, []interface{}{KeyValue{"foo", true}}, true},
-		{map[string]bool{"foo": true}, []interface{}{KeyValue{"foo", false}}, false},
-		{c, []interface{}{-1, 0, 1}, true},
-		{ct, []interface{}{-10, 0, 10}, true},
-		{foo{f1: 1, f2: true, f3: "string"}, []interface{}{1, true, "string"}, true},
+		{[]int{1, 2, 3}, []any{1, 2, 3}, true},
+		{[]int{1, 2, 4}, []any{1, 2, 3}, false},
+		{[3]int{1, 2, 3}, []any{1, 2, 3}, true},
+		{[3]int{1, 2, 4}, []any{1, 2, 3}, false},
+		{"str", []any{'s', 't', 'r'}, true},
+		{"str", []any{'s', 't', 'g'}, false},
+		{map[string]bool{"foo": true}, []any{KeyValue{"foo", true}}, true},
+		{map[string]bool{"foo": true}, []any{KeyValue{"foo", false}}, false},
+		{c, []any{-1, 0, 1}, true},
+		{ct, []any{-10, 0, 10}, true},
+		{foo{f1: 1, f2: true, f3: "string"}, []any{1, true, "string"}, true},
 	}
 
 	for _, test := range tests {
@@ -95,7 +95,7 @@ func TestFrom(t *testing.T) {
 }
 
 func TestRange(t *testing.T) {
-	w := []interface{}{-2, -1, 0, 1, 2}
+	w := []any{-2, -1, 0, 1, 2}
 
 	if q := Range(-2, 5); !validateQuery(q, w) {
 		t.Errorf("Range(-2, 5)=%v expected %v", toSlice(q), w)
@@ -103,7 +103,7 @@ func TestRange(t *testing.T) {
 }
 
 func TestRepeat(t *testing.T) {
-	w := []interface{}{1, 1, 1, 1, 1}
+	w := []any{1, 1, 1, 1, 1}
 
 	if q := Repeat(1, 5); !validateQuery(q, w) {
 		t.Errorf("Repeat(1, 5)=%v expected %v", toSlice(q), w)

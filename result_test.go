@@ -10,10 +10,10 @@ import (
 func TestAll(t *testing.T) {
 	input := []int{2, 4, 6, 8}
 
-	r1 := From(input).All(func(i interface{}) bool {
+	r1 := From(input).All(func(i any) bool {
 		return i.(int)%2 == 0
 	})
-	r2 := From(input).All(func(i interface{}) bool {
+	r2 := From(input).All(func(i any) bool {
 		return i.(int)%2 != 0
 	})
 
@@ -34,7 +34,7 @@ func TestAllT_PanicWhenPredicateFnIsInvalid(t *testing.T) {
 
 func TestAny(t *testing.T) {
 	tests := []struct {
-		input interface{}
+		input any
 		want  bool
 	}{
 		{[]int{1, 2, 2, 3, 1}, true},
@@ -52,7 +52,7 @@ func TestAny(t *testing.T) {
 
 func TestAnyWith(t *testing.T) {
 	tests := []struct {
-		input interface{}
+		input any
 		want  bool
 	}{
 		{[]int{1, 2, 2, 3, 1}, false},
@@ -61,7 +61,7 @@ func TestAnyWith(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		if r := From(test.input).AnyWith(func(i interface{}) bool {
+		if r := From(test.input).AnyWith(func(i any) bool {
 			return i.(int) == 4
 		}); r != test.want {
 			t.Errorf("From(%v).Any()=%v expected %v", test.input, r, test.want)
@@ -77,7 +77,7 @@ func TestAnyWithT_PanicWhenPredicateFnIsInvalid(t *testing.T) {
 
 func TestAverage(t *testing.T) {
 	tests := []struct {
-		input interface{}
+		input any
 		want  float64
 	}{
 		{[]int{1, 2, 2, 3, 1}, 1.8},
@@ -100,8 +100,8 @@ func TestAverageForNaN(t *testing.T) {
 
 func TestContains(t *testing.T) {
 	tests := []struct {
-		input interface{}
-		value interface{}
+		input any
+		value any
 		want  bool
 	}{
 		{[]int{1, 2, 2, 3, 1}, 10, false},
@@ -118,7 +118,7 @@ func TestContains(t *testing.T) {
 
 func TestCount(t *testing.T) {
 	tests := []struct {
-		input interface{}
+		input any
 		want  int
 	}{
 		{[]int{1, 2, 2, 3, 1}, 5},
@@ -135,7 +135,7 @@ func TestCount(t *testing.T) {
 
 func TestCountWith(t *testing.T) {
 	tests := []struct {
-		input interface{}
+		input any
 		want  int
 	}{
 		{[]int{1, 2, 2, 3, 1}, 4},
@@ -143,7 +143,7 @@ func TestCountWith(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		if r := From(test.input).CountWith(func(i interface{}) bool {
+		if r := From(test.input).CountWith(func(i any) bool {
 			return i.(int) <= 2
 		}); r != test.want {
 			t.Errorf("From(%v).CountWith()=%v expected %v", test.input, r, test.want)
@@ -159,8 +159,8 @@ func TestCountWithT_PanicWhenPredicateFnIsInvalid(t *testing.T) {
 
 func TestFirst(t *testing.T) {
 	tests := []struct {
-		input interface{}
-		want  interface{}
+		input any
+		want  any
 	}{
 		{[]int{1, 2, 2, 3, 1}, 1},
 		{[]int{}, nil},
@@ -175,15 +175,15 @@ func TestFirst(t *testing.T) {
 
 func TestFirstWith(t *testing.T) {
 	tests := []struct {
-		input interface{}
-		want  interface{}
+		input any
+		want  any
 	}{
 		{[]int{1, 2, 2, 3, 1}, 3},
 		{[]int{}, nil},
 	}
 
 	for _, test := range tests {
-		if r := From(test.input).FirstWith(func(i interface{}) bool {
+		if r := From(test.input).FirstWith(func(i any) bool {
 			return i.(int) > 2
 		}); r != test.want {
 			t.Errorf("From(%v).FirstWith()=%v expected %v", test.input, r, test.want)
@@ -199,8 +199,8 @@ func TestFirstWithT_PanicWhenPredicateFnIsInvalid(t *testing.T) {
 
 func TestForEach(t *testing.T) {
 	tests := []struct {
-		input interface{}
-		want  interface{}
+		input any
+		want  any
 	}{
 		{[5]int{1, 2, 2, 35, 111}, []int{2, 4, 4, 70, 222}},
 		{[]int{}, []int{}},
@@ -208,7 +208,7 @@ func TestForEach(t *testing.T) {
 
 	for _, test := range tests {
 		output := []int{}
-		From(test.input).ForEach(func(item interface{}) {
+		From(test.input).ForEach(func(item any) {
 			output = append(output, item.(int)*2)
 		})
 
@@ -226,8 +226,8 @@ func TestForEachT_PanicWhenActionFnIsInvalid(t *testing.T) {
 
 func TestForEachIndexed(t *testing.T) {
 	tests := []struct {
-		input interface{}
-		want  interface{}
+		input any
+		want  any
 	}{
 		{[5]int{1, 2, 2, 35, 111}, []int{1, 3, 4, 38, 115}},
 		{[]int{}, []int{}},
@@ -235,7 +235,7 @@ func TestForEachIndexed(t *testing.T) {
 
 	for _, test := range tests {
 		output := []int{}
-		From(test.input).ForEachIndexed(func(index int, item interface{}) {
+		From(test.input).ForEachIndexed(func(index int, item any) {
 			output = append(output, item.(int)+index)
 		})
 
@@ -253,8 +253,8 @@ func TestForEachIndexedT_PanicWhenActionFnIsInvalid(t *testing.T) {
 
 func TestLast(t *testing.T) {
 	tests := []struct {
-		input interface{}
-		want  interface{}
+		input any
+		want  any
 	}{
 		{[]int{1, 2, 2, 3, 1}, 1},
 		{[]int{}, nil},
@@ -269,15 +269,15 @@ func TestLast(t *testing.T) {
 
 func TestLastWith(t *testing.T) {
 	tests := []struct {
-		input interface{}
-		want  interface{}
+		input any
+		want  any
 	}{
 		{[]int{1, 2, 2, 3, 1, 4, 2, 5, 1, 1}, 5},
 		{[]int{}, nil},
 	}
 
 	for _, test := range tests {
-		if r := From(test.input).LastWith(func(i interface{}) bool {
+		if r := From(test.input).LastWith(func(i any) bool {
 			return i.(int) > 2
 		}); r != test.want {
 			t.Errorf("From(%v).LastWith()=%v expected %v", test.input, r, test.want)
@@ -293,8 +293,8 @@ func TestLastWithT_PanicWhenPredicateFnIsInvalid(t *testing.T) {
 
 func TestMax(t *testing.T) {
 	tests := []struct {
-		input interface{}
-		want  interface{}
+		input any
+		want  any
 	}{
 		{[]int{1, 2, 2, 3, 1}, 3},
 		{[]int{1}, 1},
@@ -310,8 +310,8 @@ func TestMax(t *testing.T) {
 
 func TestMin(t *testing.T) {
 	tests := []struct {
-		input interface{}
-		want  interface{}
+		input any
+		want  any
 	}{
 		{[]int{1, 2, 2, 3, 0}, 0},
 		{[]int{1}, 1},
@@ -327,7 +327,7 @@ func TestMin(t *testing.T) {
 
 func TestResults(t *testing.T) {
 	input := []int{1, 2, 3}
-	want := []interface{}{1, 2, 3}
+	want := []any{1, 2, 3}
 
 	if r := From(input).Results(); !reflect.DeepEqual(r, want) {
 		t.Errorf("From(%v).Raw()=%v expected %v", input, r, want)
@@ -336,8 +336,8 @@ func TestResults(t *testing.T) {
 
 func TestSequenceEqual(t *testing.T) {
 	tests := []struct {
-		input  interface{}
-		input2 interface{}
+		input  any
+		input2 any
 		want   bool
 	}{
 		{[]int{1, 2, 2, 3, 1}, []int{4, 6}, false},
@@ -354,8 +354,8 @@ func TestSequenceEqual(t *testing.T) {
 
 func TestSingle(t *testing.T) {
 	tests := []struct {
-		input interface{}
-		want  interface{}
+		input any
+		want  any
 	}{
 		{[]int{1, 2, 2, 3, 1}, nil},
 		{[]int{1}, 1},
@@ -371,8 +371,8 @@ func TestSingle(t *testing.T) {
 
 func TestSingleWith(t *testing.T) {
 	tests := []struct {
-		input interface{}
-		want  interface{}
+		input any
+		want  any
 	}{
 		{[]int{1, 2, 2, 3, 1}, 3},
 		{[]int{1, 1, 1}, nil},
@@ -381,7 +381,7 @@ func TestSingleWith(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		if r := From(test.input).SingleWith(func(i interface{}) bool {
+		if r := From(test.input).SingleWith(func(i any) bool {
 			return i.(int) > 2
 		}); r != test.want {
 			t.Errorf("From(%v).SingleWith()=%v expected %v", test.input, r, test.want)
@@ -397,7 +397,7 @@ func TestSingleWithT_PanicWhenPredicateFnIsInvalid(t *testing.T) {
 
 func TestSumInts(t *testing.T) {
 	tests := []struct {
-		input interface{}
+		input any
 		want  int64
 	}{
 		{[]int{1, 2, 2, 3, 1}, 9},
@@ -414,7 +414,7 @@ func TestSumInts(t *testing.T) {
 
 func TestSumUInts(t *testing.T) {
 	tests := []struct {
-		input interface{}
+		input any
 		want  uint64
 	}{
 		{[]uint{1, 2, 2, 3, 1}, 9},
@@ -431,7 +431,7 @@ func TestSumUInts(t *testing.T) {
 
 func TestSumFloats(t *testing.T) {
 	tests := []struct {
-		input interface{}
+		input any
 		want  float64
 	}{
 		{[]float32{1., 2., 2., 3., 1.}, 9.},
@@ -447,7 +447,7 @@ func TestSumFloats(t *testing.T) {
 }
 
 func TestToChannel(t *testing.T) {
-	c := make(chan interface{})
+	c := make(chan any)
 	input := []int{1, 2, 3, 4, 5}
 
 	go func() {
@@ -502,10 +502,10 @@ func TestToMapBy(t *testing.T) {
 
 	result := make(map[int]bool)
 	From(input).ToMapBy(&result,
-		func(i interface{}) interface{} {
+		func(i any) any {
 			return i.(KeyValue).Key
 		},
-		func(i interface{}) interface{} {
+		func(i any) any {
 			return i.(KeyValue).Value
 		})
 

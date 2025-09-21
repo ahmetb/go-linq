@@ -7,11 +7,11 @@ import (
 func TestDefaultIfEmpty(t *testing.T) {
 	defaultValue := 0
 	tests := []struct {
-		input []interface{}
-		want  []interface{}
+		input []any
+		want  []any
 	}{
-		{[]interface{}{}, []interface{}{defaultValue}},
-		{[]interface{}{1, 2, 3, 4, 5}, []interface{}{1, 2, 3, 4, 5}},
+		{[]any{}, []any{defaultValue}},
+		{[]any{1, 2, 3, 4, 5}, []any{1, 2, 3, 4, 5}},
 	}
 
 	for _, test := range tests {
