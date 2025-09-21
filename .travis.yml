@@ -2,7 +2,7 @@ sudo: false
 
 language: go
 go:
-  - 1.11
+  - 1.23
   - tip
 
 install: true
