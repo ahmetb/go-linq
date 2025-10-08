@@ -1,13 +1,19 @@
 package linq
 
-import "testing"
+import (
+	"iter"
+	"testing"
+)
 
 func TestEmpty(t *testing.T) {
-	q := From([]string{}).OrderBy(func(in interface{}) interface{} {
+	q := From([]string{}).OrderBy(func(in any) any {
 		return 0
 	})
 
-	_, ok := q.Iterate()()
+	next, stop := iter.Pull(q.Iterate)
+	defer stop()
+
+	_, ok := next()
 	if ok {
 		t.Errorf("Iterator for empty collection must return ok=false")
 	}
@@ -20,12 +26,14 @@ func TestOrderBy(t *testing.T) {
 		slice[i].f1 = i
 	}
 
-	q := From(slice).OrderBy(func(i interface{}) interface{} {
+	q := From(slice).OrderBy(func(i any) any {
 		return i.(foo).f1
 	})
 
+	next, stop := iter.Pull(q.Iterate)
+	defer stop()
+
 	j := 0
-	next := q.Iterate()
 	for item, ok := next(); ok; item, ok = next() {
 		if item.(foo).f1 != j {
 			t.Errorf("OrderBy()[%v]=%v expected %v", j, item, foo{f1: j})
@@ -48,12 +56,14 @@ func TestOrderByDescending(t *testing.T) {
 		slice[i].f1 = i
 	}
 
-	q := From(slice).OrderByDescending(func(i interface{}) interface{} {
+	q := From(slice).OrderByDescending(func(i any) any {
 		return i.(foo).f1
 	})
 
+	next, stop := iter.Pull(q.Iterate)
+	defer stop()
+
 	j := len(slice) - 1
-	next := q.Iterate()
 	for item, ok := next(); ok; item, ok = next() {
 		if item.(foo).f1 != j {
 			t.Errorf("OrderByDescending()[%v]=%v expected %v", j, item, foo{f1: j})
@@ -77,13 +87,15 @@ func TestThenBy(t *testing.T) {
 		slice[i].f2 = i%2 == 0
 	}
 
-	q := From(slice).OrderBy(func(i interface{}) interface{} {
+	q := From(slice).OrderBy(func(i any) any {
 		return i.(foo).f2
-	}).ThenBy(func(i interface{}) interface{} {
+	}).ThenBy(func(i any) any {
 		return i.(foo).f1
 	})
 
-	next := q.Iterate()
+	next, stop := iter.Pull(q.Iterate)
+	defer stop()
+
 	for item, ok := next(); ok; item, ok = next() {
 		if item.(foo).f2 != (item.(foo).f1%2 == 0) {
 			t.Errorf("OrderBy().ThenBy()=%v", item)
@@ -107,13 +119,15 @@ func TestThenByDescending(t *testing.T) {
 		slice[i].f2 = i%2 == 0
 	}
 
-	q := From(slice).OrderBy(func(i interface{}) interface{} {
+	q := From(slice).OrderBy(func(i any) any {
 		return i.(foo).f2
-	}).ThenByDescending(func(i interface{}) interface{} {
+	}).ThenByDescending(func(i any) any {
 		return i.(foo).f1
 	})
 
-	next := q.Iterate()
+	next, stop := iter.Pull(q.Iterate)
+	defer stop()
+
 	for item, ok := next(); ok; item, ok = next() {
 		if item.(foo).f2 != (item.(foo).f1%2 == 0) {
 			t.Errorf("OrderBy().ThenByDescending()=%v", item)
@@ -136,12 +150,14 @@ func TestSort(t *testing.T) {
 		slice[i].f1 = i
 	}
 
-	q := From(slice).Sort(func(i, j interface{}) bool {
+	q := From(slice).Sort(func(i, j any) bool {
 		return i.(foo).f1 < j.(foo).f1
 	})
 
+	next, stop := iter.Pull(q.Iterate)
+	defer stop()
+
 	j := 0
-	next := q.Iterate()
 	for item, ok := next(); ok; item, ok = next() {
 		if item.(foo).f1 != j {
 			t.Errorf("Sort()[%v]=%v expected %v", j, item, foo{f1: j})

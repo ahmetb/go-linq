@@ -4,10 +4,10 @@ import "testing"
 
 func TestReverse(t *testing.T) {
 	tests := []struct {
-		input interface{}
-		want  []interface{}
+		input any
+		want  []any
 	}{
-		{[]int{1, 2, 3}, []interface{}{3, 2, 1}},
+		{[]int{1, 2, 3}, []any{3, 2, 1}},
 	}
 
 	for _, test := range tests {

@@ -4,8 +4,8 @@ import "testing"
 
 func TestGetComparer(t *testing.T) {
 	tests := []struct {
-		x    interface{}
-		y    interface{}
+		x    any
+		y    any
 		want int
 	}{
 		{100, 500, -1},

@@ -4,48 +4,30 @@ package linq
 // collection.
 func (q Query) Take(count int) Query {
 	return Query{
-		Iterate: func() Iterator {
-			next := q.Iterate()
+		Iterate: func(yield func(any) bool) {
 			n := count
-
-			return func() (item interface{}, ok bool) {
-				if n <= 0 {
-					return
+			q.Iterate(func(item any) bool {
+				if n > 0 {
+					n--
+					return yield(item)
 				}
-
-				n--
-				return next()
-			}
+				return false
+			})
 		},
 	}
 }
 
 // TakeWhile returns elements from a collection as long as a specified condition
-// is true, and then skips the remaining elements.
-func (q Query) TakeWhile(predicate func(interface{}) bool) Query {
+// is true and then skips the remaining elements.
+func (q Query) TakeWhile(predicate func(any) bool) Query {
 	return Query{
-		Iterate: func() Iterator {
-			next := q.Iterate()
-			done := false
-
-			return func() (item interface{}, ok bool) {
-				if done {
-					return
-				}
-
-				item, ok = next()
-				if !ok {
-					done = true
-					return
-				}
-
+		Iterate: func(yield func(any) bool) {
+			q.Iterate(func(item any) bool {
 				if predicate(item) {
-					return
+					return yield(item)
 				}
-
-				done = true
-				return nil, false
-			}
+				return false
+			})
 		},
 	}
 }
@@ -55,7 +37,7 @@ func (q Query) TakeWhile(predicate func(interface{}) bool) Query {
 //   - predicateFn is of type "func(TSource)bool"
 //
 // NOTE: TakeWhile has better performance than TakeWhileT.
-func (q Query) TakeWhileT(predicateFn interface{}) Query {
+func (q Query) TakeWhileT(predicateFn any) Query {
 
 	predicateGenericFunc, err := newGenericFunc(
 		"TakeWhileT", "predicateFn", predicateFn,
@@ -65,7 +47,7 @@ func (q Query) TakeWhileT(predicateFn interface{}) Query {
 		panic(err)
 	}
 
-	predicateFunc := func(item interface{}) bool {
+	predicateFunc := func(item any) bool {
 		return predicateGenericFunc.Call(item).(bool)
 	}
 
@@ -75,34 +57,19 @@ func (q Query) TakeWhileT(predicateFn interface{}) Query {
 // TakeWhileIndexed returns elements from a collection as long as a specified
 // condition is true. The element's index is used in the logic of the predicate
 // function. The first argument of predicate represents the zero-based index of
-// the element within collection. The second argument represents the element to
+// the element within the collection. The second argument represents the element to
 // test.
-func (q Query) TakeWhileIndexed(predicate func(int, interface{}) bool) Query {
+func (q Query) TakeWhileIndexed(predicate func(int, any) bool) Query {
 	return Query{
-		Iterate: func() Iterator {
-			next := q.Iterate()
-			done := false
+		Iterate: func(yield func(any) bool) {
 			index := 0
-
-			return func() (item interface{}, ok bool) {
-				if done {
-					return
-				}
-
-				item, ok = next()
-				if !ok {
-					done = true
-					return
-				}
-
+			q.Iterate(func(item any) bool {
 				if predicate(index, item) {
 					index++
-					return
+					return yield(item)
 				}
-
-				done = true
-				return nil, false
-			}
+				return false
+			})
 		},
 	}
 }
@@ -112,7 +79,7 @@ func (q Query) TakeWhileIndexed(predicate func(int, interface{}) bool) Query {
 //   - predicateFn is of type "func(int,TSource)bool"
 //
 // NOTE: TakeWhileIndexed has better performance than TakeWhileIndexedT.
-func (q Query) TakeWhileIndexedT(predicateFn interface{}) Query {
+func (q Query) TakeWhileIndexedT(predicateFn any) Query {
 	whereFunc, err := newGenericFunc(
 		"TakeWhileIndexedT", "predicateFn", predicateFn,
 		simpleParamValidator(newElemTypeSlice(new(int), new(genericType)), newElemTypeSlice(new(bool))),
@@ -121,7 +88,7 @@ func (q Query) TakeWhileIndexedT(predicateFn interface{}) Query {
 		panic(err)
 	}
 
-	predicateFunc := func(index int, item interface{}) bool {
+	predicateFunc := func(index int, item any) bool {
 		return whereFunc.Call(index, item).(bool)
 	}
 

@@ -1,8 +1,11 @@
 package linq
 
-import "testing"
-
-import "fmt"
+import (
+	"fmt"
+	"iter"
+	"slices"
+	"testing"
+)
 
 type foo struct {
 	f1 int
@@ -10,26 +13,20 @@ type foo struct {
 	f3 string
 }
 
-func (f foo) Iterate() Iterator {
-	i := 0
-
-	return func() (item interface{}, ok bool) {
-		switch i {
-		case 0:
-			item = f.f1
-			ok = true
-		case 1:
-			item = f.f2
-			ok = true
-		case 2:
-			item = f.f3
-			ok = true
-		default:
-			ok = false
+func (f foo) Iterate() iter.Seq[any] {
+	return func(yield func(any) bool) {
+		// Yield the first field and check if we should continue.
+		if !yield(f.f1) {
+			return
 		}
 
-		i++
-		return
+		// Yield the second field and check if we should continue.
+		if !yield(f.f2) {
+			return
+		}
+
+		// Yield the third and final field.
+		yield(f.f3)
 	}
 }
 
@@ -45,30 +42,17 @@ func (f foo) CompareTo(c Comparable) int {
 	return 0
 }
 
-func toSlice(q Query) (result []interface{}) {
-	next := q.Iterate()
-
-	for item, ok := next(); ok; item, ok = next() {
+func toSlice(q Query) (result []any) {
+	q.Iterate(func(item any) bool {
 		result = append(result, item)
-	}
+		return true
+	})
 
 	return
 }
 
-func validateQuery(q Query, output []interface{}) bool {
-	next := q.Iterate()
-
-	for _, oitem := range output {
-		qitem, _ := next()
-
-		if oitem != qitem {
-			return false
-		}
-	}
-
-	_, ok := next()
-	_, ok2 := next()
-	return !(ok || ok2)
+func validateQuery(q Query, expected []any) bool {
+	return slices.Equal(toSlice(q), expected)
 }
 
 func mustPanicWithError(t *testing.T, expectedErr string, f func()) {

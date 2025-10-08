@@ -8,8 +8,8 @@ import (
 func TestChannelToChannel(t *testing.T) {
 	input := []int{30, 40, 50}
 
-	inpCh := make(chan interface{})
-	resCh := make(chan interface{})
+	inpCh := make(chan any)
+	resCh := make(chan any)
 
 	go func() {
 		for _, i := range input {
@@ -20,7 +20,7 @@ func TestChannelToChannel(t *testing.T) {
 	}()
 
 	go func() {
-		FromChannel(inpCh).Where(func(i interface{}) bool {
+		FromChannel(inpCh).Where(func(i any) bool {
 			return i.(int) > 20
 		}).ToChannel(resCh)
 	}()

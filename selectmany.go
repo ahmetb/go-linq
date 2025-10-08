@@ -2,32 +2,23 @@ package linq
 
 // SelectMany projects each element of a collection to a Query, iterates and
 // flattens the resulting collection into one collection.
-func (q Query) SelectMany(selector func(interface{}) Query) Query {
+func (q Query) SelectMany(selector func(any) Query) Query {
 	return Query{
-		Iterate: func() Iterator {
-			outernext := q.Iterate()
-			var inner interface{}
-			var innernext Iterator
+		Iterate: func(yield func(any) bool) {
+			q.Iterate(func(outerItem any) bool {
+				keepGoing := true
 
-			return func() (item interface{}, ok bool) {
-				for !ok {
-					if inner == nil {
-						inner, ok = outernext()
-						if !ok {
-							return
-						}
-
-						innernext = selector(inner).Iterate()
+				innerQuery := selector(outerItem)
+				innerQuery.Iterate(func(innerItem any) bool {
+					if !yield(innerItem) {
+						keepGoing = false
+						return false
 					}
+					return true
+				})
 
-					item, ok = innernext()
-					if !ok {
-						inner = nil
-					}
-				}
-
-				return
-			}
+				return keepGoing
+			})
 		},
 	}
 }
@@ -37,7 +28,7 @@ func (q Query) SelectMany(selector func(interface{}) Query) Query {
 //   - selectorFn is of type "func(TSource)Query"
 //
 // NOTE: SelectMany has better performance than SelectManyT.
-func (q Query) SelectManyT(selectorFn interface{}) Query {
+func (q Query) SelectManyT(selectorFn any) Query {
 
 	selectManyGenericFunc, err := newGenericFunc(
 		"SelectManyT", "selectorFn", selectorFn,
@@ -47,7 +38,7 @@ func (q Query) SelectManyT(selectorFn interface{}) Query {
 		panic(err)
 	}
 
-	selectorFunc := func(inner interface{}) Query {
+	selectorFunc := func(inner any) Query {
 		return selectManyGenericFunc.Call(inner).(Query)
 	}
 	return q.SelectMany(selectorFunc)
@@ -63,34 +54,25 @@ func (q Query) SelectManyT(selectorFn interface{}) Query {
 // index, for example. It can also be useful if you want to retrieve the index
 // of one or more elements. The second argument to selector represents the
 // element to process.
-func (q Query) SelectManyIndexed(selector func(int, interface{}) Query) Query {
+func (q Query) SelectManyIndexed(selector func(index int, outer any) Query) Query {
 	return Query{
-		Iterate: func() Iterator {
-			outernext := q.Iterate()
+		Iterate: func(yield func(any) bool) {
 			index := 0
-			var inner interface{}
-			var innernext Iterator
+			q.Iterate(func(outerItem any) bool {
+				keepGoing := true
 
-			return func() (item interface{}, ok bool) {
-				for !ok {
-					if inner == nil {
-						inner, ok = outernext()
-						if !ok {
-							return
-						}
-
-						innernext = selector(index, inner).Iterate()
-						index++
+				innerQuery := selector(index, outerItem)
+				index++
+				innerQuery.Iterate(func(innerItem any) bool {
+					if !yield(innerItem) {
+						keepGoing = false
+						return false
 					}
+					return true
+				})
 
-					item, ok = innernext()
-					if !ok {
-						inner = nil
-					}
-				}
-
-				return
-			}
+				return keepGoing
+			})
 		},
 	}
 }
@@ -100,7 +82,7 @@ func (q Query) SelectManyIndexed(selector func(int, interface{}) Query) Query {
 //   - selectorFn is of type "func(int,TSource)Query"
 //
 // NOTE: SelectManyIndexed has better performance than SelectManyIndexedT.
-func (q Query) SelectManyIndexedT(selectorFn interface{}) Query {
+func (q Query) SelectManyIndexedT(selectorFn any) Query {
 
 	selectManyIndexedGenericFunc, err := newGenericFunc(
 		"SelectManyIndexedT", "selectorFn", selectorFn,
@@ -110,7 +92,7 @@ func (q Query) SelectManyIndexedT(selectorFn interface{}) Query {
 		panic(err)
 	}
 
-	selectorFunc := func(index int, inner interface{}) Query {
+	selectorFunc := func(index int, inner any) Query {
 		return selectManyIndexedGenericFunc.Call(index, inner).(Query)
 	}
 
@@ -120,35 +102,28 @@ func (q Query) SelectManyIndexedT(selectorFn interface{}) Query {
 // SelectManyBy projects each element of a collection to a Query, iterates and
 // flattens the resulting collection into one collection, and invokes a result
 // selector function on each element therein.
-func (q Query) SelectManyBy(selector func(interface{}) Query,
-	resultSelector func(interface{}, interface{}) interface{}) Query {
-
+func (q Query) SelectManyBy(
+	selector func(outer any) Query,
+	resultSelector func(inner, outer any) any,
+) Query {
 	return Query{
-		Iterate: func() Iterator {
-			outernext := q.Iterate()
-			var outer interface{}
-			var innernext Iterator
+		Iterate: func(yield func(any) bool) {
+			q.Iterate(func(outerItem any) bool {
+				keepGoing := true
+				innerQuery := selector(outerItem)
 
-			return func() (item interface{}, ok bool) {
-				for !ok {
-					if outer == nil {
-						outer, ok = outernext()
-						if !ok {
-							return
-						}
+				innerQuery.Iterate(func(innerItem any) bool {
+					result := resultSelector(innerItem, outerItem)
 
-						innernext = selector(outer).Iterate()
+					if !yield(result) {
+						keepGoing = false
+						return false
 					}
+					return true
+				})
 
-					item, ok = innernext()
-					if !ok {
-						outer = nil
-					}
-				}
-
-				item = resultSelector(item, outer)
-				return
-			}
+				return keepGoing
+			})
 		},
 	}
 }
@@ -159,8 +134,8 @@ func (q Query) SelectManyBy(selector func(interface{}) Query,
 //   - resultSelectorFn is of type "func(TSource,TCollection)TResult"
 //
 // NOTE: SelectManyBy has better performance than SelectManyByT.
-func (q Query) SelectManyByT(selectorFn interface{},
-	resultSelectorFn interface{}) Query {
+func (q Query) SelectManyByT(selectorFn any,
+	resultSelectorFn any) Query {
 
 	selectorGenericFunc, err := newGenericFunc(
 		"SelectManyByT", "selectorFn", selectorFn,
@@ -170,7 +145,7 @@ func (q Query) SelectManyByT(selectorFn interface{},
 		panic(err)
 	}
 
-	selectorFunc := func(outer interface{}) Query {
+	selectorFunc := func(outer any) Query {
 		return selectorGenericFunc.Call(outer).(Query)
 	}
 
@@ -182,7 +157,7 @@ func (q Query) SelectManyByT(selectorFn interface{},
 		panic(err)
 	}
 
-	resultSelectorFunc := func(outer interface{}, item interface{}) interface{} {
+	resultSelectorFunc := func(outer any, item any) any {
 		return resultSelectorGenericFunc.Call(outer, item)
 	}
 
@@ -193,37 +168,30 @@ func (q Query) SelectManyByT(selectorFn interface{},
 // iterates and flattens the resulting collection into one collection, and
 // invokes a result selector function on each element therein. The index of each
 // source element is used in the intermediate projected form of that element.
-func (q Query) SelectManyByIndexed(selector func(int, interface{}) Query,
-	resultSelector func(interface{}, interface{}) interface{}) Query {
-
+func (q Query) SelectManyByIndexed(
+	selector func(index int, outer any) Query,
+	resultSelector func(inner, outer any) any,
+) Query {
 	return Query{
-		Iterate: func() Iterator {
-			outernext := q.Iterate()
+		Iterate: func(yield func(any) bool) {
 			index := 0
-			var outer interface{}
-			var innernext Iterator
+			q.Iterate(func(outerItem any) bool {
+				innerQuery := selector(index, outerItem)
+				index++
 
-			return func() (item interface{}, ok bool) {
-				for !ok {
-					if outer == nil {
-						outer, ok = outernext()
-						if !ok {
-							return
-						}
+				keepGoing := true
+				innerQuery.Iterate(func(innerItem any) bool {
+					result := resultSelector(innerItem, outerItem)
 
-						innernext = selector(index, outer).Iterate()
-						index++
+					if !yield(result) {
+						keepGoing = false
+						return false
 					}
+					return true
+				})
 
-					item, ok = innernext()
-					if !ok {
-						outer = nil
-					}
-				}
-
-				item = resultSelector(item, outer)
-				return
-			}
+				return keepGoing
+			})
 		},
 	}
 }
@@ -235,8 +203,8 @@ func (q Query) SelectManyByIndexed(selector func(int, interface{}) Query,
 //
 // NOTE: SelectManyByIndexed has better performance than
 // SelectManyByIndexedT.
-func (q Query) SelectManyByIndexedT(selectorFn interface{},
-	resultSelectorFn interface{}) Query {
+func (q Query) SelectManyByIndexedT(selectorFn any,
+	resultSelectorFn any) Query {
 	selectorGenericFunc, err := newGenericFunc(
 		"SelectManyByIndexedT", "selectorFn", selectorFn,
 		simpleParamValidator(newElemTypeSlice(new(int), new(genericType)), newElemTypeSlice(new(Query))),
@@ -245,7 +213,7 @@ func (q Query) SelectManyByIndexedT(selectorFn interface{},
 		panic(err)
 	}
 
-	selectorFunc := func(index int, outer interface{}) Query {
+	selectorFunc := func(index int, outer any) Query {
 		return selectorGenericFunc.Call(index, outer).(Query)
 	}
 
@@ -257,7 +225,7 @@ func (q Query) SelectManyByIndexedT(selectorFn interface{},
 		panic(err)
 	}
 
-	resultSelectorFunc := func(outer interface{}, item interface{}) interface{} {
+	resultSelectorFunc := func(outer any, item any) any {
 		return resultSelectorGenericFunc.Call(outer, item)
 	}
 
