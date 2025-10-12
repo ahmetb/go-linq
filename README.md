@@ -12,12 +12,12 @@ A powerful language integrated query (LINQ) library for Go.
 
 When used with Go modules, use the following import path:
 
-    go get github.com/ahmetb/go-linq/v3
+    go get github.com/ahmetb/go-linq/v4
 
 Older versions of Go using different dependency management tools can use the
 following import path to prevent breaking API changes:
 
-    go get gopkg.in/ahmetb/go-linq.v3
+    go get gopkg.in/ahmetb/go-linq.v4
 
 ## Quickstart
 
@@ -28,7 +28,7 @@ Usage is as easy as chaining methods like:
 **Example 1: Find all owners of cars manufactured after 2015**
 
 ```go
-import . "github.com/ahmetb/go-linq/v3"
+import . "github.com/ahmetb/go-linq/v4"
 
 type Car struct {
     year int
@@ -63,7 +63,7 @@ From(cars).WhereT(func(c Car) bool {
 **Example 2: Find the author who has written the most books**
 
 ```go
-import . "github.com/ahmetb/go-linq/v3"
+import . "github.com/ahmetb/go-linq/v4"
 
 type Book struct {
 	id      int
