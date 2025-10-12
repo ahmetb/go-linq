@@ -91,6 +91,7 @@ func (q Query) OrderByDescending(selector func(interface{}) interface{}) Ordered
 
 // OrderByDescendingT is the typed version of OrderByDescending.
 //   - selectorFn is of type "func(TSource) TKey"
+//
 // NOTE: OrderByDescending has better performance than OrderByDescendingT.
 func (q Query) OrderByDescendingT(selectorFn interface{}) OrderedQuery {
 	selectorGenericFunc, err := newGenericFunc(
@@ -138,6 +139,7 @@ func (oq OrderedQuery) ThenBy(
 
 // ThenByT is the typed version of ThenBy.
 //   - selectorFn is of type "func(TSource) TKey"
+//
 // NOTE: ThenBy has better performance than ThenByT.
 func (oq OrderedQuery) ThenByT(selectorFn interface{}) OrderedQuery {
 	selectorGenericFunc, err := newGenericFunc(
@@ -184,6 +186,7 @@ func (oq OrderedQuery) ThenByDescending(selector func(interface{}) interface{}) 
 
 // ThenByDescendingT is the typed version of ThenByDescending.
 //   - selectorFn is of type "func(TSource) TKey"
+//
 // NOTE: ThenByDescending has better performance than ThenByDescendingT.
 func (oq OrderedQuery) ThenByDescendingT(selectorFn interface{}) OrderedQuery {
 	selectorFunc, ok := selectorFn.(func(interface{}) interface{})
@@ -230,6 +233,7 @@ func (q Query) Sort(less func(i, j interface{}) bool) Query {
 
 // SortT is the typed version of Sort.
 //   - lessFn is of type "func(TSource,TSource) bool"
+//
 // NOTE: Sort has better performance than SortT.
 func (q Query) SortT(lessFn interface{}) Query {
 	lessGenericFunc, err := newGenericFunc(

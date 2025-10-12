@@ -47,7 +47,7 @@ jobs:
         run: go vet -x ./...
 
       - name: Check Formatting
-        run: test -z "$(gofmt -s -l -w . | tee /dev/stderr)" -e
+        run: test -z "$(gofmt -s -l -w . | tee /dev/stderr)"
 
       - name: Run Tests
         run: go test -v ./...
