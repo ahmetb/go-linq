@@ -2627,3 +2627,25 @@ func ExampleFromChannel() {
 	// Output:
 	// [one two three]
 }
+
+type MyQuery Query
+
+func (q MyQuery) GreaterThan(threshold int) Query {
+	return Query{
+		Iterate: func(yield func(any) bool) {
+			q.Iterate(func(item any) bool {
+				if item.(int) > threshold {
+					return yield(item)
+				}
+				return true
+			})
+		},
+	}
+}
+
+func ExampleMyQuery_GreaterThan() {
+	result := MyQuery(Range(1, 10)).GreaterThan(5).Results()
+	fmt.Println(result)
+	// Output:
+	// [6 7 8 9 10]
+}

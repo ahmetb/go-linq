@@ -40,7 +40,7 @@ type Car struct {
 
 var owners []string
 
-From(cars).Where(func(c any) bool {
+FromSlice(cars).Where(func(c any) bool {
 	return c.(Car).year >= 2015
 }).Select(func(c any) any {
 	return c.(Car).owner
@@ -53,7 +53,7 @@ Or, you can use generic functions, like `WhereT` and `SelectT` to simplify your 
 ```go
 var owners []string
 
-From(cars).WhereT(func(c Car) bool {
+FromSlice(cars).WhereT(func(c Car) bool {
 	return c.year >= 2015
 }).SelectT(func(c Car) string {
 	return c.owner
@@ -71,7 +71,7 @@ type Book struct {
 	authors []string
 }
 
-author := From(books).SelectMany( // make a flat array of authors
+author := FromSlice(books).SelectMany( // make a flat array of authors
 	func(book any) Query {
 		return From(book.(Book).authors)
 	}).GroupBy( // group by author
@@ -94,21 +94,16 @@ author := From(books).SelectMany( // make a flat array of authors
 type MyQuery Query
 
 func (q MyQuery) GreaterThan(threshold int) Query {
-	return Query{
-		Iterate: func() Iterator {
-			next := q.Iterate()
-
-			return func() (item any, ok bool) {
-				for item, ok = next(); ok; item, ok = next() {
-					if item.(int) > threshold {
-						return
-					}
-				}
-
-				return
-			}
-		},
-	}
+    return Query{
+        Iterate: func(yield func(any) bool) {
+            q.Iterate(func(item any) bool {
+                if item.(int) > threshold {
+                    return yield(item)
+                }
+                return true
+            })
+        },
+    }
 }
 
 result := MyQuery(Range(1,10)).GreaterThan(5).Results()
@@ -161,11 +156,47 @@ From(sentences).
 	ToSlice(&results)
 ```
 
+## Manual Iteration
+
+Since **go-linq v4** manual iteration follows Go’s standard iterator pattern introduced with the `iter` package.
+The Query type exposes an `Iterate` field of type `iter.Seq[any]`, making it easier to integrate with Go’s native
+iteration style.
+
+**Example 5: Iterate over a query using the standard `for ... range` loop**
+
+```go
+q := FromSlice([]int{1, 2, 3, 4})
+
+for v := range q.Iterate {
+	fmt.Println(v)
+}
+```
+
 **More examples** can be found in the [documentation](https://godoc.org/github.com/ahmetb/go-linq).
+
+## Data Source Constructors
+
+Since **go-linq v4**, a new family of constructor functions provides a type-safe and efficient way to create queries from
+various data sources. Each function is optimized for its specific input type, avoiding the overhead of reflection.
+
+Available constructors:
+- `FromSlice` - creates a query from a slice
+- `FromMap` - creates a query from a map
+- `FromChannel` - creates a query from a channel
+- `FromString` - creates a query from a string (iterating over runes)
+- `FromIterable` - creates a query from a custom collection implementing the `Iterable` interface
+
+The older `From` function remains available for backward compatibility, but it relies on runtime reflection and is
+significantly less efficient. For all new code, it’s recommended to use the explicit `From*` constructors.
 
 ## Release Notes
 
 ```text
+v4.0.0 (2025-10-12)
+* Breaking change: Migrated to standard Go iterator pattern. (thanks @kalaninja!)
+* Added typed constructors: FromSlice(), FromMap(), FromChannel(), FromString().
+* Breaking change: Removed FromChannelT() in favor of FromChannel().
+
 v3.2.0 (2020-12-29)
 * Added FromChannelT().
 * Added DefaultIfEmpty().
