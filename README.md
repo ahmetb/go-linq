@@ -40,9 +40,9 @@ type Car struct {
 
 var owners []string
 
-From(cars).Where(func(c interface{}) bool {
+From(cars).Where(func(c any) bool {
 	return c.(Car).year >= 2015
-}).Select(func(c interface{}) interface{} {
+}).Select(func(c any) any {
 	return c.(Car).owner
 }).ToSlice(&owners)
 ```
@@ -72,18 +72,18 @@ type Book struct {
 }
 
 author := From(books).SelectMany( // make a flat array of authors
-	func(book interface{}) Query {
+	func(book any) Query {
 		return From(book.(Book).authors)
 	}).GroupBy( // group by author
-	func(author interface{}) interface{} {
+	func(author any) any {
 		return author // author as key
-	}, func(author interface{}) interface{} {
+	}, func(author any) any {
 		return author // author as value
 	}).OrderByDescending( // sort groups by its length
-	func(group interface{}) interface{} {
+	func(group any) any {
 		return len(group.(Group).Group)
 	}).Select( // get authors out of groups
-	func(group interface{}) interface{} {
+	func(group any) any {
 		return group.(Group).Key
 	}).First() // take the first author
 ```
@@ -98,7 +98,7 @@ func (q MyQuery) GreaterThan(threshold int) Query {
 		Iterate: func() Iterator {
 			next := q.Iterate()
 
-			return func() (item interface{}, ok bool) {
+			return func() (item any, ok bool) {
 				for item, ok = next(); ok; item, ok = next() {
 					if item.(int) > threshold {
 						return
@@ -117,18 +117,18 @@ result := MyQuery(Range(1,10)).GreaterThan(5).Results()
 ## Generic Functions
 
 Although Go doesn't implement generics, with some reflection tricks, you can use go-linq without
-typing `interface{}`s and type assertions. This will introduce a performance penalty (5x-10x slower)
+typing `any`s and type assertions. This will introduce a performance penalty (5x-10x slower)
 but will yield in a cleaner and more readable code.
 
 Methods with `T` suffix (such as `WhereT`) accept functions with generic types. So instead of
 
-    .Select(func(v interface{}) interface{} {...})
+    .Select(func(v any) any {...})
 
 you can type:
 
     .SelectT(func(v YourType) YourOtherType {...})
 
-This will make your code free of `interface{}` and type assertions.
+This will make your code free of `any` and type assertions.
 
 **Example 4: "MapReduce" in a slice of string sentences to list the top 5 most used words using generic functions**
 
