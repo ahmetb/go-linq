@@ -12,12 +12,12 @@ A powerful language integrated query (LINQ) library for Go.
 
 When used with Go modules, use the following import path:
 
-    go get github.com/ahmetb/go-linq/v3
+    go get github.com/ahmetb/go-linq/v4
 
 Older versions of Go using different dependency management tools can use the
 following import path to prevent breaking API changes:
 
-    go get gopkg.in/ahmetb/go-linq.v3
+    go get gopkg.in/ahmetb/go-linq.v4
 
 ## Quickstart
 
@@ -28,7 +28,7 @@ Usage is as easy as chaining methods like:
 **Example 1: Find all owners of cars manufactured after 2015**
 
 ```go
-import . "github.com/ahmetb/go-linq/v3"
+import . "github.com/ahmetb/go-linq/v4"
 
 type Car struct {
     year int
@@ -40,9 +40,9 @@ type Car struct {
 
 var owners []string
 
-From(cars).Where(func(c interface{}) bool {
+FromSlice(cars).Where(func(c any) bool {
 	return c.(Car).year >= 2015
-}).Select(func(c interface{}) interface{} {
+}).Select(func(c any) any {
 	return c.(Car).owner
 }).ToSlice(&owners)
 ```
@@ -53,7 +53,7 @@ Or, you can use generic functions, like `WhereT` and `SelectT` to simplify your 
 ```go
 var owners []string
 
-From(cars).WhereT(func(c Car) bool {
+FromSlice(cars).WhereT(func(c Car) bool {
 	return c.year >= 2015
 }).SelectT(func(c Car) string {
 	return c.owner
@@ -63,7 +63,7 @@ From(cars).WhereT(func(c Car) bool {
 **Example 2: Find the author who has written the most books**
 
 ```go
-import . "github.com/ahmetb/go-linq/v3"
+import . "github.com/ahmetb/go-linq/v4"
 
 type Book struct {
 	id      int
@@ -71,19 +71,19 @@ type Book struct {
 	authors []string
 }
 
-author := From(books).SelectMany( // make a flat array of authors
-	func(book interface{}) Query {
+author := FromSlice(books).SelectMany( // make a flat array of authors
+	func(book any) Query {
 		return From(book.(Book).authors)
 	}).GroupBy( // group by author
-	func(author interface{}) interface{} {
+	func(author any) any {
 		return author // author as key
-	}, func(author interface{}) interface{} {
+	}, func(author any) any {
 		return author // author as value
 	}).OrderByDescending( // sort groups by its length
-	func(group interface{}) interface{} {
+	func(group any) any {
 		return len(group.(Group).Group)
 	}).Select( // get authors out of groups
-	func(group interface{}) interface{} {
+	func(group any) any {
 		return group.(Group).Key
 	}).First() // take the first author
 ```
@@ -94,21 +94,16 @@ author := From(books).SelectMany( // make a flat array of authors
 type MyQuery Query
 
 func (q MyQuery) GreaterThan(threshold int) Query {
-	return Query{
-		Iterate: func() Iterator {
-			next := q.Iterate()
-
-			return func() (item interface{}, ok bool) {
-				for item, ok = next(); ok; item, ok = next() {
-					if item.(int) > threshold {
-						return
-					}
-				}
-
-				return
-			}
-		},
-	}
+    return Query{
+        Iterate: func(yield func(any) bool) {
+            q.Iterate(func(item any) bool {
+                if item.(int) > threshold {
+                    return yield(item)
+                }
+                return true
+            })
+        },
+    }
 }
 
 result := MyQuery(Range(1,10)).GreaterThan(5).Results()
@@ -117,18 +112,18 @@ result := MyQuery(Range(1,10)).GreaterThan(5).Results()
 ## Generic Functions
 
 Although Go doesn't implement generics, with some reflection tricks, you can use go-linq without
-typing `interface{}`s and type assertions. This will introduce a performance penalty (5x-10x slower)
+typing `any`s and type assertions. This will introduce a performance penalty (5x-10x slower)
 but will yield in a cleaner and more readable code.
 
 Methods with `T` suffix (such as `WhereT`) accept functions with generic types. So instead of
 
-    .Select(func(v interface{}) interface{} {...})
+    .Select(func(v any) any {...})
 
 you can type:
 
     .SelectT(func(v YourType) YourOtherType {...})
 
-This will make your code free of `interface{}` and type assertions.
+This will make your code free of `any` and type assertions.
 
 **Example 4: "MapReduce" in a slice of string sentences to list the top 5 most used words using generic functions**
 
@@ -161,11 +156,47 @@ From(sentences).
 	ToSlice(&results)
 ```
 
+## Manual Iteration
+
+Since **go-linq v4** manual iteration follows Go’s standard iterator pattern introduced with the `iter` package.
+The Query type exposes an `Iterate` field of type `iter.Seq[any]`, making it easier to integrate with Go’s native
+iteration style.
+
+**Example 5: Iterate over a query using the standard `for ... range` loop**
+
+```go
+q := FromSlice([]int{1, 2, 3, 4})
+
+for v := range q.Iterate {
+	fmt.Println(v)
+}
+```
+
 **More examples** can be found in the [documentation](https://godoc.org/github.com/ahmetb/go-linq).
+
+## Data Source Constructors
+
+Since **go-linq v4**, a new family of constructor functions provides a type-safe and efficient way to create queries from
+various data sources. Each function is optimized for its specific input type, avoiding the overhead of reflection.
+
+Available constructors:
+- `FromSlice` - creates a query from a slice
+- `FromMap` - creates a query from a map
+- `FromChannel` - creates a query from a channel
+- `FromString` - creates a query from a string (iterating over runes)
+- `FromIterable` - creates a query from a custom collection implementing the `Iterable` interface
+
+The older `From` function remains available for backward compatibility, but it relies on runtime reflection and is
+significantly less efficient. For all new code, it’s recommended to use the explicit `From*` constructors.
 
 ## Release Notes
 
 ```text
+v4.0.0 (2025-10-12)
+* Breaking change: Migrated to standard Go iterator pattern. (thanks @kalaninja!)
+* Added typed constructors: FromSlice(), FromMap(), FromChannel(), FromString().
+* Breaking change: Removed FromChannelT() in favor of FromChannel().
+
 v3.2.0 (2020-12-29)
 * Added FromChannelT().
 * Added DefaultIfEmpty().
