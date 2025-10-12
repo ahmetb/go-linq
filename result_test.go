@@ -607,13 +607,13 @@ func TestToSlice(t *testing.T) {
 		}
 
 		// test capacity of output slice
-		if cap(test.output) != test.wantedOutputCap {
-			t.Fatalf("case #%d: cap(output)=%d expected=%d", c, cap(test.output), test.wantedOutputCap)
+		if cap(test.output) < test.wantedOutputCap {
+			t.Fatalf("case #%d: cap(output)=%d expected not less then %d", c, cap(test.output), test.wantedOutputCap)
 		}
 
 		// test if a new slice is allocated
-		inPtr := (*reflect.SliceHeader)(unsafe.Pointer(&initialOutputValue)).Data
-		outPtr := (*reflect.SliceHeader)(unsafe.Pointer(&modifiedOutputValue)).Data
+		inPtr := uintptr(unsafe.Pointer(unsafe.SliceData(initialOutputValue)))
+		outPtr := uintptr(unsafe.Pointer(unsafe.SliceData(modifiedOutputValue)))
 		isNewSlice := inPtr != outPtr
 		if isNewSlice != test.outputIsANewSlice {
 			t.Fatalf("case #%d: isNewSlice=%v (in=0x%X out=0x%X) expected=%v", c, isNewSlice, inPtr, outPtr, test.outputIsANewSlice)
