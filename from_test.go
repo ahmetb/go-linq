@@ -1,6 +1,9 @@
 package linq
 
-import "testing"
+import (
+	"testing"
+	"time"
+)
 
 func TestFromSlice(t *testing.T) {
 	s := [3]int{1, 2, 3}
@@ -31,6 +34,34 @@ func TestFromChannel(t *testing.T) {
 
 	if q := FromChannel(c); !validateQuery(q, w) {
 		t.Errorf("FromChannel() failed expected %v", w)
+	}
+}
+
+func TestFromChannelWithTimeout_Timeout(t *testing.T) {
+	c := make(chan int, 3)
+	defer close(c)
+	c <- 10
+	c <- 15
+	c <- -3
+
+	w := []any{10, 15, -3}
+
+	if q := FromChannelWithTimeout(c, time.Second); !validateQuery(q, w) {
+		t.Errorf("FromChannelWithTimeout() failed expected %v", w)
+	}
+}
+
+func TestFromChannelWithTimeout_Closed(t *testing.T) {
+	c := make(chan int, 3)
+	c <- 10
+	c <- 15
+	c <- -3
+	close(c)
+
+	w := []any{10, 15, -3}
+
+	if q := FromChannelWithTimeout(c, time.Hour); !validateQuery(q, w) {
+		t.Errorf("FromChannelWithTimeout() failed expected %v", w)
 	}
 }
 

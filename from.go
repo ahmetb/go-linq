@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"iter"
 	"reflect"
+	"time"
 )
 
 // Query is the type returned from query functions. It can be iterated manually
@@ -61,6 +62,34 @@ func FromChannel[T any](source <-chan T) Query {
 		Iterate: func(yield func(any) bool) {
 			for item := range source {
 				if !yield(item) {
+					return
+				}
+			}
+		},
+	}
+}
+
+// FromChannelWithTimeout initializes a linq query with a passed channel,
+// but stops iterating either when the channel is closed or when the timeout elapses.
+func FromChannelWithTimeout[T any](source <-chan T, timeout time.Duration) Query {
+	return Query{
+		Iterate: func(yield func(any) bool) {
+			timer := time.NewTimer(timeout)
+			defer timer.Stop()
+
+			for {
+				select {
+				case item, ok := <-source:
+					if !ok {
+						// channel closed
+						return
+					}
+					if !yield(item) {
+						// consumer stopped early
+						return
+					}
+				case <-timer.C:
+					// timeout elapsed
 					return
 				}
 			}
