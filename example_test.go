@@ -716,10 +716,10 @@ func ExampleQuery_OrderByDescending() {
 // The following code example demonstrates how to use ThenByDescending to perform
 // a secondary ordering of the elements in a slice in descending order.
 func ExampleOrderedQuery_ThenByDescending() {
-	fruits := []string{"apPLe", "baNanA", "apple", "APple", "orange", "BAnana", "ORANGE", "apPLE"}
+	fruits := []string{"apPLe", "baNanA", "apple", "APple", "orange", "BAnana", "ORANGE"}
 
 	// Sort the strings first ascending by their length and
-	// then descending using a custom case insensitive comparer.
+	// then descending using a custom case-insensitive comparer.
 	var query []string
 	From(fruits).
 		OrderBy(
@@ -728,21 +728,22 @@ func ExampleOrderedQuery_ThenByDescending() {
 		ThenByDescending(
 			func(fruit interface{}) interface{} { return fruit.(string)[0] },
 		).
+		ThenByDescending(
+			func(fruit interface{}) interface{} { return fruit.(string)[3] },
+		).
 		ToSlice(&query)
 
 	for _, fruit := range query {
 		fmt.Println(fruit)
 	}
 	// Output:
-	// apPLe
-	// apPLE
 	// apple
+	// apPLe
 	// APple
 	// orange
 	// baNanA
 	// ORANGE
 	// BAnana
-
 }
 
 // The following code example demonstrates how to use Concat
