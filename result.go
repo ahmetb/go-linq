@@ -630,35 +630,36 @@ func (q Query) ToMapByT(result any,
 // resliced slice. If it does not, a new underlying array will be allocated and
 // v will point to it.
 func (q Query) ToSlice(v any) {
-	res := reflect.ValueOf(v)
-	slice := reflect.Indirect(res)
+	ptrValue := reflect.ValueOf(v)
+	if ptrValue.Kind() != reflect.Ptr || ptrValue.IsNil() {
+		panic("ToSlice: v must be a pointer to a slice")
+	}
 
-	cap := slice.Cap()
-	res.Elem().Set(slice.Slice(0, cap)) // make len(slice)==cap(slice) from now on
+	sliceValue := reflect.Indirect(ptrValue)
+	if sliceValue.Kind() != reflect.Slice {
+		panic("ToSlice: v must point to a slice")
+	}
 
-	index := 0
+	// Reset length to 0 but keep capacity (like s = s[:0])
+	// This preserves any existing capacity for reuse.
+	out := sliceValue.Slice(0, 0)
+
+	elemType := sliceValue.Type().Elem()
 	for item := range q.Iterate {
-		if index >= cap {
-			slice, cap = grow(slice)
+		itemValue := reflect.ValueOf(item)
+
+		// Ensure type compatibility with the slice element type.
+		if !itemValue.Type().AssignableTo(elemType) {
+			if itemValue.Type().ConvertibleTo(elemType) {
+				itemValue = itemValue.Convert(elemType)
+			} else {
+				panic("ToSlice: item type is not assignable/convertible to slice element type")
+			}
 		}
-		slice.Index(index).Set(reflect.ValueOf(item))
-		index++
+
+		out = reflect.Append(out, itemValue)
 	}
 
-	// reslice the len(res)==cap(res) actual res size
-	res.Elem().Set(slice.Slice(0, index))
-}
-
-// grow grows the slice s by doubling its capacity, then it returns the new
-// slice (resliced to its full capacity) and the new capacity.
-func grow(s reflect.Value) (v reflect.Value, newCap int) {
-	cap := s.Cap()
-	if cap == 0 {
-		cap = 1
-	} else {
-		cap *= 2
-	}
-	newSlice := reflect.MakeSlice(s.Type(), cap, cap)
-	reflect.Copy(newSlice, s)
-	return newSlice, cap
+	// Point v to the final slice (which may have a new backing array).
+	ptrValue.Elem().Set(out)
 }
