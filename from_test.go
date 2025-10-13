@@ -50,7 +50,7 @@ func TestFromChannelWithContext_Cancel(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	if q := FromChannelWithContext(c, ctx); !validateQuery(q, w) {
+	if q := FromChannelWithContext(ctx, c); !validateQuery(q, w) {
 		t.Errorf("FromChannelWithContext() failed expected %v", w)
 	}
 }
@@ -66,7 +66,7 @@ func TestFromChannelWithContext_Closed(t *testing.T) {
 
 	ctx := context.Background()
 
-	if q := FromChannelWithContext(c, ctx); !validateQuery(q, w) {
+	if q := FromChannelWithContext(ctx, c); !validateQuery(q, w) {
 		t.Errorf("FromChannelWithContext() failed expected %v", w)
 	}
 }

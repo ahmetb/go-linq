@@ -72,7 +72,7 @@ func FromChannel[T any](source <-chan T) Query {
 
 // FromChannelWithContext initializes a linq query with a passed channel
 // and stops iterating either when the channel is closed or when the context is canceled.
-func FromChannelWithContext[T any](source <-chan T, ctx context.Context) Query {
+func FromChannelWithContext[T any](ctx context.Context, source <-chan T) Query {
 	return Query{
 		Iterate: func(yield func(any) bool) {
 			for {
@@ -103,7 +103,7 @@ func FromChannelWithTimeout[T any](source <-chan T, timeout time.Duration) Query
 		Iterate: func(yield func(any) bool) {
 			// cancel once iteration finishes (or is stopped)
 			defer cancel()
-			FromChannelWithContext(source, ctx).Iterate(yield)
+			FromChannelWithContext(ctx, source).Iterate(yield)
 		},
 	}
 }
