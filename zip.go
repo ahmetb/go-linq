@@ -27,7 +27,7 @@ func (q Query) Zip(q2 Query,
 				item1, ok1 := next1()
 				item2, ok2 := next2()
 
-				if !(ok1 && ok2) {
+				if !ok1 || !ok2 {
 					return
 				}
 
