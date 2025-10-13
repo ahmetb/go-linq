@@ -66,7 +66,7 @@ func TestNewGenericFunc(t *testing.T) {
 
 	for _, test := range tests {
 		_, err := newGenericFunc(test.methodName, test.paramName, test.function, test.validationFunc)
-		if !(err == test.exception || err.Error() == test.exception.Error()) {
+		if err != test.exception && err.Error() != test.exception.Error() {
 			t.Errorf("Validate expect error: %s, actual: %s", test.exception, err)
 		}
 	}
@@ -112,7 +112,7 @@ func TestCall(t *testing.T) {
 		func() {
 			defer func() {
 				r := recover()
-				if !(r == test.exception || r == test.exception.Error()) {
+				if r != test.exception && r != test.exception.Error() {
 					t.Errorf("expect error: nil, actual: %s", r)
 				}
 			}()

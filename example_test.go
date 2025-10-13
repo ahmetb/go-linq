@@ -326,8 +326,8 @@ func ExampleQuery_Append() {
 	// 5
 }
 
-//The following code example demonstrates how to use Average
-//to calculate the average of a slice of values.
+// The following code example demonstrates how to use Average
+// to calculate the average of a slice of values.
 func ExampleQuery_Average() {
 	grades := []int{78, 92, 100, 37, 81}
 	average := From(grades).Average()
@@ -360,8 +360,8 @@ func ExampleQuery_Contains() {
 	// Does the slice contains 5? true
 }
 
-//The following code example demonstrates how to use CountWith
-//to count the even numbers in an array.
+// The following code example demonstrates how to use CountWith
+// to count the even numbers in an array.
 func ExampleQuery_CountWith() {
 	slice := []int{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
 
@@ -445,8 +445,8 @@ func ExampleQuery_DefaultIfEmpty() {
 
 }
 
-//The following code example demonstrates how to use Distinct
-//to return distinct elements from a slice of integers.
+// The following code example demonstrates how to use Distinct
+// to return distinct elements from a slice of integers.
 func ExampleQuery_Distinct() {
 	ages := []int{21, 46, 46, 55, 17, 21, 55, 55}
 
@@ -567,7 +567,7 @@ func ExampleQuery_First() {
 
 }
 
-//The following code example demonstrates how to use FirstWith
+// The following code example demonstrates how to use FirstWith
 // to return the first element of an array that satisfies a condition.
 func ExampleQuery_FirstWith() {
 	numbers := []int{9, 34, 65, 92, 87, 435, 3, 54, 83, 23, 87, 435, 67, 12, 19}
@@ -583,8 +583,8 @@ func ExampleQuery_FirstWith() {
 
 }
 
-//The following code example demonstrates how to use Intersect
-//to return the elements that appear in each of two slices of integers.
+// The following code example demonstrates how to use Intersect
+// to return the elements that appear in each of two slices of integers.
 func ExampleQuery_Intersect() {
 	id1 := []int{44, 26, 92, 30, 71, 38}
 	id2 := []int{39, 59, 83, 47, 26, 4, 30}
@@ -603,8 +603,8 @@ func ExampleQuery_Intersect() {
 
 }
 
-//The following code example demonstrates how to use IntersectBy
-//to return the elements that appear in each of two slices of products with same Code.
+// The following code example demonstrates how to use IntersectBy
+// to return the elements that appear in each of two slices of products with same Code.
 func ExampleQuery_IntersectBy() {
 	type Product struct {
 		Name string
@@ -716,10 +716,10 @@ func ExampleQuery_OrderByDescending() {
 // The following code example demonstrates how to use ThenByDescending to perform
 // a secondary ordering of the elements in a slice in descending order.
 func ExampleOrderedQuery_ThenByDescending() {
-	fruits := []string{"apPLe", "baNanA", "apple", "APple", "orange", "BAnana", "ORANGE", "apPLE"}
+	fruits := []string{"apPLe", "baNanA", "apple", "APple", "orange", "BAnana", "ORANGE"}
 
 	// Sort the strings first ascending by their length and
-	// then descending using a custom case insensitive comparer.
+	// then descending using a custom case-insensitive comparer.
 	var query []string
 	From(fruits).
 		OrderBy(
@@ -728,21 +728,22 @@ func ExampleOrderedQuery_ThenByDescending() {
 		ThenByDescending(
 			func(fruit interface{}) interface{} { return fruit.(string)[0] },
 		).
+		ThenByDescending(
+			func(fruit interface{}) interface{} { return fruit.(string)[3] },
+		).
 		ToSlice(&query)
 
 	for _, fruit := range query {
 		fmt.Println(fruit)
 	}
 	// Output:
-	// apPLe
-	// apPLE
 	// apple
+	// apPLe
 	// APple
 	// orange
 	// baNanA
 	// ORANGE
 	// BAnana
-
 }
 
 // The following code example demonstrates how to use Concat
@@ -1281,7 +1282,7 @@ func ExampleQuery_SumUInts() {
 }
 
 // The following code example demonstrates how to use Take
-//  to return elements from the start of a slice.
+// to return elements from the start of a slice.
 func ExampleQuery_Take() {
 	grades := []int{59, 82, 70, 56, 92, 98, 85}
 
@@ -1910,7 +1911,7 @@ func ExampleQuery_GroupByT() {
 }
 
 // The following code example demonstrates how to use GroupJoinT
-//  to perform a grouped join on two slices.
+// to perform a grouped join on two slices.
 func ExampleQuery_GroupJoinT() {
 
 	type Person struct {
@@ -2405,7 +2406,7 @@ func ExampleQuery_SelectManyByIndexedT() {
 
 }
 
-//The following code example demonstrates how to use SingleWithT
+// The following code example demonstrates how to use SingleWithT
 // to select the only element of a slice that satisfies a condition.
 func ExampleQuery_SingleWithT() {
 	fruits := []string{"apple", "banana", "mango", "orange", "passionfruit", "grape"}

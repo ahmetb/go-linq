@@ -68,7 +68,7 @@ func validateQuery(q Query, output []interface{}) bool {
 
 	_, ok := next()
 	_, ok2 := next()
-	return !(ok || ok2)
+	return !ok && !ok2
 }
 
 func mustPanicWithError(t *testing.T, expectedErr string, f func()) {
