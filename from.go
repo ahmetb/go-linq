@@ -1,6 +1,7 @@
 package linq
 
 import (
+	"context"
 	"fmt"
 	"iter"
 	"reflect"
@@ -69,30 +70,40 @@ func FromChannel[T any](source <-chan T) Query {
 	}
 }
 
-// FromChannelWithTimeout initializes a linq query with a passed channel,
-// but stops iterating either when the channel is closed or when the timeout elapses.
-func FromChannelWithTimeout[T any](source <-chan T, timeout time.Duration) Query {
+// FromChannelWithContext initializes a linq query with a passed channel
+// and stops iterating either when the channel is closed or when the context is canceled.
+func FromChannelWithContext[T any](source <-chan T, ctx context.Context) Query {
 	return Query{
 		Iterate: func(yield func(any) bool) {
-			timer := time.NewTimer(timeout)
-			defer timer.Stop()
-
 			for {
 				select {
+				case <-ctx.Done():
+					// Context canceled or deadline exceeded
+					return
 				case item, ok := <-source:
 					if !ok {
-						// channel closed
+						// Channel closed
 						return
 					}
 					if !yield(item) {
-						// consumer stopped early
+						// Consumer stopped early
 						return
 					}
-				case <-timer.C:
-					// timeout elapsed
-					return
 				}
 			}
+		},
+	}
+}
+
+// FromChannelWithTimeout is a convenience wrapper over FromChannelWithContext.
+// It stops iterating either when the channel is closed or when the timeout elapses.
+func FromChannelWithTimeout[T any](source <-chan T, timeout time.Duration) Query {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	return Query{
+		Iterate: func(yield func(any) bool) {
+			// cancel once iteration finishes (or is stopped)
+			defer cancel()
+			FromChannelWithContext(source, ctx).Iterate(yield)
 		},
 	}
 }
