@@ -220,7 +220,7 @@ func TestForEach(t *testing.T) {
 
 func TestForEachT_PanicWhenActionFnIsInvalid(t *testing.T) {
 	mustPanicWithError(t, "ForEachT: parameter [actionFn] has a invalid function signature. Expected: 'func(T)', actual: 'func(int,int)'", func() {
-		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).ForEachT(func(item, idx int) { item = item + 2 })
+		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).ForEachT(func(item, idx int) {})
 	})
 }
 
@@ -247,7 +247,7 @@ func TestForEachIndexed(t *testing.T) {
 
 func TestForEachIndexedT_PanicWhenActionFnIsInvalid(t *testing.T) {
 	mustPanicWithError(t, "ForEachIndexedT: parameter [actionFn] has a invalid function signature. Expected: 'func(int,T)', actual: 'func(int)'", func() {
-		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).ForEachIndexedT(func(item int) { item = item + 2 })
+		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).ForEachIndexedT(func(item int) {})
 	})
 }
 

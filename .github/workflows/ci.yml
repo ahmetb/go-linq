@@ -1,0 +1,59 @@
+name: ci.yml
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - master
+
+permissions:
+  contents: read
+
+env:
+  GO111MODULE: on
+
+jobs:
+  golangci:
+    name: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version: stable
+
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v8
+        with:
+          version: v2.1
+
+  build:
+    name: Build and Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version: 1.25
+
+      - name: go vet
+        run: go vet -x ./...
+
+      - name: Check Formatting
+        run: test -z "$(gofmt -s -l -w . | tee /dev/stderr)"
+
+      - name: Run Tests
+        run: go test -v ./...
+
+      - name: Coverage (profile.cov)
+        run: go test -covermode=count -coverprofile=profile.cov
+
+      - name: Coveralls
+        uses: coverallsapp/github-action@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          file: profile.cov
+          format: golang

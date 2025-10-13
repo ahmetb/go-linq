@@ -1281,8 +1281,7 @@ func ExampleQuery_SumUInts() {
 }
 
 // The following code example demonstrates how to use Take
-//
-//	to return elements from the start of a slice.
+// to return elements from the start of a slice.
 func ExampleQuery_Take() {
 	grades := []int{59, 82, 70, 56, 92, 98, 85}
 
@@ -1911,8 +1910,7 @@ func ExampleQuery_GroupByT() {
 }
 
 // The following code example demonstrates how to use GroupJoinT
-//
-//	to perform a grouped join on two slices.
+// to perform a grouped join on two slices.
 func ExampleQuery_GroupJoinT() {
 
 	type Person struct {
