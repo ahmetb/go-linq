@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"iter"
 	"reflect"
-	"time"
 )
 
 // Query is the type returned from query functions. It can be iterated manually
@@ -91,19 +90,6 @@ func FromChannelWithContext[T any](ctx context.Context, source <-chan T) Query {
 					}
 				}
 			}
-		},
-	}
-}
-
-// FromChannelWithTimeout is a convenience wrapper over FromChannelWithContext.
-// It stops iterating either when the channel is closed or when the timeout elapses.
-func FromChannelWithTimeout[T any](source <-chan T, timeout time.Duration) Query {
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	return Query{
-		Iterate: func(yield func(any) bool) {
-			// cancel once iteration finishes (or is stopped)
-			defer cancel()
-			FromChannelWithContext(ctx, source).Iterate(yield)
 		},
 	}
 }

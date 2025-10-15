@@ -184,7 +184,6 @@ Available constructors:
 - `FromMap` - creates a query from a map
 - `FromChannel` - creates a query from a channel
 - `FromChannelWithContext` - creates a query from a channel with `Context` support
-- `FromChannelWithTimeout` - creates a query from a channel with timeout support
 - `FromString` - creates a query from a string (iterating over runes)
 - `FromIterable` - creates a query from a custom collection implementing the `Iterable` interface
 
@@ -197,7 +196,7 @@ significantly less efficient. For all new code, it’s recommended to use the ex
 v4.0.0 (2025-10-12)
 * Breaking change: Migrated to standard Go iterator pattern. (thanks @kalaninja!)
 * Added typed constructors: FromSlice(), FromMap(), FromChannel(),
- FromChannelWithContext(), FromChannelWithTimeout(), FromString().
+ FromChannelWithContext(), FromString().
 * Breaking change: Removed FromChannelT() in favor of FromChannel().
 
 v3.2.0 (2020-12-29)

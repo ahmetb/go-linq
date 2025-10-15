@@ -71,34 +71,6 @@ func TestFromChannelWithContext_Closed(t *testing.T) {
 	}
 }
 
-func TestFromChannelWithTimeout_Timeout(t *testing.T) {
-	c := make(chan int, 3)
-	defer close(c)
-	c <- 10
-	c <- 15
-	c <- -3
-
-	w := []any{10, 15, -3}
-
-	if q := FromChannelWithTimeout(c, time.Second); !validateQuery(q, w) {
-		t.Errorf("FromChannelWithTimeout() failed expected %v", w)
-	}
-}
-
-func TestFromChannelWithTimeout_Closed(t *testing.T) {
-	c := make(chan int, 3)
-	c <- 10
-	c <- 15
-	c <- -3
-	close(c)
-
-	w := []any{10, 15, -3}
-
-	if q := FromChannelWithTimeout(c, time.Hour); !validateQuery(q, w) {
-		t.Errorf("FromChannelWithTimeout() failed expected %v", w)
-	}
-}
-
 func TestFromString(t *testing.T) {
 	s := "string"
 	w := []any{'s', 't', 'r', 'i', 'n', 'g'}
