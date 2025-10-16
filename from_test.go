@@ -1,6 +1,10 @@
 package linq
 
-import "testing"
+import (
+	"context"
+	"testing"
+	"time"
+)
 
 func TestFromSlice(t *testing.T) {
 	s := [3]int{1, 2, 3}
@@ -31,6 +35,39 @@ func TestFromChannel(t *testing.T) {
 
 	if q := FromChannel(c); !validateQuery(q, w) {
 		t.Errorf("FromChannel() failed expected %v", w)
+	}
+}
+
+func TestFromChannelWithContext_Cancel(t *testing.T) {
+	c := make(chan int, 3)
+	defer close(c)
+	c <- 10
+	c <- 15
+	c <- -3
+
+	w := []any{10, 15, -3}
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	if q := FromChannelWithContext(ctx, c); !validateQuery(q, w) {
+		t.Errorf("FromChannelWithContext() failed expected %v", w)
+	}
+}
+
+func TestFromChannelWithContext_Closed(t *testing.T) {
+	c := make(chan int, 3)
+	c <- 10
+	c <- 15
+	c <- -3
+	close(c)
+
+	w := []any{10, 15, -3}
+
+	ctx := context.Background()
+
+	if q := FromChannelWithContext(ctx, c); !validateQuery(q, w) {
+		t.Errorf("FromChannelWithContext() failed expected %v", w)
 	}
 }
 

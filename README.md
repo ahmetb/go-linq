@@ -130,7 +130,7 @@ This will make your code free of `any` and type assertions.
 ```go
 var results []string
 
-From(sentences).
+FromSlice(sentences).
 	// split sentences to words
 	SelectManyT(func(sentence string) Query {
 		return From(strings.Split(sentence, " "))
@@ -183,6 +183,7 @@ Available constructors:
 - `FromSlice` - creates a query from a slice
 - `FromMap` - creates a query from a map
 - `FromChannel` - creates a query from a channel
+- `FromChannelWithContext` - creates a query from a channel with `Context` support
 - `FromString` - creates a query from a string (iterating over runes)
 - `FromIterable` - creates a query from a custom collection implementing the `Iterable` interface
 
@@ -194,7 +195,8 @@ significantly less efficient. For all new code, it’s recommended to use the ex
 ```text
 v4.0.0 (2025-10-12)
 * Breaking change: Migrated to standard Go iterator pattern. (thanks @kalaninja!)
-* Added typed constructors: FromSlice(), FromMap(), FromChannel(), FromString().
+* Added typed constructors: FromSlice(), FromMap(), FromChannel(),
+ FromChannelWithContext(), FromString().
 * Breaking change: Removed FromChannelT() in favor of FromChannel().
 
 v3.2.0 (2020-12-29)

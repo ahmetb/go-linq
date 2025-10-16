@@ -1,6 +1,7 @@
 package linq
 
 import (
+	"context"
 	"fmt"
 	"iter"
 	"reflect"
@@ -62,6 +63,31 @@ func FromChannel[T any](source <-chan T) Query {
 			for item := range source {
 				if !yield(item) {
 					return
+				}
+			}
+		},
+	}
+}
+
+// FromChannelWithContext initializes a linq query with a passed channel
+// and stops iterating either when the channel is closed or when the context is canceled.
+func FromChannelWithContext[T any](ctx context.Context, source <-chan T) Query {
+	return Query{
+		Iterate: func(yield func(any) bool) {
+			for {
+				select {
+				case <-ctx.Done():
+					// Context canceled or deadline exceeded
+					return
+				case item, ok := <-source:
+					if !ok {
+						// Channel closed
+						return
+					}
+					if !yield(item) {
+						// Consumer stopped early
+						return
+					}
 				}
 			}
 		},
