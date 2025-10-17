@@ -20,7 +20,7 @@ func TestSelect(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		if q := From(test.input).Select(test.selector); !validateQuery(q, test.output) {
+		if q := From(test.input).Select(test.selector); !testQueryIteration(q, test.output) {
 			t.Errorf("From(%v).Select()=%v expected %v", test.input, toSlice(q), test.output)
 		}
 	}
@@ -47,7 +47,7 @@ func TestSelectIndexed(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		if q := From(test.input).SelectIndexed(test.selector); !validateQuery(q, test.output) {
+		if q := From(test.input).SelectIndexed(test.selector); !testQueryIteration(q, test.output) {
 			t.Errorf("From(%v).SelectIndexed()=%v expected %v", test.input, toSlice(q), test.output)
 		}
 	}

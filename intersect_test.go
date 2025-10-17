@@ -7,7 +7,7 @@ func TestIntersect(t *testing.T) {
 	input2 := []int{1, 4, 7, 9, 12, 3}
 	want := []any{1, 3}
 
-	if q := From(input1).Intersect(From(input2)); !validateQuery(q, want) {
+	if q := From(input1).Intersect(From(input2)); !testQueryIteration(q, want) {
 		t.Errorf("From(%v).Intersect(%v)=%v expected %v", input1, input2, toSlice(q), want)
 	}
 }
@@ -19,7 +19,7 @@ func TestIntersectBy(t *testing.T) {
 
 	if q := From(input1).IntersectBy(From(input2), func(i any) any {
 		return i.(int) % 2
-	}); !validateQuery(q, want) {
+	}); !testQueryIteration(q, want) {
 		t.Errorf("From(%v).IntersectBy(%v)=%v expected %v", input1, input2, toSlice(q), want)
 	}
 }

@@ -7,7 +7,7 @@ func TestExcept(t *testing.T) {
 	input2 := []int{1, 2}
 	want := []any{3, 4, 5, 5}
 
-	if q := From(input1).Except(From(input2)); !validateQuery(q, want) {
+	if q := From(input1).Except(From(input2)); !testQueryIteration(q, want) {
 		t.Errorf("From(%v).Except(%v)=%v expected %v", input1, input2, toSlice(q), want)
 	}
 }
@@ -19,7 +19,7 @@ func TestExceptBy(t *testing.T) {
 
 	if q := From(input1).ExceptBy(From(input2), func(i any) any {
 		return i.(int) % 2
-	}); !validateQuery(q, want) {
+	}); !testQueryIteration(q, want) {
 		t.Errorf("From(%v).ExceptBy(%v)=%v expected %v", input1, input2, toSlice(q), want)
 	}
 }

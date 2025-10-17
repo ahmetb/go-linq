@@ -51,8 +51,25 @@ func toSlice(q Query) (result []any) {
 	return
 }
 
-func validateQuery(q Query, expected []any) bool {
-	return slices.Equal(toSlice(q), expected)
+// testQueryIteration tests the iteration of a query. First, it aborts the
+// iteration by returning false. Then, it verifies that the output of the
+// iteration is as expected.
+//
+// NOTE: This function might not behave as expected if the query does not
+// support reiteration, e.g., iteration over a channel.
+func testQueryIteration(q Query, expected []any) bool {
+	q.Iterate(func(item any) bool { return false })
+	return verifyQueryOutput(q, expected)
+}
+
+// verifyQueryOutput verifies that the output of a query is as expected.
+func verifyQueryOutput(q Query, expected []any) (result bool) {
+	actual := toSlice(q)
+	result = slices.Equal(actual, expected)
+	if !result {
+		fmt.Printf("got=[%v] expected=[%v]", actual, expected)
+	}
+	return
 }
 
 func mustPanicWithError(t *testing.T, expectedErr string, f func()) {

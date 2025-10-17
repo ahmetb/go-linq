@@ -9,7 +9,7 @@ func TestZip(t *testing.T) {
 
 	if q := From(input1).Zip(From(input2), func(i, j any) any {
 		return i.(int) + j.(int)
-	}); !validateQuery(q, want) {
+	}); !testQueryIteration(q, want) {
 		t.Errorf("From(%v).Zip(%v)=%v expected %v", input1, input2, toSlice(q), want)
 	}
 }

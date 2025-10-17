@@ -19,7 +19,7 @@ func TestGroupJoin(t *testing.T) {
 			return KeyValue{outer, len(inners)}
 		})
 
-	if !validateQuery(q, want) {
+	if !testQueryIteration(q, want) {
 		t.Errorf("From().GroupJoin()=%v expected %v", toSlice(q), want)
 	}
 }

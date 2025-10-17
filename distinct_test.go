@@ -13,7 +13,7 @@ func TestDistinct(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		if q := From(test.input).Distinct(); !validateQuery(q, test.output) {
+		if q := From(test.input).Distinct(); !testQueryIteration(q, test.output) {
 			t.Errorf("From(%v).Distinct()=%v expected %v", test.input, toSlice(q), test.output)
 		}
 	}
@@ -32,7 +32,7 @@ func TestDistinctForOrderedQuery(t *testing.T) {
 	for _, test := range tests {
 		if q := From(test.input).OrderBy(func(i any) any {
 			return i
-		}).Distinct(); !validateQuery(q.Query, test.output) {
+		}).Distinct(); !testQueryIteration(q.Query, test.output) {
 			t.Errorf("From(%v).Distinct()=%v expected %v", test.input, toSlice(q.Query), test.output)
 		}
 	}
@@ -49,7 +49,7 @@ func TestDistinctBy(t *testing.T) {
 
 	if q := From(users).DistinctBy(func(u any) any {
 		return u.(user).name
-	}); !validateQuery(q, want) {
+	}); !testQueryIteration(q, want) {
 		t.Errorf("From(%v).DistinctBy()=%v expected %v", users, toSlice(q), want)
 	}
 }

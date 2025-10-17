@@ -13,7 +13,7 @@ func TestTake(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		if q := From(test.input).Take(3); !validateQuery(q, test.output) {
+		if q := From(test.input).Take(3); !testQueryIteration(q, test.output) {
 			t.Errorf("From(%v).Take(3)=%v expected %v", test.input, toSlice(q), test.output)
 		}
 	}
@@ -37,7 +37,7 @@ func TestTakeWhile(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		if q := From(test.input).TakeWhile(test.predicate); !validateQuery(q, test.output) {
+		if q := From(test.input).TakeWhile(test.predicate); !testQueryIteration(q, test.output) {
 			t.Errorf("From(%v).TakeWhile()=%v expected %v", test.input, toSlice(q), test.output)
 		}
 	}
@@ -67,7 +67,7 @@ func TestTakeWhileIndexed(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		if q := From(test.input).TakeWhileIndexed(test.predicate); !validateQuery(q, test.output) {
+		if q := From(test.input).TakeWhileIndexed(test.predicate); !testQueryIteration(q, test.output) {
 			t.Errorf("From(%v).TakeWhileIndexed()=%v expected %v", test.input, toSlice(q), test.output)
 		}
 	}

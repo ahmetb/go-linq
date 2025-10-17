@@ -21,7 +21,7 @@ func TestJoin(t *testing.T) {
 			return KeyValue{outer, inner}
 		})
 
-	if !validateQuery(q, want) {
+	if !testQueryIteration(q, want) {
 		t.Errorf("From().Join()=%v expected %v", toSlice(q), want)
 	}
 }

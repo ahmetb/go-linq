@@ -17,7 +17,7 @@ func TestWhere(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		if q := From(test.input).Where(test.predicate); !validateQuery(q, test.output) {
+		if q := From(test.input).Where(test.predicate); !testQueryIteration(q, test.output) {
 			t.Errorf("From(%v).Where()=%v expected %v", test.input, toSlice(q), test.output)
 		}
 	}
@@ -47,7 +47,7 @@ func TestWhereIndexed(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		if q := From(test.input).WhereIndexed(test.predicate); !validateQuery(q, test.output) {
+		if q := From(test.input).WhereIndexed(test.predicate); !testQueryIteration(q, test.output) {
 			t.Errorf("From(%v).WhereIndexed()=%v expected %v", test.input, toSlice(q), test.output)
 		}
 	}
