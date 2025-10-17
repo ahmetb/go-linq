@@ -103,6 +103,17 @@ func TestThenBy(t *testing.T) {
 	}
 }
 
+func TestThenBy_Abort(t *testing.T) {
+	input := []int{1, 2, 3, 4, 5, 6, 7, 8, 9}
+	q := From(input).OrderBy(func(i any) any {
+		return i.(int)
+	}).ThenBy(func(i any) any {
+		return i.(int)
+	})
+
+	runDryIteration(q.Query)
+}
+
 func TestThenByT_PanicWhenSelectorFnIsInvalid(t *testing.T) {
 	mustPanicWithError(t, "ThenByT: parameter [selectorFn] has a invalid function signature. Expected: 'func(T)T', actual: 'func(int,int)bool'", func() {
 		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).
@@ -135,6 +146,17 @@ func TestThenByDescending(t *testing.T) {
 	}
 }
 
+func TestThenByDescending_Abort(t *testing.T) {
+	input := []int{1, 2, 3, 4, 5, 6, 7, 8, 9}
+	q := From(input).OrderBy(func(i any) any {
+		return i.(int)
+	}).ThenByDescending(func(i any) any {
+		return i.(int)
+	})
+
+	runDryIteration(q.Query)
+}
+
 func TestThenByDescendingT_PanicWhenSelectorFnIsInvalid(t *testing.T) {
 	mustPanicWithError(t, "ThenByDescending: parameter [selectorFn] has a invalid function signature. Expected: 'func(T)T', actual: 'func(int,int)bool'", func() {
 		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).
@@ -165,6 +187,16 @@ func TestSort(t *testing.T) {
 
 		j++
 	}
+}
+
+func TestSort_Abort(t *testing.T) {
+	input := []int{1, 2, 3, 4, 5, 6, 7, 8, 9}
+
+	q := From(input).Sort(func(i, j any) bool {
+		return i.(int) < j.(int)
+	})
+
+	runDryIteration(q)
 }
 
 func TestSortT_PanicWhenLessFnIsInvalid(t *testing.T) {

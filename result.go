@@ -629,6 +629,10 @@ func (q Query) ToMapByT(result any,
 // If the slice pointed by v has sufficient capacity, v will be pointed to a
 // resliced slice. If it does not, a new underlying array will be allocated and
 // v will point to it.
+//
+// Note: Starting with go-linq v4, ToSlice panics if v is not a pointer to a slice.
+// If the query type is not assignable to the slice element type, ToSlice will
+// attempt to convert the query elements to the slice element type.
 func (q Query) ToSlice(v any) {
 	ptrValue := reflect.ValueOf(v)
 	if ptrValue.Kind() != reflect.Ptr || ptrValue.IsNil() {

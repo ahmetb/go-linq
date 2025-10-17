@@ -80,12 +80,8 @@ func FromChannelWithContext[T any](ctx context.Context, source <-chan T) Query {
 					// Context canceled or deadline exceeded
 					return
 				case item, ok := <-source:
-					if !ok {
-						// Channel closed
-						return
-					}
-					if !yield(item) {
-						// Consumer stopped early
+					if !ok || !yield(item) {
+						// Channel closed or Consumer stopped early
 						return
 					}
 				}

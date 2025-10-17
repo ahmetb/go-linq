@@ -37,6 +37,17 @@ func TestGroupBy(t *testing.T) {
 	}
 }
 
+func TestGroupBy_Abort(t *testing.T) {
+	input := []int{1, 2, 3, 4, 5, 6, 7, 8, 9}
+
+	q := From(input).GroupBy(
+		func(i any) any { return i.(int) % 2 },
+		func(i any) any { return i.(int) },
+	)
+
+	runDryIteration(q)
+}
+
 func TestGroupByT_PanicWhenKeySelectorFnIsInvalid(t *testing.T) {
 	mustPanicWithError(t, "GroupByT: parameter [keySelectorFn] has a invalid function signature. Expected: 'func(T)T', actual: 'func(int,int)bool'", func() {
 		var r []int

@@ -58,12 +58,18 @@ func toSlice(q Query) (result []any) {
 // NOTE: This function might not behave as expected if the query does not
 // support reiteration, e.g., iteration over a channel.
 func testQueryIteration(q Query, expected []any) bool {
-	q.Iterate(func(item any) bool { return false })
-	return verifyQueryOutput(q, expected)
+	runDryIteration(q)
+	return assertQueryOutput(q, expected)
 }
 
-// verifyQueryOutput verifies that the output of a query is as expected.
-func verifyQueryOutput(q Query, expected []any) (result bool) {
+// runDryIteration performs a no-op iteration over the query
+// to test whether it supports early abort and reiteration.
+func runDryIteration(q Query) {
+	q.Iterate(func(item any) bool { return false })
+}
+
+// assertQueryOutput verifies that the output of a query is as expected.
+func assertQueryOutput(q Query, expected []any) (result bool) {
 	actual := toSlice(q)
 	result = slices.Equal(actual, expected)
 	if !result {

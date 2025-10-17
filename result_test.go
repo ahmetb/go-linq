@@ -620,3 +620,32 @@ func TestToSlice(t *testing.T) {
 		}
 	}
 }
+
+func TestToSlice_PanicWhenNil(t *testing.T) {
+	mustPanicWithError(t, "ToSlice: v must be a pointer to a slice", func() {
+		From([]int{1, 2, 3}).ToSlice(nil)
+	})
+}
+
+func TestToSlice_PanicWhenNotSlice(t *testing.T) {
+	mustPanicWithError(t, "ToSlice: v must point to a slice", func() {
+		i := 123
+		From([]int{1, 2, 3}).ToSlice(&i)
+	})
+}
+
+func TestToSlice_AutomaticConversion(t *testing.T) {
+	input := []int{1, 2, 3}
+	want := []float64{1, 2, 3}
+	output := make([]float64, 0, 3)
+	From(input).ToSlice(&output)
+	if !reflect.DeepEqual(output, want) {
+		t.Errorf("From(%v).ToSlice()=%v expected %v", input, output, want)
+	}
+}
+
+func TestToSlice_PanicWhenConversionIsNotPossible(t *testing.T) {
+	mustPanicWithError(t, "ToSlice: item type is not assignable/convertible to slice element type", func() {
+		From([]string{"1", "2", "3"}).ToSlice(&[]int{})
+	})
+}

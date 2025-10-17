@@ -33,9 +33,19 @@ func TestFromChannel(t *testing.T) {
 
 	w := []any{10, 15, -3}
 
-	if q := FromChannel(c); !verifyQueryOutput(q, w) {
+	if q := FromChannel(c); !assertQueryOutput(q, w) {
 		t.Errorf("FromChannel() failed expected %v", w)
 	}
+}
+
+func TestFromChannel_DryRun(t *testing.T) {
+	c := make(chan int, 3)
+	c <- 10
+	c <- 15
+	c <- -3
+	close(c)
+	q := FromChannel(c)
+	runDryIteration(q)
 }
 
 func TestFromChannelWithContext_Cancel(t *testing.T) {
@@ -50,7 +60,7 @@ func TestFromChannelWithContext_Cancel(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	if q := FromChannelWithContext(ctx, c); !verifyQueryOutput(q, w) {
+	if q := FromChannelWithContext(ctx, c); !assertQueryOutput(q, w) {
 		t.Errorf("FromChannelWithContext() failed expected %v", w)
 	}
 }
@@ -66,7 +76,7 @@ func TestFromChannelWithContext_Closed(t *testing.T) {
 
 	ctx := context.Background()
 
-	if q := FromChannelWithContext(ctx, c); !verifyQueryOutput(q, w) {
+	if q := FromChannelWithContext(ctx, c); !assertQueryOutput(q, w) {
 		t.Errorf("FromChannelWithContext() failed expected %v", w)
 	}
 }
@@ -104,6 +114,7 @@ func TestFrom(t *testing.T) {
 		{map[string]bool{"foo": true}, []any{KeyValue{"foo", true}}, true},
 		{map[string]bool{"foo": true}, []any{KeyValue{"foo", false}}, false},
 		{foo{f1: 1, f2: true, f3: "string"}, []any{1, true, "string"}, true},
+		{nil, nil, true},
 	}
 
 	for _, test := range tests {
@@ -139,10 +150,17 @@ func TestFrom_Channel(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		if q := From(test.input); !verifyQueryOutput(q, test.output) {
+		if q := From(test.input); !assertQueryOutput(q, test.output) {
 			t.Errorf("From(%v) failed, expected %v", test.input, test.output)
 		}
 	}
+}
+
+func TestFrom_UnsupportedTypePanics(t *testing.T) {
+	mustPanicWithError(t, "unsupported type for From: int", func() {
+		// int is not supported by From, should panic
+		From(123)
+	})
 }
 
 func TestRange(t *testing.T) {
