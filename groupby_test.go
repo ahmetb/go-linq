@@ -7,17 +7,16 @@ import (
 
 func TestGroupBy(t *testing.T) {
 	input := []int{1, 2, 3, 4, 5, 6, 7, 8, 9}
-	wantEven := []interface{}{2, 4, 6, 8}
-	wantOdd := []interface{}{1, 3, 5, 7, 9}
+	wantEven := []any{2, 4, 6, 8}
+	wantOdd := []any{1, 3, 5, 7, 9}
 
 	q := From(input).GroupBy(
-		func(i interface{}) interface{} { return i.(int) % 2 },
-		func(i interface{}) interface{} { return i.(int) },
+		func(i any) any { return i.(int) % 2 },
+		func(i any) any { return i.(int) },
 	)
 
-	next := q.Iterate()
 	eq := true
-	for item, ok := next(); ok; item, ok = next() {
+	for item := range q.Iterate {
 		group := item.(Group)
 		switch group.Key.(int) {
 		case 0:
@@ -36,6 +35,17 @@ func TestGroupBy(t *testing.T) {
 	if !eq {
 		t.Errorf("From(%v).GroupBy()=%v", input, toSlice(q))
 	}
+}
+
+func TestGroupBy_Abort(t *testing.T) {
+	input := []int{1, 2, 3, 4, 5, 6, 7, 8, 9}
+
+	q := From(input).GroupBy(
+		func(i any) any { return i.(int) % 2 },
+		func(i any) any { return i.(int) },
+	)
+
+	runDryIteration(q)
 }
 
 func TestGroupByT_PanicWhenKeySelectorFnIsInvalid(t *testing.T) {

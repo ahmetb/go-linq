@@ -7,17 +7,17 @@ import (
 func TestDefaultIfEmpty(t *testing.T) {
 	defaultValue := 0
 	tests := []struct {
-		input []interface{}
-		want  []interface{}
+		input []any
+		want  []any
 	}{
-		{[]interface{}{}, []interface{}{defaultValue}},
-		{[]interface{}{1, 2, 3, 4, 5}, []interface{}{1, 2, 3, 4, 5}},
+		{[]any{}, []any{defaultValue}},
+		{[]any{1, 2, 3, 4, 5}, []any{1, 2, 3, 4, 5}},
 	}
 
 	for _, test := range tests {
 		q := From(test.input).DefaultIfEmpty(defaultValue)
 
-		if !validateQuery(q, test.want) {
+		if !testQueryIteration(q, test.want) {
 			t.Errorf("From(%v).DefaultIfEmpty(%v)=%v expected %v", test.input, defaultValue, toSlice(q), test.want)
 		}
 	}

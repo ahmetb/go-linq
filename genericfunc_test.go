@@ -10,7 +10,7 @@ func TestNewGenericFunc(t *testing.T) {
 	tests := []struct {
 		methodName     string
 		paramName      string
-		function       interface{}
+		function       any
 		validationFunc func(*functionCache) error
 		exception      error
 	}{
@@ -76,10 +76,10 @@ func TestCall(t *testing.T) {
 	tests := []struct {
 		methodName     string
 		paramName      string
-		function       interface{}
+		function       any
 		validationFunc func(*functionCache) error
-		fnParameter    interface{}
-		result         interface{}
+		fnParameter    any
+		result         any
 		exception      error
 	}{
 		{ // A valid function and parameters

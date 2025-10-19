@@ -4,20 +4,20 @@ import "testing"
 
 func TestWhere(t *testing.T) {
 	tests := []struct {
-		input     interface{}
-		predicate func(interface{}) bool
-		output    []interface{}
+		input     any
+		predicate func(any) bool
+		output    []any
 	}{
-		{[9]int{1, 1, 1, 2, 1, 2, 3, 4, 2}, func(i interface{}) bool {
+		{[9]int{1, 1, 1, 2, 1, 2, 3, 4, 2}, func(i any) bool {
 			return i.(int) >= 3
-		}, []interface{}{3, 4}},
-		{"sstr", func(i interface{}) bool {
+		}, []any{3, 4}},
+		{"sstr", func(i any) bool {
 			return i.(rune) != 's'
-		}, []interface{}{'t', 'r'}},
+		}, []any{'t', 'r'}},
 	}
 
 	for _, test := range tests {
-		if q := From(test.input).Where(test.predicate); !validateQuery(q, test.output) {
+		if q := From(test.input).Where(test.predicate); !testQueryIteration(q, test.output) {
 			t.Errorf("From(%v).Where()=%v expected %v", test.input, toSlice(q), test.output)
 		}
 	}
@@ -31,23 +31,23 @@ func TestWhereT_PanicWhenPredicateFnIsInvalid(t *testing.T) {
 
 func TestWhereIndexed(t *testing.T) {
 	tests := []struct {
-		input     interface{}
-		predicate func(int, interface{}) bool
-		output    []interface{}
+		input     any
+		predicate func(int, any) bool
+		output    []any
 	}{
-		{[9]int{1, 1, 1, 2, 1, 2, 3, 4, 2}, func(i int, x interface{}) bool {
+		{[9]int{1, 1, 1, 2, 1, 2, 3, 4, 2}, func(i int, x any) bool {
 			return x.(int) < 4 && i > 4
-		}, []interface{}{2, 3, 2}},
-		{"sstr", func(i int, x interface{}) bool {
+		}, []any{2, 3, 2}},
+		{"sstr", func(i int, x any) bool {
 			return x.(rune) != 's' || i == 1
-		}, []interface{}{'s', 't', 'r'}},
-		{"abcde", func(i int, _ interface{}) bool {
+		}, []any{'s', 't', 'r'}},
+		{"abcde", func(i int, _ any) bool {
 			return i < 2
-		}, []interface{}{'a', 'b'}},
+		}, []any{'a', 'b'}},
 	}
 
 	for _, test := range tests {
-		if q := From(test.input).WhereIndexed(test.predicate); !validateQuery(q, test.output) {
+		if q := From(test.input).WhereIndexed(test.predicate); !testQueryIteration(q, test.output) {
 			t.Errorf("From(%v).WhereIndexed()=%v expected %v", test.input, toSlice(q), test.output)
 		}
 	}

@@ -1,20 +1,23 @@
 package linq
 
+import "iter"
+
 // Aggregate applies an accumulator function over a sequence.
 //
 // Aggregate method makes it simple to perform a calculation over a sequence of
-// values. This method works by calling f() one time for each element in source
+// values. This method works by calling f() one time for each element in a source
 // except the first one. Each time f() is called, Aggregate passes both the
 // element from the sequence and an aggregated value (as the first argument to
-// f()). The first element of source is used as the initial aggregate value. The
+// f()). The first element of the source is used as the initial aggregate value. The
 // result of f() replaces the previous aggregated value.
 //
 // Aggregate returns the final result of f().
-func (q Query) Aggregate(f func(interface{}, interface{}) interface{}) interface{} {
-	next := q.Iterate()
+func (q Query) Aggregate(f func(accumulator, item any) any) any {
+	next, stop := iter.Pull(q.Iterate)
+	defer stop()
 
-	result, any := next()
-	if !any {
+	result, ok := next()
+	if !ok {
 		return nil
 	}
 
@@ -30,7 +33,7 @@ func (q Query) Aggregate(f func(interface{}, interface{}) interface{}) interface
 //   - f is of type: func(TSource, TSource) TSource
 //
 // NOTE: Aggregate has better performance than AggregateT.
-func (q Query) AggregateT(f interface{}) interface{} {
+func (q Query) AggregateT(f any) any {
 	fGenericFunc, err := newGenericFunc(
 		"AggregateT", "f", f,
 		simpleParamValidator(newElemTypeSlice(new(genericType), new(genericType)), newElemTypeSlice(new(genericType))),
@@ -39,7 +42,7 @@ func (q Query) AggregateT(f interface{}) interface{} {
 		panic(err)
 	}
 
-	fFunc := func(result interface{}, current interface{}) interface{} {
+	fFunc := func(result any, current any) any {
 		return fGenericFunc.Call(result, current)
 	}
 
@@ -50,20 +53,18 @@ func (q Query) AggregateT(f interface{}) interface{} {
 // specified seed value is used as the initial accumulator value.
 //
 // Aggregate method makes it simple to perform a calculation over a sequence of
-// values. This method works by calling f() one time for each element in source
+// values. This method works by calling f() one time for each element in a source
 // except the first one. Each time f() is called, Aggregate passes both the
 // element from the sequence and an aggregated value (as the first argument to
 // f()). The value of the seed parameter is used as the initial aggregate value.
 // The result of f() replaces the previous aggregated value.
 //
 // Aggregate returns the final result of f().
-func (q Query) AggregateWithSeed(seed interface{},
-	f func(interface{}, interface{}) interface{}) interface{} {
-
-	next := q.Iterate()
+func (q Query) AggregateWithSeed(seed any,
+	f func(accumulator, item any) any) any {
 	result := seed
 
-	for current, ok := next(); ok; current, ok = next() {
+	for current := range q.Iterate {
 		result = f(result, current)
 	}
 
@@ -76,8 +77,8 @@ func (q Query) AggregateWithSeed(seed interface{},
 //
 // NOTE: AggregateWithSeed has better performance than
 // AggregateWithSeedT.
-func (q Query) AggregateWithSeedT(seed interface{},
-	f interface{}) interface{} {
+func (q Query) AggregateWithSeedT(seed any,
+	f any) any {
 	fGenericFunc, err := newGenericFunc(
 		"AggregateWithSeed", "f", f,
 		simpleParamValidator(newElemTypeSlice(new(genericType), new(genericType)), newElemTypeSlice(new(genericType))),
@@ -86,7 +87,7 @@ func (q Query) AggregateWithSeedT(seed interface{},
 		panic(err)
 	}
 
-	fFunc := func(result interface{}, current interface{}) interface{} {
+	fFunc := func(result any, current any) any {
 		return fGenericFunc.Call(result, current)
 	}
 
@@ -106,14 +107,13 @@ func (q Query) AggregateWithSeedT(seed interface{},
 //
 // The final result of func is passed to resultSelector to obtain the final
 // result of Aggregate.
-func (q Query) AggregateWithSeedBy(seed interface{},
-	f func(interface{}, interface{}) interface{},
-	resultSelector func(interface{}) interface{}) interface{} {
+func (q Query) AggregateWithSeedBy(seed any,
+	f func(accumulator, item any) any,
+	resultSelector func(any) any) any {
 
-	next := q.Iterate()
 	result := seed
 
-	for current, ok := next(); ok; current, ok = next() {
+	for current := range q.Iterate {
 		result = f(result, current)
 	}
 
@@ -127,9 +127,9 @@ func (q Query) AggregateWithSeedBy(seed interface{},
 //
 // NOTE: AggregateWithSeedBy has better performance than
 // AggregateWithSeedByT.
-func (q Query) AggregateWithSeedByT(seed interface{},
-	f interface{},
-	resultSelectorFn interface{}) interface{} {
+func (q Query) AggregateWithSeedByT(seed any,
+	f any,
+	resultSelectorFn any) any {
 	fGenericFunc, err := newGenericFunc(
 		"AggregateWithSeedByT", "f", f,
 		simpleParamValidator(newElemTypeSlice(new(genericType), new(genericType)), newElemTypeSlice(new(genericType))),
@@ -138,7 +138,7 @@ func (q Query) AggregateWithSeedByT(seed interface{},
 		panic(err)
 	}
 
-	fFunc := func(result interface{}, current interface{}) interface{} {
+	fFunc := func(result any, current any) any {
 		return fGenericFunc.Call(result, current)
 	}
 
@@ -150,7 +150,7 @@ func (q Query) AggregateWithSeedByT(seed interface{},
 		panic(err)
 	}
 
-	resultSelectorFunc := func(result interface{}) interface{} {
+	resultSelectorFunc := func(result any) any {
 		return resultSelectorGenericFunc.Call(result)
 	}
 

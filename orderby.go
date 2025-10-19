@@ -3,7 +3,7 @@ package linq
 import "sort"
 
 type order struct {
-	selector func(interface{}) interface{}
+	selector func(any) any
 	compare  comparer
 	desc     bool
 }
@@ -18,24 +18,19 @@ type OrderedQuery struct {
 
 // OrderBy sorts the elements of a collection in ascending order. Elements are
 // sorted according to a key.
-func (q Query) OrderBy(selector func(interface{}) interface{}) OrderedQuery {
+func (q Query) OrderBy(selector func(any) any) OrderedQuery {
 	return OrderedQuery{
 		orders:   []order{{selector: selector}},
 		original: q,
 		Query: Query{
-			Iterate: func() Iterator {
-				items := q.sort([]order{{selector: selector}})
-				len := len(items)
-				index := 0
-
-				return func() (item interface{}, ok bool) {
-					ok = index < len
-					if ok {
-						item = items[index]
-						index++
+			Iterate: func(yield func(any) bool) {
+				{
+					items := q.sort([]order{{selector: selector}})
+					for _, item := range items {
+						if !yield(item) {
+							return
+						}
 					}
-
-					return
 				}
 			},
 		},
@@ -47,7 +42,7 @@ func (q Query) OrderBy(selector func(interface{}) interface{}) OrderedQuery {
 //   - selectorFn is of type "func(TSource) TKey"
 //
 // NOTE: OrderBy has better performance than OrderByT.
-func (q Query) OrderByT(selectorFn interface{}) OrderedQuery {
+func (q Query) OrderByT(selectorFn any) OrderedQuery {
 	selectorGenericFunc, err := newGenericFunc(
 		"OrderByT", "selectorFn", selectorFn,
 		simpleParamValidator(newElemTypeSlice(new(genericType)), newElemTypeSlice(new(genericType))),
@@ -56,7 +51,7 @@ func (q Query) OrderByT(selectorFn interface{}) OrderedQuery {
 		panic(err)
 	}
 
-	selectorFunc := func(item interface{}) interface{} {
+	selectorFunc := func(item any) any {
 		return selectorGenericFunc.Call(item)
 	}
 
@@ -65,24 +60,17 @@ func (q Query) OrderByT(selectorFn interface{}) OrderedQuery {
 
 // OrderByDescending sorts the elements of a collection in descending order.
 // Elements are sorted according to a key.
-func (q Query) OrderByDescending(selector func(interface{}) interface{}) OrderedQuery {
+func (q Query) OrderByDescending(selector func(any) any) OrderedQuery {
 	return OrderedQuery{
 		orders:   []order{{selector: selector, desc: true}},
 		original: q,
 		Query: Query{
-			Iterate: func() Iterator {
+			Iterate: func(yield func(any) bool) {
 				items := q.sort([]order{{selector: selector, desc: true}})
-				len := len(items)
-				index := 0
-
-				return func() (item interface{}, ok bool) {
-					ok = index < len
-					if ok {
-						item = items[index]
-						index++
+				for _, item := range items {
+					if !yield(item) {
+						return
 					}
-
-					return
 				}
 			},
 		},
@@ -93,7 +81,7 @@ func (q Query) OrderByDescending(selector func(interface{}) interface{}) Ordered
 //   - selectorFn is of type "func(TSource) TKey"
 //
 // NOTE: OrderByDescending has better performance than OrderByDescendingT.
-func (q Query) OrderByDescendingT(selectorFn interface{}) OrderedQuery {
+func (q Query) OrderByDescendingT(selectorFn any) OrderedQuery {
 	selectorGenericFunc, err := newGenericFunc(
 		"OrderByDescendingT", "selectorFn", selectorFn,
 		simpleParamValidator(newElemTypeSlice(new(genericType)), newElemTypeSlice(new(genericType))),
@@ -102,7 +90,7 @@ func (q Query) OrderByDescendingT(selectorFn interface{}) OrderedQuery {
 		panic(err)
 	}
 
-	selectorFunc := func(item interface{}) interface{} {
+	selectorFunc := func(item any) any {
 		return selectorGenericFunc.Call(item)
 	}
 
@@ -113,24 +101,17 @@ func (q Query) OrderByDescendingT(selectorFn interface{}) OrderedQuery {
 // ascending order. This method enables you to specify multiple sort criteria by
 // applying any number of ThenBy or ThenByDescending methods.
 func (oq OrderedQuery) ThenBy(
-	selector func(interface{}) interface{}) OrderedQuery {
+	selector func(any) any) OrderedQuery {
 	return OrderedQuery{
 		orders:   append(oq.orders, order{selector: selector}),
 		original: oq.original,
 		Query: Query{
-			Iterate: func() Iterator {
+			Iterate: func(yield func(any) bool) {
 				items := oq.original.sort(append(oq.orders, order{selector: selector}))
-				len := len(items)
-				index := 0
-
-				return func() (item interface{}, ok bool) {
-					ok = index < len
-					if ok {
-						item = items[index]
-						index++
+				for _, item := range items {
+					if !yield(item) {
+						return
 					}
-
-					return
 				}
 			},
 		},
@@ -141,7 +122,7 @@ func (oq OrderedQuery) ThenBy(
 //   - selectorFn is of type "func(TSource) TKey"
 //
 // NOTE: ThenBy has better performance than ThenByT.
-func (oq OrderedQuery) ThenByT(selectorFn interface{}) OrderedQuery {
+func (oq OrderedQuery) ThenByT(selectorFn any) OrderedQuery {
 	selectorGenericFunc, err := newGenericFunc(
 		"ThenByT", "selectorFn", selectorFn,
 		simpleParamValidator(newElemTypeSlice(new(genericType)), newElemTypeSlice(new(genericType))),
@@ -150,7 +131,7 @@ func (oq OrderedQuery) ThenByT(selectorFn interface{}) OrderedQuery {
 		panic(err)
 	}
 
-	selectorFunc := func(item interface{}) interface{} {
+	selectorFunc := func(item any) any {
 		return selectorGenericFunc.Call(item)
 	}
 
@@ -160,24 +141,17 @@ func (oq OrderedQuery) ThenByT(selectorFn interface{}) OrderedQuery {
 // ThenByDescending performs a subsequent ordering of the elements in a
 // collection in descending order. This method enables you to specify multiple
 // sort criteria by applying any number of ThenBy or ThenByDescending methods.
-func (oq OrderedQuery) ThenByDescending(selector func(interface{}) interface{}) OrderedQuery {
+func (oq OrderedQuery) ThenByDescending(selector func(any) any) OrderedQuery {
 	return OrderedQuery{
 		orders:   append(oq.orders, order{selector: selector, desc: true}),
 		original: oq.original,
 		Query: Query{
-			Iterate: func() Iterator {
+			Iterate: func(yield func(any) bool) {
 				items := oq.original.sort(append(oq.orders, order{selector: selector, desc: true}))
-				len := len(items)
-				index := 0
-
-				return func() (item interface{}, ok bool) {
-					ok = index < len
-					if ok {
-						item = items[index]
-						index++
+				for _, item := range items {
+					if !yield(item) {
+						return
 					}
-
-					return
 				}
 			},
 		},
@@ -188,8 +162,8 @@ func (oq OrderedQuery) ThenByDescending(selector func(interface{}) interface{}) 
 //   - selectorFn is of type "func(TSource) TKey"
 //
 // NOTE: ThenByDescending has better performance than ThenByDescendingT.
-func (oq OrderedQuery) ThenByDescendingT(selectorFn interface{}) OrderedQuery {
-	selectorFunc, ok := selectorFn.(func(interface{}) interface{})
+func (oq OrderedQuery) ThenByDescendingT(selectorFn any) OrderedQuery {
+	selectorFunc, ok := selectorFn.(func(any) any)
 	if !ok {
 		selectorGenericFunc, err := newGenericFunc(
 			"ThenByDescending", "selectorFn", selectorFn,
@@ -199,7 +173,7 @@ func (oq OrderedQuery) ThenByDescendingT(selectorFn interface{}) OrderedQuery {
 			panic(err)
 		}
 
-		selectorFunc = func(item interface{}) interface{} {
+		selectorFunc = func(item any) any {
 			return selectorGenericFunc.Call(item)
 		}
 	}
@@ -209,23 +183,16 @@ func (oq OrderedQuery) ThenByDescendingT(selectorFn interface{}) OrderedQuery {
 // Sort returns a new query by sorting elements with provided less function in
 // ascending order. The comparer function should return true if the parameter i
 // is less than j. While this method is uglier than chaining OrderBy,
-// OrderByDescending, ThenBy and ThenByDescending methods, it's performance is
+// OrderByDescending, ThenBy and ThenByDescending methods, its performance is
 // much better.
-func (q Query) Sort(less func(i, j interface{}) bool) Query {
+func (q Query) Sort(less func(i, j any) bool) Query {
 	return Query{
-		Iterate: func() Iterator {
+		Iterate: func(yield func(any) bool) {
 			items := q.lessSort(less)
-			len := len(items)
-			index := 0
-
-			return func() (item interface{}, ok bool) {
-				ok = index < len
-				if ok {
-					item = items[index]
-					index++
+			for _, item := range items {
+				if !yield(item) {
+					return
 				}
-
-				return
 			}
 		},
 	}
@@ -235,7 +202,7 @@ func (q Query) Sort(less func(i, j interface{}) bool) Query {
 //   - lessFn is of type "func(TSource,TSource) bool"
 //
 // NOTE: Sort has better performance than SortT.
-func (q Query) SortT(lessFn interface{}) Query {
+func (q Query) SortT(lessFn any) Query {
 	lessGenericFunc, err := newGenericFunc(
 		"SortT", "lessFn", lessFn,
 		simpleParamValidator(newElemTypeSlice(new(genericType), new(genericType)), newElemTypeSlice(new(bool))),
@@ -244,7 +211,7 @@ func (q Query) SortT(lessFn interface{}) Query {
 		panic(err)
 	}
 
-	lessFunc := func(i, j interface{}) bool {
+	lessFunc := func(i, j any) bool {
 		return lessGenericFunc.Call(i, j).(bool)
 	}
 
@@ -252,8 +219,8 @@ func (q Query) SortT(lessFn interface{}) Query {
 }
 
 type sorter struct {
-	items []interface{}
-	less  func(i, j interface{}) bool
+	items []any
+	less  func(i, j any) bool
 }
 
 func (s sorter) Len() int {
@@ -268,9 +235,8 @@ func (s sorter) Less(i, j int) bool {
 	return s.less(s.items[i], s.items[j])
 }
 
-func (q Query) sort(orders []order) (r []interface{}) {
-	next := q.Iterate()
-	for item, ok := next(); ok; item, ok = next() {
+func (q Query) sort(orders []order) (r []any) {
+	for item := range q.Iterate {
 		r = append(r, item)
 	}
 
@@ -284,7 +250,7 @@ func (q Query) sort(orders []order) (r []interface{}) {
 
 	s := sorter{
 		items: r,
-		less: func(i, j interface{}) bool {
+		less: func(i, j any) bool {
 			for _, order := range orders {
 				x, y := order.selector(i), order.selector(j)
 				switch order.compare(x, y) {
@@ -304,9 +270,8 @@ func (q Query) sort(orders []order) (r []interface{}) {
 	return
 }
 
-func (q Query) lessSort(less func(i, j interface{}) bool) (r []interface{}) {
-	next := q.Iterate()
-	for item, ok := next(); ok; item, ok = next() {
+func (q Query) lessSort(less func(i, j any) bool) (r []any) {
+	for item := range q.Iterate {
 		r = append(r, item)
 	}
 

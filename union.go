@@ -4,37 +4,37 @@ package linq
 //
 // This method excludes duplicates from the return set. This is different
 // behavior to the Concat method, which returns all the elements in the input
-// collection including duplicates.
+// collection, including duplicates.
 func (q Query) Union(q2 Query) Query {
 	return Query{
-		Iterate: func() Iterator {
-			next := q.Iterate()
-			next2 := q2.Iterate()
+		Iterate: func(yield func(any) bool) {
+			set := make(map[any]struct{})
+			stopped := false
 
-			set := make(map[interface{}]bool)
-			use1 := true
-
-			return func() (item interface{}, ok bool) {
-				if use1 {
-					for item, ok = next(); ok; item, ok = next() {
-						if _, has := set[item]; !has {
-							set[item] = true
-							return
-						}
-					}
-
-					use1 = false
-				}
-
-				for item, ok = next2(); ok; item, ok = next2() {
-					if _, has := set[item]; !has {
-						set[item] = true
-						return
+			q.Iterate(func(item any) bool {
+				if _, seen := set[item]; !seen {
+					set[item] = struct{}{}
+					if !yield(item) {
+						stopped = true
+						return false
 					}
 				}
+				return true
+			})
 
+			if stopped {
 				return
 			}
+
+			q2.Iterate(func(item any) bool {
+				if _, seen := set[item]; !seen {
+					set[item] = struct{}{}
+					if !yield(item) {
+						return false
+					}
+				}
+				return true
+			})
 		},
 	}
 }

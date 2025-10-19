@@ -6,27 +6,27 @@ import (
 
 func TestIndexOf(t *testing.T) {
 	tests := []struct {
-		input     interface{}
-		predicate func(interface{}) bool
+		input     any
+		predicate func(any) bool
 		expected  int
 	}{
 		{
 			input: [9]int{1, 2, 3, 4, 5, 6, 7, 8, 9},
-			predicate: func(i interface{}) bool {
+			predicate: func(i any) bool {
 				return i.(int) == 3
 			},
 			expected: 2,
 		},
 		{
 			input: "sstr",
-			predicate: func(i interface{}) bool {
+			predicate: func(i any) bool {
 				return i.(rune) == 'r'
 			},
 			expected: 3,
 		},
 		{
 			input: "gadsgsadgsda",
-			predicate: func(i interface{}) bool {
+			predicate: func(i any) bool {
 				return i.(rune) == 'z'
 			},
 			expected: -1,

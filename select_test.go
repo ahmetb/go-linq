@@ -7,20 +7,20 @@ import (
 
 func TestSelect(t *testing.T) {
 	tests := []struct {
-		input    interface{}
-		selector func(interface{}) interface{}
-		output   []interface{}
+		input    any
+		selector func(any) any
+		output   []any
 	}{
-		{[]int{1, 2, 3}, func(i interface{}) interface{} {
+		{[]int{1, 2, 3}, func(i any) any {
 			return i.(int) * 2
-		}, []interface{}{2, 4, 6}},
-		{"str", func(i interface{}) interface{} {
+		}, []any{2, 4, 6}},
+		{"str", func(i any) any {
 			return string(i.(rune)) + "1"
-		}, []interface{}{"s1", "t1", "r1"}},
+		}, []any{"s1", "t1", "r1"}},
 	}
 
 	for _, test := range tests {
-		if q := From(test.input).Select(test.selector); !validateQuery(q, test.output) {
+		if q := From(test.input).Select(test.selector); !testQueryIteration(q, test.output) {
 			t.Errorf("From(%v).Select()=%v expected %v", test.input, toSlice(q), test.output)
 		}
 	}
@@ -34,20 +34,20 @@ func TestSelectT_PanicWhenSelectorFnIsInvalid(t *testing.T) {
 
 func TestSelectIndexed(t *testing.T) {
 	tests := []struct {
-		input    interface{}
-		selector func(int, interface{}) interface{}
-		output   []interface{}
+		input    any
+		selector func(int, any) any
+		output   []any
 	}{
-		{[]int{1, 2, 3}, func(i int, x interface{}) interface{} {
+		{[]int{1, 2, 3}, func(i int, x any) any {
 			return x.(int) * i
-		}, []interface{}{0, 2, 6}},
-		{"str", func(i int, x interface{}) interface{} {
+		}, []any{0, 2, 6}},
+		{"str", func(i int, x any) any {
 			return string(x.(rune)) + strconv.Itoa(i)
-		}, []interface{}{"s0", "t1", "r2"}},
+		}, []any{"s0", "t1", "r2"}},
 	}
 
 	for _, test := range tests {
-		if q := From(test.input).SelectIndexed(test.selector); !validateQuery(q, test.output) {
+		if q := From(test.input).SelectIndexed(test.selector); !testQueryIteration(q, test.output) {
 			t.Errorf("From(%v).SelectIndexed()=%v expected %v", test.input, toSlice(q), test.output)
 		}
 	}

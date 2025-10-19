@@ -7,23 +7,16 @@ package linq
 // the reverse order from which they are produced by the underlying source.
 func (q Query) Reverse() Query {
 	return Query{
-		Iterate: func() Iterator {
-			next := q.Iterate()
-
-			items := []interface{}{}
-			for item, ok := next(); ok; item, ok = next() {
+		Iterate: func(yield func(any) bool) {
+			var items []any
+			for item := range q.Iterate {
 				items = append(items, item)
 			}
 
-			index := len(items) - 1
-			return func() (item interface{}, ok bool) {
-				if index < 0 {
+			for i := len(items) - 1; i >= 0; i-- {
+				if !yield(items[i]) {
 					return
 				}
-
-				item, ok = items[index], true
-				index--
-				return
 			}
 		},
 	}

@@ -27,7 +27,7 @@ type genericFunc struct {
 }
 
 // Call calls a dynamic function.
-func (g *genericFunc) Call(params ...interface{}) interface{} {
+func (g *genericFunc) Call(params ...any) any {
 	paramsIn := make([]reflect.Value, len(params))
 	for i, param := range params {
 		paramsIn[i] = reflect.ValueOf(param)
@@ -40,7 +40,7 @@ func (g *genericFunc) Call(params ...interface{}) interface{} {
 }
 
 // newGenericFunc instantiates a new genericFunc pointer
-func newGenericFunc(methodName, paramName string, fn interface{}, validateFunc func(*functionCache) error) (*genericFunc, error) {
+func newGenericFunc(methodName, paramName string, fn any, validateFunc func(*functionCache) error) (*genericFunc, error) {
 	cache := &functionCache{}
 	cache.FnValue = reflect.ValueOf(fn)
 
@@ -104,7 +104,7 @@ func simpleParamValidator(In []reflect.Type, Out []reflect.Type) func(cache *fun
 }
 
 // newElemTypeSlice creates a slice of items elem types.
-func newElemTypeSlice(items ...interface{}) []reflect.Type {
+func newElemTypeSlice(items ...any) []reflect.Type {
 	typeList := make([]reflect.Type, len(items))
 	for i, item := range items {
 		typeItem := reflect.TypeOf(item)
