@@ -108,7 +108,7 @@ func newElemTypeSlice(items ...any) []reflect.Type {
 	typeList := make([]reflect.Type, len(items))
 	for i, item := range items {
 		typeItem := reflect.TypeOf(item)
-		if typeItem.Kind() == reflect.Ptr {
+		if typeItem.Kind() == reflect.Pointer {
 			typeList[i] = typeItem.Elem()
 		}
 	}

@@ -635,7 +635,7 @@ func (q Query) ToMapByT(result any,
 // attempt to convert the query elements to the slice element type.
 func (q Query) ToSlice(v any) {
 	ptrValue := reflect.ValueOf(v)
-	if ptrValue.Kind() != reflect.Ptr || ptrValue.IsNil() {
+	if ptrValue.Kind() != reflect.Pointer || ptrValue.IsNil() {
 		panic("ToSlice: v must be a pointer to a slice")
 	}
 
