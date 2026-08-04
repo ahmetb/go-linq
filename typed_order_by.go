@@ -23,6 +23,11 @@ func (q query[T]) OrderByDescending[K cmp.Ordered](selector func(T) K) orderedQu
 	return newOrderedQuery(q, []typedOrder[T]{newTypedOrderDescending(selector)})
 }
 
+func (q orderedQuery[T]) ThenBy[K cmp.Ordered](selector func(T) K) orderedQuery[T] {
+	orders := append(slices.Clone(q.orders), newTypedOrder(selector))
+	return newOrderedQuery(q.original, orders)
+}
+
 func newTypedOrder[T any, K cmp.Ordered](selector func(T) K) typedOrder[T] {
 	return typedOrder[T]{
 		compare: func(left, right T) int {
