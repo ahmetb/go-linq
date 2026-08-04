@@ -1,194 +1,137 @@
 package linq
 
-import "sort"
-
-type order struct {
-	selector func(any) any
-	compare  comparer
-	desc     bool
-}
+import (
+	"cmp"
+	"iter"
+	"slices"
+)
 
 // OrderedQuery is the type returned from OrderBy, OrderByDescending ThenBy and
 // ThenByDescending functions.
-type OrderedQuery struct {
-	Query
-	original Query
-	orders   []order
+type OrderedQuery[T any] struct {
+	Query[T]
+	original Query[T]
+	compares []func(a, b T) int
+}
+
+func ascending[T any, TKey cmp.Ordered](selector func(T) TKey) func(a, b T) int {
+	return func(a, b T) int {
+		return cmp.Compare(selector(a), selector(b))
+	}
+}
+
+func descending[T any, TKey cmp.Ordered](selector func(T) TKey) func(a, b T) int {
+	return func(a, b T) int {
+		return cmp.Compare(selector(b), selector(a))
+	}
+}
+
+// sortedIterate returns a sequence that collects the query into a slice and
+// sorts it with the given comparison functions, applied in order until one of
+// them reports a difference.
+func (q Query[T]) sortedIterate(compares []func(a, b T) int) iter.Seq[T] {
+	return func(yield func(T) bool) {
+		items := slices.Collect(q.Iterate)
+
+		slices.SortFunc(items, func(a, b T) int {
+			for _, compare := range compares {
+				if c := compare(a, b); c != 0 {
+					return c
+				}
+			}
+			return 0
+		})
+
+		for _, item := range items {
+			if !yield(item) {
+				return
+			}
+		}
+	}
 }
 
 // OrderBy sorts the elements of a collection in ascending order. Elements are
 // sorted according to a key.
-func (q Query) OrderBy(selector func(any) any) OrderedQuery {
-	return OrderedQuery{
-		orders:   []order{{selector: selector}},
+//
+// OrderBy is a generic method: the key type TKey is inferred from the selector
+// function and must be an ordered type (cmp.Ordered). To sort by a custom
+// comparison instead, use the Sort method.
+func (q Query[T]) OrderBy[TKey cmp.Ordered](selector func(T) TKey) OrderedQuery[T] {
+	compares := []func(a, b T) int{ascending(selector)}
+	return OrderedQuery[T]{
+		compares: compares,
 		original: q,
-		Query: Query{
-			Iterate: func(yield func(any) bool) {
-				{
-					items := q.sort([]order{{selector: selector}})
-					for _, item := range items {
-						if !yield(item) {
-							return
-						}
-					}
-				}
-			},
+		Query: Query[T]{
+			Iterate: q.sortedIterate(compares),
 		},
 	}
-}
-
-// OrderByT is the typed version of OrderBy.
-//
-//   - selectorFn is of type "func(TSource) TKey"
-//
-// NOTE: OrderBy has better performance than OrderByT.
-func (q Query) OrderByT(selectorFn any) OrderedQuery {
-	selectorGenericFunc, err := newGenericFunc(
-		"OrderByT", "selectorFn", selectorFn,
-		simpleParamValidator(newElemTypeSlice(new(genericType)), newElemTypeSlice(new(genericType))),
-	)
-	if err != nil {
-		panic(err)
-	}
-
-	selectorFunc := func(item any) any {
-		return selectorGenericFunc.Call(item)
-	}
-
-	return q.OrderBy(selectorFunc)
 }
 
 // OrderByDescending sorts the elements of a collection in descending order.
 // Elements are sorted according to a key.
-func (q Query) OrderByDescending(selector func(any) any) OrderedQuery {
-	return OrderedQuery{
-		orders:   []order{{selector: selector, desc: true}},
+//
+// OrderByDescending is a generic method: the key type TKey is inferred from the
+// selector function and must be an ordered type (cmp.Ordered).
+func (q Query[T]) OrderByDescending[TKey cmp.Ordered](selector func(T) TKey) OrderedQuery[T] {
+	compares := []func(a, b T) int{descending(selector)}
+	return OrderedQuery[T]{
+		compares: compares,
 		original: q,
-		Query: Query{
-			Iterate: func(yield func(any) bool) {
-				items := q.sort([]order{{selector: selector, desc: true}})
-				for _, item := range items {
-					if !yield(item) {
-						return
-					}
-				}
-			},
+		Query: Query[T]{
+			Iterate: q.sortedIterate(compares),
 		},
 	}
-}
-
-// OrderByDescendingT is the typed version of OrderByDescending.
-//   - selectorFn is of type "func(TSource) TKey"
-//
-// NOTE: OrderByDescending has better performance than OrderByDescendingT.
-func (q Query) OrderByDescendingT(selectorFn any) OrderedQuery {
-	selectorGenericFunc, err := newGenericFunc(
-		"OrderByDescendingT", "selectorFn", selectorFn,
-		simpleParamValidator(newElemTypeSlice(new(genericType)), newElemTypeSlice(new(genericType))),
-	)
-	if err != nil {
-		panic(err)
-	}
-
-	selectorFunc := func(item any) any {
-		return selectorGenericFunc.Call(item)
-	}
-
-	return q.OrderByDescending(selectorFunc)
 }
 
 // ThenBy performs a subsequent ordering of the elements in a collection in
 // ascending order. This method enables you to specify multiple sort criteria by
 // applying any number of ThenBy or ThenByDescending methods.
-func (oq OrderedQuery) ThenBy(
-	selector func(any) any) OrderedQuery {
-	return OrderedQuery{
-		orders:   append(oq.orders, order{selector: selector}),
+func (oq OrderedQuery[T]) ThenBy[TKey cmp.Ordered](selector func(T) TKey) OrderedQuery[T] {
+	compares := append(slices.Clip(oq.compares), ascending(selector))
+	return OrderedQuery[T]{
+		compares: compares,
 		original: oq.original,
-		Query: Query{
-			Iterate: func(yield func(any) bool) {
-				items := oq.original.sort(append(oq.orders, order{selector: selector}))
-				for _, item := range items {
-					if !yield(item) {
-						return
-					}
-				}
-			},
+		Query: Query[T]{
+			Iterate: oq.original.sortedIterate(compares),
 		},
 	}
-}
-
-// ThenByT is the typed version of ThenBy.
-//   - selectorFn is of type "func(TSource) TKey"
-//
-// NOTE: ThenBy has better performance than ThenByT.
-func (oq OrderedQuery) ThenByT(selectorFn any) OrderedQuery {
-	selectorGenericFunc, err := newGenericFunc(
-		"ThenByT", "selectorFn", selectorFn,
-		simpleParamValidator(newElemTypeSlice(new(genericType)), newElemTypeSlice(new(genericType))),
-	)
-	if err != nil {
-		panic(err)
-	}
-
-	selectorFunc := func(item any) any {
-		return selectorGenericFunc.Call(item)
-	}
-
-	return oq.ThenBy(selectorFunc)
 }
 
 // ThenByDescending performs a subsequent ordering of the elements in a
 // collection in descending order. This method enables you to specify multiple
 // sort criteria by applying any number of ThenBy or ThenByDescending methods.
-func (oq OrderedQuery) ThenByDescending(selector func(any) any) OrderedQuery {
-	return OrderedQuery{
-		orders:   append(oq.orders, order{selector: selector, desc: true}),
+func (oq OrderedQuery[T]) ThenByDescending[TKey cmp.Ordered](selector func(T) TKey) OrderedQuery[T] {
+	compares := append(slices.Clip(oq.compares), descending(selector))
+	return OrderedQuery[T]{
+		compares: compares,
 		original: oq.original,
-		Query: Query{
-			Iterate: func(yield func(any) bool) {
-				items := oq.original.sort(append(oq.orders, order{selector: selector, desc: true}))
-				for _, item := range items {
-					if !yield(item) {
-						return
-					}
-				}
-			},
+		Query: Query[T]{
+			Iterate: oq.original.sortedIterate(compares),
 		},
 	}
 }
 
-// ThenByDescendingT is the typed version of ThenByDescending.
-//   - selectorFn is of type "func(TSource) TKey"
-//
-// NOTE: ThenByDescending has better performance than ThenByDescendingT.
-func (oq OrderedQuery) ThenByDescendingT(selectorFn any) OrderedQuery {
-	selectorFunc, ok := selectorFn.(func(any) any)
-	if !ok {
-		selectorGenericFunc, err := newGenericFunc(
-			"ThenByDescending", "selectorFn", selectorFn,
-			simpleParamValidator(newElemTypeSlice(new(genericType)), newElemTypeSlice(new(genericType))),
-		)
-		if err != nil {
-			panic(err)
-		}
-
-		selectorFunc = func(item any) any {
-			return selectorGenericFunc.Call(item)
-		}
-	}
-	return oq.ThenByDescending(selectorFunc)
-}
-
 // Sort returns a new query by sorting elements with provided less function in
 // ascending order. The comparer function should return true if the parameter i
-// is less than j. While this method is uglier than chaining OrderBy,
-// OrderByDescending, ThenBy and ThenByDescending methods, its performance is
-// much better.
-func (q Query) Sort(less func(i, j any) bool) Query {
-	return Query{
-		Iterate: func(yield func(any) bool) {
-			items := q.lessSort(less)
+// is less than j.
+//
+// Unlike OrderBy, Sort does not require the sort key to be an ordered type,
+// so it can be used with arbitrary comparison logic.
+func (q Query[T]) Sort(less func(i, j T) bool) Query[T] {
+	return Query[T]{
+		Iterate: func(yield func(T) bool) {
+			items := slices.Collect(q.Iterate)
+
+			slices.SortFunc(items, func(a, b T) int {
+				if less(a, b) {
+					return -1
+				}
+				if less(b, a) {
+					return 1
+				}
+				return 0
+			})
+
 			for _, item := range items {
 				if !yield(item) {
 					return
@@ -196,87 +139,4 @@ func (q Query) Sort(less func(i, j any) bool) Query {
 			}
 		},
 	}
-}
-
-// SortT is the typed version of Sort.
-//   - lessFn is of type "func(TSource,TSource) bool"
-//
-// NOTE: Sort has better performance than SortT.
-func (q Query) SortT(lessFn any) Query {
-	lessGenericFunc, err := newGenericFunc(
-		"SortT", "lessFn", lessFn,
-		simpleParamValidator(newElemTypeSlice(new(genericType), new(genericType)), newElemTypeSlice(new(bool))),
-	)
-	if err != nil {
-		panic(err)
-	}
-
-	lessFunc := func(i, j any) bool {
-		return lessGenericFunc.Call(i, j).(bool)
-	}
-
-	return q.Sort(lessFunc)
-}
-
-type sorter struct {
-	items []any
-	less  func(i, j any) bool
-}
-
-func (s sorter) Len() int {
-	return len(s.items)
-}
-
-func (s sorter) Swap(i, j int) {
-	s.items[i], s.items[j] = s.items[j], s.items[i]
-}
-
-func (s sorter) Less(i, j int) bool {
-	return s.less(s.items[i], s.items[j])
-}
-
-func (q Query) sort(orders []order) (r []any) {
-	for item := range q.Iterate {
-		r = append(r, item)
-	}
-
-	if len(r) == 0 {
-		return
-	}
-
-	for i, j := range orders {
-		orders[i].compare = getComparer(j.selector(r[0]))
-	}
-
-	s := sorter{
-		items: r,
-		less: func(i, j any) bool {
-			for _, order := range orders {
-				x, y := order.selector(i), order.selector(j)
-				switch order.compare(x, y) {
-				case 0:
-					continue
-				case -1:
-					return !order.desc
-				default:
-					return order.desc
-				}
-			}
-
-			return false
-		}}
-
-	sort.Sort(s)
-	return
-}
-
-func (q Query) lessSort(less func(i, j any) bool) (r []any) {
-	for item := range q.Iterate {
-		r = append(r, item)
-	}
-
-	s := sorter{items: r, less: less}
-
-	sort.Sort(s)
-	return
 }

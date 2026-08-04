@@ -5,8 +5,15 @@ import (
 	"testing"
 )
 
+func boolToInt(b bool) int {
+	if b {
+		return 1
+	}
+	return 0
+}
+
 func TestEmpty(t *testing.T) {
-	q := From([]string{}).OrderBy(func(in any) any {
+	q := FromSlice([]string{}).OrderBy(func(in string) int {
 		return 0
 	})
 
@@ -26,8 +33,8 @@ func TestOrderBy(t *testing.T) {
 		slice[i].f1 = i
 	}
 
-	q := From(slice).OrderBy(func(i any) any {
-		return i.(foo).f1
+	q := FromSlice(slice).OrderBy(func(f foo) int {
+		return f.f1
 	})
 
 	next, stop := iter.Pull(q.Iterate)
@@ -35,18 +42,12 @@ func TestOrderBy(t *testing.T) {
 
 	j := 0
 	for item, ok := next(); ok; item, ok = next() {
-		if item.(foo).f1 != j {
+		if item.f1 != j {
 			t.Errorf("OrderBy()[%v]=%v expected %v", j, item, foo{f1: j})
 		}
 
 		j++
 	}
-}
-
-func TestOrderByT_PanicWhenSelectorFnIsInvalid(t *testing.T) {
-	mustPanicWithError(t, "OrderByT: parameter [selectorFn] has a invalid function signature. Expected: 'func(T)T', actual: 'func(int,int)int'", func() {
-		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).OrderByT(func(item, j int) int { return item + 2 })
-	})
 }
 
 func TestOrderByDescending(t *testing.T) {
@@ -56,8 +57,8 @@ func TestOrderByDescending(t *testing.T) {
 		slice[i].f1 = i
 	}
 
-	q := From(slice).OrderByDescending(func(i any) any {
-		return i.(foo).f1
+	q := FromSlice(slice).OrderByDescending(func(f foo) int {
+		return f.f1
 	})
 
 	next, stop := iter.Pull(q.Iterate)
@@ -65,18 +66,12 @@ func TestOrderByDescending(t *testing.T) {
 
 	j := len(slice) - 1
 	for item, ok := next(); ok; item, ok = next() {
-		if item.(foo).f1 != j {
+		if item.f1 != j {
 			t.Errorf("OrderByDescending()[%v]=%v expected %v", j, item, foo{f1: j})
 		}
 
 		j--
 	}
-}
-
-func TestOrderByDescendingT_PanicWhenSelectorFnIsInvalid(t *testing.T) {
-	mustPanicWithError(t, "OrderByDescendingT: parameter [selectorFn] has a invalid function signature. Expected: 'func(T)T', actual: 'func(int,int)int'", func() {
-		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).OrderByDescendingT(func(item, j int) int { return item + 2 })
-	})
 }
 
 func TestThenBy(t *testing.T) {
@@ -87,39 +82,61 @@ func TestThenBy(t *testing.T) {
 		slice[i].f2 = i%2 == 0
 	}
 
-	q := From(slice).OrderBy(func(i any) any {
-		return i.(foo).f2
-	}).ThenBy(func(i any) any {
-		return i.(foo).f1
+	q := FromSlice(slice).OrderBy(func(f foo) int {
+		return boolToInt(f.f2)
+	}).ThenBy(func(f foo) int {
+		return f.f1
 	})
 
 	next, stop := iter.Pull(q.Iterate)
 	defer stop()
 
+	prevByGroup := map[bool]int{true: -1, false: -1}
 	for item, ok := next(); ok; item, ok = next() {
-		if item.(foo).f2 != (item.(foo).f1%2 == 0) {
+		if item.f2 != (item.f1%2 == 0) {
 			t.Errorf("OrderBy().ThenBy()=%v", item)
 		}
+		if item.f1 < prevByGroup[item.f2] {
+			t.Errorf("OrderBy().ThenBy() not sorted by f1 within group: %v after %v", item.f1, prevByGroup[item.f2])
+		}
+		prevByGroup[item.f2] = item.f1
+	}
+}
+
+func TestThenBy_DifferentKeyType(t *testing.T) {
+	// ThenBy key type may differ from the OrderBy key type.
+	slice := []foo{
+		{f1: 2, f3: "b"},
+		{f1: 1, f3: "b"},
+		{f1: 1, f3: "a"},
+	}
+
+	q := FromSlice(slice).OrderBy(func(f foo) int {
+		return f.f1
+	}).ThenBy(func(f foo) string {
+		return f.f3
+	})
+
+	want := []foo{
+		{f1: 1, f3: "a"},
+		{f1: 1, f3: "b"},
+		{f1: 2, f3: "b"},
+	}
+
+	if !testQueryIteration(q.Query, want) {
+		t.Errorf("OrderBy().ThenBy()=%v expected %v", toSlice(q.Query), want)
 	}
 }
 
 func TestThenBy_Abort(t *testing.T) {
 	input := []int{1, 2, 3, 4, 5, 6, 7, 8, 9}
-	q := From(input).OrderBy(func(i any) any {
-		return i.(int)
-	}).ThenBy(func(i any) any {
-		return i.(int)
+	q := FromSlice(input).OrderBy(func(i int) int {
+		return i
+	}).ThenBy(func(i int) int {
+		return i
 	})
 
 	runDryIteration(q.Query)
-}
-
-func TestThenByT_PanicWhenSelectorFnIsInvalid(t *testing.T) {
-	mustPanicWithError(t, "ThenByT: parameter [selectorFn] has a invalid function signature. Expected: 'func(T)T', actual: 'func(int,int)bool'", func() {
-		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).
-			OrderByT(func(item int) int { return item }).
-			ThenByT(func(item, j int) bool { return true })
-	})
 }
 
 func TestThenByDescending(t *testing.T) {
@@ -130,17 +147,17 @@ func TestThenByDescending(t *testing.T) {
 		slice[i].f2 = i%2 == 0
 	}
 
-	q := From(slice).OrderBy(func(i any) any {
-		return i.(foo).f2
-	}).ThenByDescending(func(i any) any {
-		return i.(foo).f1
+	q := FromSlice(slice).OrderBy(func(f foo) int {
+		return boolToInt(f.f2)
+	}).ThenByDescending(func(f foo) int {
+		return f.f1
 	})
 
 	next, stop := iter.Pull(q.Iterate)
 	defer stop()
 
 	for item, ok := next(); ok; item, ok = next() {
-		if item.(foo).f2 != (item.(foo).f1%2 == 0) {
+		if item.f2 != (item.f1%2 == 0) {
 			t.Errorf("OrderBy().ThenByDescending()=%v", item)
 		}
 	}
@@ -148,21 +165,13 @@ func TestThenByDescending(t *testing.T) {
 
 func TestThenByDescending_Abort(t *testing.T) {
 	input := []int{1, 2, 3, 4, 5, 6, 7, 8, 9}
-	q := From(input).OrderBy(func(i any) any {
-		return i.(int)
-	}).ThenByDescending(func(i any) any {
-		return i.(int)
+	q := FromSlice(input).OrderBy(func(i int) int {
+		return i
+	}).ThenByDescending(func(i int) int {
+		return i
 	})
 
 	runDryIteration(q.Query)
-}
-
-func TestThenByDescendingT_PanicWhenSelectorFnIsInvalid(t *testing.T) {
-	mustPanicWithError(t, "ThenByDescending: parameter [selectorFn] has a invalid function signature. Expected: 'func(T)T', actual: 'func(int,int)bool'", func() {
-		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).
-			OrderByT(func(item int) int { return item }).
-			ThenByDescendingT(func(item, j int) bool { return true })
-	})
 }
 
 func TestSort(t *testing.T) {
@@ -172,8 +181,8 @@ func TestSort(t *testing.T) {
 		slice[i].f1 = i
 	}
 
-	q := From(slice).Sort(func(i, j any) bool {
-		return i.(foo).f1 < j.(foo).f1
+	q := FromSlice(slice).Sort(func(i, j foo) bool {
+		return i.f1 < j.f1
 	})
 
 	next, stop := iter.Pull(q.Iterate)
@@ -181,7 +190,7 @@ func TestSort(t *testing.T) {
 
 	j := 0
 	for item, ok := next(); ok; item, ok = next() {
-		if item.(foo).f1 != j {
+		if item.f1 != j {
 			t.Errorf("Sort()[%v]=%v expected %v", j, item, foo{f1: j})
 		}
 
@@ -192,15 +201,27 @@ func TestSort(t *testing.T) {
 func TestSort_Abort(t *testing.T) {
 	input := []int{1, 2, 3, 4, 5, 6, 7, 8, 9}
 
-	q := From(input).Sort(func(i, j any) bool {
-		return i.(int) < j.(int)
+	q := FromSlice(input).Sort(func(i, j int) bool {
+		return i < j
 	})
 
 	runDryIteration(q)
 }
 
-func TestSortT_PanicWhenLessFnIsInvalid(t *testing.T) {
-	mustPanicWithError(t, "SortT: parameter [lessFn] has a invalid function signature. Expected: 'func(T,T)bool', actual: 'func(int,int)string'", func() {
-		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).SortT(func(i, j int) string { return "" })
+// TestOrderedQueryMethodPromotion verifies that Query[T] methods, including
+// generic methods like Select, are promoted through the embedded Query[T]
+// field of OrderedQuery[T].
+func TestOrderedQueryMethodPromotion(t *testing.T) {
+	input := []int{3, 1, 2}
+	want := []string{"1x", "2x", "3x"}
+
+	q := FromSlice(input).OrderBy(func(i int) int {
+		return i
+	}).Select(func(i int) string {
+		return string(rune('0'+i)) + "x"
 	})
+
+	if !testQueryIteration(q, want) {
+		t.Errorf("OrderBy().Select()=%v expected %v", toSlice(q), want)
+	}
 }
