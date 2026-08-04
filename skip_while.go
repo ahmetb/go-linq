@@ -1,5 +1,6 @@
 package linq
 
+// SkipWhile bypasses the leading run of values satisfying predicate.
 func (q Query[T]) SkipWhile(predicate func(T) bool) Query[T] {
 	return Query[T]{iterate: func(yield func(T) bool) {
 		skipping := true

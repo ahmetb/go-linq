@@ -1,5 +1,6 @@
 package linq
 
+// IntersectBy yields the first value for each key occurring in both queries.
 func (q Query[T]) IntersectBy[K comparable](other Query[T], selector func(T) K) Query[T] {
 	return Query[T]{iterate: func(yield func(T) bool) {
 		available := make(map[K]struct{})

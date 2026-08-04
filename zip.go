@@ -2,6 +2,7 @@ package linq
 
 import "iter"
 
+// Zip combines values at equal positions until either query ends.
 func (q Query[T]) Zip[U, R any](other Query[U], resultSelector func(T, U) R) Query[R] {
 	return Query[R]{
 		iterate: func(yield func(R) bool) {

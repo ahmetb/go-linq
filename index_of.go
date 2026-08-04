@@ -1,5 +1,6 @@
 package linq
 
+// IndexOf returns the first matching zero-based index, or -1 when absent.
 func (q Query[T]) IndexOf(predicate func(T) bool) int {
 	result := -1
 	index := 0

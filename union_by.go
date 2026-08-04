@@ -1,5 +1,6 @@
 package linq
 
+// UnionBy yields the first value for each key across q followed by other.
 func (q Query[T]) UnionBy[K comparable](other Query[T], selector func(T) K) Query[T] {
 	return Query[T]{iterate: func(yield func(T) bool) {
 		seen := make(map[K]struct{})

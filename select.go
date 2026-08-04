@@ -1,5 +1,6 @@
 package linq
 
+// Select lazily projects each value into a result value.
 func (q Query[T]) Select[R any](selector func(T) R) Query[R] {
 	return Query[R]{
 		iterate: func(yield func(R) bool) {
@@ -10,6 +11,7 @@ func (q Query[T]) Select[R any](selector func(T) R) Query[R] {
 	}
 }
 
+// SelectIndexed lazily projects each zero-based source index and value.
 func (q Query[T]) SelectIndexed[R any](selector func(int, T) R) Query[R] {
 	return Query[R]{
 		iterate: func(yield func(R) bool) {

@@ -1,5 +1,6 @@
 package linq
 
+// SkipWhileIndexed is SkipWhile with each zero-based source index.
 func (q Query[T]) SkipWhileIndexed(predicate func(int, T) bool) Query[T] {
 	return Query[T]{iterate: func(yield func(T) bool) {
 		index := 0

@@ -1,5 +1,6 @@
 package linq
 
+// Append returns a lazy query that yields value after the source.
 func (q Query[T]) Append(value T) Query[T] {
 	return Query[T]{iterate: func(yield func(T) bool) {
 		continuing := true

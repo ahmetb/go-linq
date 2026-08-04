@@ -2,6 +2,7 @@ package linq
 
 import "math"
 
+// AverageBy returns the arithmetic mean of selected numeric values, or NaN when empty.
 func (q Query[T]) AverageBy[N Number](selector func(T) N) float64 {
 	sum := 0.0
 	count := 0

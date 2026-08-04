@@ -16,19 +16,23 @@ type OrderedQuery[T any] struct {
 	orders   []typedOrder[T]
 }
 
+// OrderBy returns a stable query ordered by an ascending key.
 func (q Query[T]) OrderBy[K cmp.Ordered](selector func(T) K) OrderedQuery[T] {
 	return newOrderedQuery(q, []typedOrder[T]{newTypedOrder(selector)})
 }
 
+// OrderByDescending returns a stable query ordered by a descending key.
 func (q Query[T]) OrderByDescending[K cmp.Ordered](selector func(T) K) OrderedQuery[T] {
 	return newOrderedQuery(q, []typedOrder[T]{newTypedOrderDescending(selector)})
 }
 
+// ThenBy adds an ascending tie-break key without mutating the parent query.
 func (q OrderedQuery[T]) ThenBy[K cmp.Ordered](selector func(T) K) OrderedQuery[T] {
 	orders := append(slices.Clone(q.orders), newTypedOrder(selector))
 	return newOrderedQuery(q.original, orders)
 }
 
+// ThenByDescending adds a descending tie-break key without mutating the parent query.
 func (q OrderedQuery[T]) ThenByDescending[K cmp.Ordered](selector func(T) K) OrderedQuery[T] {
 	orders := append(slices.Clone(q.orders), newTypedOrderDescending(selector))
 	return newOrderedQuery(q.original, orders)

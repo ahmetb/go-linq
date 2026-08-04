@@ -1,5 +1,6 @@
 package linq
 
+// ExceptBy yields distinct values from q whose keys do not occur in other.
 func (q Query[T]) ExceptBy[K comparable](other Query[T], selector func(T) K) Query[T] {
 	return Query[T]{
 		iterate: func(yield func(T) bool) {

@@ -2,6 +2,7 @@ package linq
 
 import "cmp"
 
+// MinBy returns the first value with the least key, or the zero value of T.
 func (q Query[T]) MinBy[K cmp.Ordered](selector func(T) K) T {
 	var result T
 	var minimum K

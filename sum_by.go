@@ -7,6 +7,7 @@ type Number interface {
 		~float32 | ~float64
 }
 
+// SumBy returns the sum of selected numeric values, or zero when empty.
 func (q Query[T]) SumBy[N Number](selector func(T) N) N {
 	var result N
 	q.iterate(func(value T) bool {

@@ -1,5 +1,6 @@
 package linq
 
+// ToMapBy materializes selected keys and values into a new map.
 func (q Query[T]) ToMapBy[K comparable, V any](
 	keySelector func(T) K,
 	valueSelector func(T) V,

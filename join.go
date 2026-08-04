@@ -1,5 +1,6 @@
 package linq
 
+// Join correlates outer and inner values with equal keys and projects each match.
 func (q Query[T]) Join[U any, K comparable, R any](
 	inner Query[U],
 	outerKeySelector func(T) K,

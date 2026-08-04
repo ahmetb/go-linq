@@ -1,5 +1,6 @@
 package linq
 
+// SelectMany projects each value to a query and lazily flattens the results.
 func (q Query[T]) SelectMany[R any](selector func(T) Query[R]) Query[R] {
 	return Query[R]{
 		iterate: func(yield func(R) bool) {
@@ -15,6 +16,7 @@ func (q Query[T]) SelectMany[R any](selector func(T) Query[R]) Query[R] {
 	}
 }
 
+// SelectManyIndexed projects each index and value to a query and flattens it.
 func (q Query[T]) SelectManyIndexed[R any](selector func(int, T) Query[R]) Query[R] {
 	return Query[R]{
 		iterate: func(yield func(R) bool) {
@@ -33,6 +35,7 @@ func (q Query[T]) SelectManyIndexed[R any](selector func(int, T) Query[R]) Query
 	}
 }
 
+// SelectManyBy flattens projected queries and combines inner and outer values.
 func (q Query[T]) SelectManyBy[U, R any](
 	selector func(T) Query[U],
 	resultSelector func(U, T) R,
@@ -51,6 +54,7 @@ func (q Query[T]) SelectManyBy[U, R any](
 	}
 }
 
+// SelectManyByIndexed is SelectManyBy with each outer source index.
 func (q Query[T]) SelectManyByIndexed[U, R any](
 	selector func(int, T) Query[U],
 	resultSelector func(U, T) R,

@@ -1,5 +1,6 @@
 package linq
 
+// Aggregate combines the sequence from left to right, using its first value as the seed.
 func (q Query[T]) Aggregate(accumulator func(T, T) T) T {
 	var result T
 	first := true
@@ -14,6 +15,7 @@ func (q Query[T]) Aggregate(accumulator func(T, T) T) T {
 	return result
 }
 
+// AggregateWithSeed combines the sequence from left to right starting with seed.
 func (q Query[T]) AggregateWithSeed[A any](seed A, accumulator func(A, T) A) A {
 	result := seed
 	for value := range q.iterate {
@@ -22,6 +24,7 @@ func (q Query[T]) AggregateWithSeed[A any](seed A, accumulator func(A, T) A) A {
 	return result
 }
 
+// AggregateWithSeedBy aggregates from seed and projects the final accumulator.
 func (q Query[T]) AggregateWithSeedBy[A, R any](
 	seed A,
 	accumulator func(A, T) A,

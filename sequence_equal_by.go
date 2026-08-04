@@ -2,6 +2,7 @@ package linq
 
 import "iter"
 
+// SequenceEqualBy reports whether two sequences have equal keys in equal positions.
 func (q Query[T]) SequenceEqualBy[U any, K comparable](
 	other Query[U],
 	leftSelector func(T) K,

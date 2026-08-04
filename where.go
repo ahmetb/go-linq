@@ -1,5 +1,6 @@
 package linq
 
+// Where lazily yields values satisfying predicate.
 func (q Query[T]) Where(predicate func(T) bool) Query[T] {
 	return Query[T]{
 		iterate: func(yield func(T) bool) {
@@ -13,6 +14,7 @@ func (q Query[T]) Where(predicate func(T) bool) Query[T] {
 	}
 }
 
+// WhereIndexed lazily tests each zero-based source index and value.
 func (q Query[T]) WhereIndexed(predicate func(int, T) bool) Query[T] {
 	return Query[T]{
 		iterate: func(yield func(T) bool) {

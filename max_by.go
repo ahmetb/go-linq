@@ -2,6 +2,7 @@ package linq
 
 import "cmp"
 
+// MaxBy returns the first value with the greatest key, or the zero value of T.
 func (q Query[T]) MaxBy[K cmp.Ordered](selector func(T) K) T {
 	var result T
 	var maximum K

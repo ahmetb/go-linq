@@ -1,5 +1,6 @@
 package linq
 
+// Single returns the sole value, or the zero value of T unless exactly one exists.
 func (q Query[T]) Single() T {
 	var result T
 	found := false

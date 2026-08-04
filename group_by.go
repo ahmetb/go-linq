@@ -6,6 +6,7 @@ type Group[K comparable, E any] struct {
 	Group []E
 }
 
+// GroupBy groups projected elements by key in first-key encounter order.
 func (q Query[T]) GroupBy[K comparable, E any](
 	keySelector func(T) K,
 	elementSelector func(T) E,

@@ -1,5 +1,6 @@
 package linq
 
+// SingleWith returns the sole matching value, or the zero value of T otherwise.
 func (q Query[T]) SingleWith(predicate func(T) bool) T {
 	var result T
 	found := false

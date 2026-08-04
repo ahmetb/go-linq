@@ -11,6 +11,7 @@ func (s typedSorter[T]) Len() int           { return len(s.items) }
 func (s typedSorter[T]) Less(i, j int) bool { return s.less(s.items[i], s.items[j]) }
 func (s typedSorter[T]) Swap(i, j int)      { s.items[i], s.items[j] = s.items[j], s.items[i] }
 
+// Sort returns a query ordered by less using an unstable sort.
 func (q Query[T]) Sort(less func(T, T) bool) Query[T] {
 	return Query[T]{iterate: func(yield func(T) bool) {
 		items := q.toSlice()

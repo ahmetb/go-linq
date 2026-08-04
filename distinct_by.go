@@ -1,5 +1,6 @@
 package linq
 
+// DistinctBy yields the first value for each projected key.
 func (q Query[T]) DistinctBy[K comparable](selector func(T) K) Query[T] {
 	return Query[T]{
 		iterate: func(yield func(T) bool) {

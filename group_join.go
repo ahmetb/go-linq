@@ -1,5 +1,6 @@
 package linq
 
+// GroupJoin correlates each outer value with all inner values sharing its key.
 func (q Query[T]) GroupJoin[U any, K comparable, R any](
 	inner Query[U],
 	outerKeySelector func(T) K,
