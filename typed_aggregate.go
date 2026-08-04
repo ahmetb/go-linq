@@ -13,3 +13,11 @@ func (q query[T]) Aggregate(accumulator func(T, T) T) T {
 	}
 	return result
 }
+
+func (q query[T]) AggregateWithSeed[A any](seed A, accumulator func(A, T) A) A {
+	result := seed
+	for value := range q.iterate {
+		result = accumulator(result, value)
+	}
+	return result
+}
