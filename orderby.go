@@ -10,7 +10,7 @@ type order struct {
 
 // OrderedQuery is the type returned from OrderBy, OrderByDescending ThenBy and
 // ThenByDescending functions.
-type OrderedQuery struct {
+type legacyOrderedQuery struct {
 	legacyQuery
 	original legacyQuery
 	orders   []order
@@ -18,8 +18,8 @@ type OrderedQuery struct {
 
 // OrderBy sorts the elements of a collection in ascending order. Elements are
 // sorted according to a key.
-func (q legacyQuery) OrderBy(selector func(any) any) OrderedQuery {
-	return OrderedQuery{
+func (q legacyQuery) OrderBy(selector func(any) any) legacyOrderedQuery {
+	return legacyOrderedQuery{
 		orders:   []order{{selector: selector}},
 		original: q,
 		legacyQuery: legacyQuery{
@@ -42,7 +42,7 @@ func (q legacyQuery) OrderBy(selector func(any) any) OrderedQuery {
 //   - selectorFn is of type "func(TSource) TKey"
 //
 // NOTE: OrderBy has better performance than OrderByT.
-func (q legacyQuery) OrderByT(selectorFn any) OrderedQuery {
+func (q legacyQuery) OrderByT(selectorFn any) legacyOrderedQuery {
 	selectorGenericFunc, err := newGenericFunc(
 		"OrderByT", "selectorFn", selectorFn,
 		simpleParamValidator(newElemTypeSlice(new(genericType)), newElemTypeSlice(new(genericType))),
@@ -60,8 +60,8 @@ func (q legacyQuery) OrderByT(selectorFn any) OrderedQuery {
 
 // OrderByDescending sorts the elements of a collection in descending order.
 // Elements are sorted according to a key.
-func (q legacyQuery) OrderByDescending(selector func(any) any) OrderedQuery {
-	return OrderedQuery{
+func (q legacyQuery) OrderByDescending(selector func(any) any) legacyOrderedQuery {
+	return legacyOrderedQuery{
 		orders:   []order{{selector: selector, desc: true}},
 		original: q,
 		legacyQuery: legacyQuery{
@@ -81,7 +81,7 @@ func (q legacyQuery) OrderByDescending(selector func(any) any) OrderedQuery {
 //   - selectorFn is of type "func(TSource) TKey"
 //
 // NOTE: OrderByDescending has better performance than OrderByDescendingT.
-func (q legacyQuery) OrderByDescendingT(selectorFn any) OrderedQuery {
+func (q legacyQuery) OrderByDescendingT(selectorFn any) legacyOrderedQuery {
 	selectorGenericFunc, err := newGenericFunc(
 		"OrderByDescendingT", "selectorFn", selectorFn,
 		simpleParamValidator(newElemTypeSlice(new(genericType)), newElemTypeSlice(new(genericType))),
@@ -100,9 +100,9 @@ func (q legacyQuery) OrderByDescendingT(selectorFn any) OrderedQuery {
 // ThenBy performs a subsequent ordering of the elements in a collection in
 // ascending order. This method enables you to specify multiple sort criteria by
 // applying any number of ThenBy or ThenByDescending methods.
-func (oq OrderedQuery) ThenBy(
-	selector func(any) any) OrderedQuery {
-	return OrderedQuery{
+func (oq legacyOrderedQuery) ThenBy(
+	selector func(any) any) legacyOrderedQuery {
+	return legacyOrderedQuery{
 		orders:   append(oq.orders, order{selector: selector}),
 		original: oq.original,
 		legacyQuery: legacyQuery{
@@ -122,7 +122,7 @@ func (oq OrderedQuery) ThenBy(
 //   - selectorFn is of type "func(TSource) TKey"
 //
 // NOTE: ThenBy has better performance than ThenByT.
-func (oq OrderedQuery) ThenByT(selectorFn any) OrderedQuery {
+func (oq legacyOrderedQuery) ThenByT(selectorFn any) legacyOrderedQuery {
 	selectorGenericFunc, err := newGenericFunc(
 		"ThenByT", "selectorFn", selectorFn,
 		simpleParamValidator(newElemTypeSlice(new(genericType)), newElemTypeSlice(new(genericType))),
@@ -141,8 +141,8 @@ func (oq OrderedQuery) ThenByT(selectorFn any) OrderedQuery {
 // ThenByDescending performs a subsequent ordering of the elements in a
 // collection in descending order. This method enables you to specify multiple
 // sort criteria by applying any number of ThenBy or ThenByDescending methods.
-func (oq OrderedQuery) ThenByDescending(selector func(any) any) OrderedQuery {
-	return OrderedQuery{
+func (oq legacyOrderedQuery) ThenByDescending(selector func(any) any) legacyOrderedQuery {
+	return legacyOrderedQuery{
 		orders:   append(oq.orders, order{selector: selector, desc: true}),
 		original: oq.original,
 		legacyQuery: legacyQuery{
@@ -162,7 +162,7 @@ func (oq OrderedQuery) ThenByDescending(selector func(any) any) OrderedQuery {
 //   - selectorFn is of type "func(TSource) TKey"
 //
 // NOTE: ThenByDescending has better performance than ThenByDescendingT.
-func (oq OrderedQuery) ThenByDescendingT(selectorFn any) OrderedQuery {
+func (oq legacyOrderedQuery) ThenByDescendingT(selectorFn any) legacyOrderedQuery {
 	selectorFunc, ok := selectorFn.(func(any) any)
 	if !ok {
 		selectorGenericFunc, err := newGenericFunc(

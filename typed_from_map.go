@@ -1,5 +1,6 @@
 package linq
 
+// KeyValue is a typed map entry yielded by FromMap.
 type KeyValue[K comparable, V any] struct {
 	Key   K
 	Value V

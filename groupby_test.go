@@ -17,14 +17,14 @@ func TestGroupBy(t *testing.T) {
 
 	eq := true
 	for item := range q.Iterate {
-		group := item.(Group)
+		group := item.(legacyGroup)
 		switch group.Key.(int) {
 		case 0:
-			if !reflect.DeepEqual(group.Group, wantEven) {
+			if !reflect.DeepEqual(group.legacyGroup, wantEven) {
 				eq = false
 			}
 		case 1:
-			if !reflect.DeepEqual(group.Group, wantOdd) {
+			if !reflect.DeepEqual(group.legacyGroup, wantOdd) {
 				eq = false
 			}
 		default:

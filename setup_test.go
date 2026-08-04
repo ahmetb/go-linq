@@ -30,7 +30,7 @@ func (f foo) Iterate() iter.Seq[any] {
 	}
 }
 
-func (f foo) CompareTo(c Comparable) int {
+func (f foo) CompareTo(c legacyComparable) int {
 	a, b := f.f1, c.(foo).f1
 
 	if a < b {

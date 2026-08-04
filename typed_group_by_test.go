@@ -36,7 +36,7 @@ func TestTypedGroupByBuffersBeforeYielding(t *testing.T) {
 		func(value int) int { return value },
 	)
 
-	q.iterate(func(group[int, int]) bool { return false })
+	q.iterate(func(Group[int, int]) bool { return false })
 
 	if calls != 3 {
 		t.Fatalf("key selector called %d times, want 3", calls)
@@ -60,7 +60,7 @@ func BenchmarkTypedGroupBy(b *testing.B) {
 		for b.Loop() {
 			size := 0
 			legacyFromSlice(source).GroupByT(groupByBenchmarkKey, groupByBenchmarkElement).Iterate(func(value any) bool {
-				size += len(value.(Group).Group)
+				size += len(value.(legacyGroup).legacyGroup)
 				return true
 			})
 			benchmarkGroupBySize = size
@@ -71,7 +71,7 @@ func BenchmarkTypedGroupBy(b *testing.B) {
 		b.ReportAllocs()
 		for b.Loop() {
 			size := 0
-			fromSlice(source).GroupBy(groupByBenchmarkKey, groupByBenchmarkElement).iterate(func(value group[int, int]) bool {
+			fromSlice(source).GroupBy(groupByBenchmarkKey, groupByBenchmarkElement).iterate(func(value Group[int, int]) bool {
 				size += len(value.Group)
 				return true
 			})

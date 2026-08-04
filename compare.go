@@ -18,8 +18,8 @@ type comparer func(any, any) int
 //
 //		return 0
 //	}
-type Comparable interface {
-	CompareTo(Comparable) int
+type legacyComparable interface {
+	CompareTo(legacyComparable) int
 }
 
 func getComparer(data any) comparer {
@@ -194,7 +194,7 @@ func getComparer(data any) comparer {
 		}
 	default:
 		return func(x, y any) int {
-			a, b := x.(Comparable), y.(Comparable)
+			a, b := x.(legacyComparable), y.(legacyComparable)
 			return a.CompareTo(b)
 		}
 	}

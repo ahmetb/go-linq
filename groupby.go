@@ -1,9 +1,9 @@
 package linq
 
 // Group is a type used to store the result of GroupBy method.
-type Group struct {
-	Key   any
-	Group []any
+type legacyGroup struct {
+	Key         any
+	legacyGroup []any
 }
 
 // GroupBy method groups the elements of a collection according to a specified
@@ -22,9 +22,9 @@ func (q legacyQuery) GroupBy(keySelector func(any) any,
 			}
 
 			for key, group := range groups {
-				group := Group{
-					Key:   key,
-					Group: group,
+				group := legacyGroup{
+					Key:         key,
+					legacyGroup: group,
 				}
 				if !yield(group) {
 					return

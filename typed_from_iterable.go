@@ -2,6 +2,7 @@ package linq
 
 import "iter"
 
+// Iterable is implemented by custom collections that expose a typed sequence.
 type Iterable[T any] interface {
 	Iterate() iter.Seq[T]
 }

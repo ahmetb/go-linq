@@ -157,7 +157,7 @@ func ExamplelegacyQuery_AggregateWithSeedBy() {
 
 // The following code example demonstrates how to
 // use Distinct to return distinct elements from a slice of integers.
-func ExampleOrderedQuery_Distinct() {
+func ExamplelegacyOrderedQuery_Distinct() {
 	ages := []int{21, 46, 46, 55, 17, 21, 55, 55}
 
 	var distinctAges []int
@@ -175,7 +175,7 @@ func ExampleOrderedQuery_Distinct() {
 
 // The following code example demonstrates how to
 // use DistinctBy to return distinct elements from a ordered slice of elements.
-func ExampleOrderedQuery_DistinctBy() {
+func ExamplelegacyOrderedQuery_DistinctBy() {
 	type Product struct {
 		Name string
 		Code int
@@ -210,7 +210,7 @@ func ExampleOrderedQuery_DistinctBy() {
 
 // The following code example demonstrates how to use ThenBy to perform
 // a secondary ordering of the elements in a slice.
-func ExampleOrderedQuery_ThenBy() {
+func ExamplelegacyOrderedQuery_ThenBy() {
 	fruits := []string{"grape", "passionfruit", "banana", "mango", "orange", "raspberry", "apple", "blueberry"}
 
 	// Sort the strings first by their length and then
@@ -421,11 +421,13 @@ func ExamplelegacyQuery_DefaultIfEmpty() {
 			legacyFrom(pets),
 			func(person Person) Person { return person },
 			func(pet Pet) Person { return pet.Owner },
-			func(person Person, pets []Pet) Group { return Group{Key: person, Group: legacyFrom(pets).Results()} },
+			func(person Person, pets []Pet) legacyGroup {
+				return legacyGroup{Key: person, legacyGroup: legacyFrom(pets).Results()}
+			},
 		).
 		SelectManyByT(
-			func(g Group) legacyQuery { return legacyFrom(g.Group).DefaultIfEmpty(Pet{}) },
-			func(pet Pet, group Group) string {
+			func(g legacyGroup) legacyQuery { return legacyFrom(g.legacyGroup).DefaultIfEmpty(Pet{}) },
+			func(pet Pet, group legacyGroup) string {
 				return fmt.Sprintf("%s: %s", group.Key.(Person).FirstName, pet.Name)
 			},
 		).
@@ -714,7 +716,7 @@ func ExamplelegacyQuery_OrderByDescending() {
 
 // The following code example demonstrates how to use ThenByDescending to perform
 // a secondary ordering of the elements in a slice in descending order.
-func ExampleOrderedQuery_ThenByDescending() {
+func ExamplelegacyOrderedQuery_ThenByDescending() {
 	fruits := []string{"apPLe", "baNanA", "apple", "APple", "orange", "BAnana", "ORANGE"}
 
 	// Sort the strings first ascending by their length and
@@ -764,7 +766,7 @@ func ExamplelegacyQuery_GroupBy() {
 		func(i any) any { return i.(int) })
 
 	fmt.Println(q.OrderBy(func(i any) any {
-		return i.(Group).Key
+		return i.(legacyGroup).Key
 	}).Results())
 	// Output:
 	// [{0 [2 4 6 8]} {1 [1 3 5 7 9]}]
@@ -1492,7 +1494,7 @@ func ExamplelegacyQuery_Zip() {
 
 // The following code example demonstrates how to use ThenByDescendingT to perform
 // a order in a slice of dates by year, and then by month descending.
-func ExampleOrderedQuery_ThenByDescendingT() {
+func ExamplelegacyOrderedQuery_ThenByDescendingT() {
 	dates := []time.Time{
 		time.Date(2015, 3, 23, 0, 0, 0, 0, time.Local),
 		time.Date(2014, 7, 11, 0, 0, 0, 0, time.Local),
@@ -1526,7 +1528,7 @@ func ExampleOrderedQuery_ThenByDescendingT() {
 
 // The following code example demonstrates how to use ThenByT to perform
 // a orders in a slice of dates by year, and then by day.
-func ExampleOrderedQuery_ThenByT() {
+func ExamplelegacyOrderedQuery_ThenByT() {
 	dates := []time.Time{
 		time.Date(2015, 3, 23, 0, 0, 0, 0, time.Local),
 		time.Date(2014, 7, 11, 0, 0, 0, 0, time.Local),
@@ -1884,17 +1886,17 @@ func ExamplelegacyQuery_GroupByT() {
 
 	// Group the pets using Age as the key value
 	// and selecting only the pet's Name for each value.
-	var query []Group
+	var query []legacyGroup
 	legacyFrom(pets).GroupByT(
 		func(p Pet) int { return p.Age },
 		func(p Pet) string { return p.Name },
 	).OrderByT(
-		func(g Group) int { return g.Key.(int) },
+		func(g legacyGroup) int { return g.Key.(int) },
 	).ToSlice(&query)
 
 	for _, petGroup := range query {
 		fmt.Printf("%d\n", petGroup.Key)
-		for _, petName := range petGroup.Group {
+		for _, petName := range petGroup.legacyGroup {
 			fmt.Printf("  %s\n", petName)
 		}
 
@@ -2268,18 +2270,18 @@ func ExamplelegacyQuery_SelectManyT() {
 			func(word string) string { return word },
 		).
 		//Ordering by word counts
-		OrderByDescendingT(func(wordGroup Group) int {
-			return len(wordGroup.Group)
+		OrderByDescendingT(func(wordGroup legacyGroup) int {
+			return len(wordGroup.legacyGroup)
 		}).
 		//Then order by word
-		ThenByT(func(wordGroup Group) string {
+		ThenByT(func(wordGroup legacyGroup) string {
 			return wordGroup.Key.(string)
 		}).
 		//Take the top 5
 		Take(5).
 		//Project the words using the index as rank
-		SelectIndexedT(func(index int, wordGroup Group) string {
-			return fmt.Sprintf("Rank: #%d, Word: %s, Counts: %d", index+1, wordGroup.Key, len(wordGroup.Group))
+		SelectIndexedT(func(index int, wordGroup legacyGroup) string {
+			return fmt.Sprintf("Rank: #%d, Word: %s, Counts: %d", index+1, wordGroup.Key, len(wordGroup.legacyGroup))
 		}).
 		ToSlice(&results)
 

@@ -9,26 +9,27 @@ type typedOrder[T any] struct {
 	compare func(T, T) int
 }
 
-type orderedQuery[T any] struct {
+// OrderedQuery is a typed query with one or more stable sort keys.
+type OrderedQuery[T any] struct {
 	Query[T]
 	original Query[T]
 	orders   []typedOrder[T]
 }
 
-func (q Query[T]) OrderBy[K cmp.Ordered](selector func(T) K) orderedQuery[T] {
+func (q Query[T]) OrderBy[K cmp.Ordered](selector func(T) K) OrderedQuery[T] {
 	return newOrderedQuery(q, []typedOrder[T]{newTypedOrder(selector)})
 }
 
-func (q Query[T]) OrderByDescending[K cmp.Ordered](selector func(T) K) orderedQuery[T] {
+func (q Query[T]) OrderByDescending[K cmp.Ordered](selector func(T) K) OrderedQuery[T] {
 	return newOrderedQuery(q, []typedOrder[T]{newTypedOrderDescending(selector)})
 }
 
-func (q orderedQuery[T]) ThenBy[K cmp.Ordered](selector func(T) K) orderedQuery[T] {
+func (q OrderedQuery[T]) ThenBy[K cmp.Ordered](selector func(T) K) OrderedQuery[T] {
 	orders := append(slices.Clone(q.orders), newTypedOrder(selector))
 	return newOrderedQuery(q.original, orders)
 }
 
-func (q orderedQuery[T]) ThenByDescending[K cmp.Ordered](selector func(T) K) orderedQuery[T] {
+func (q OrderedQuery[T]) ThenByDescending[K cmp.Ordered](selector func(T) K) OrderedQuery[T] {
 	orders := append(slices.Clone(q.orders), newTypedOrderDescending(selector))
 	return newOrderedQuery(q.original, orders)
 }
@@ -49,8 +50,8 @@ func newTypedOrderDescending[T any, K cmp.Ordered](selector func(T) K) typedOrde
 	}
 }
 
-func newOrderedQuery[T any](original Query[T], orders []typedOrder[T]) orderedQuery[T] {
-	ordered := orderedQuery[T]{original: original, orders: orders}
+func newOrderedQuery[T any](original Query[T], orders []typedOrder[T]) OrderedQuery[T] {
+	ordered := OrderedQuery[T]{original: original, orders: orders}
 	ordered.Query = Query[T]{
 		iterate: func(yield func(T) bool) {
 			items := original.toSlice()

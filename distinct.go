@@ -24,8 +24,8 @@ func (q legacyQuery) Distinct() legacyQuery {
 //
 // NOTE: Distinct method on OrderedQuery type has better performance than
 // Distinct method on Query type.
-func (oq OrderedQuery) Distinct() OrderedQuery {
-	return OrderedQuery{
+func (oq legacyOrderedQuery) Distinct() legacyOrderedQuery {
+	return legacyOrderedQuery{
 		orders: oq.orders,
 		legacyQuery: legacyQuery{
 			Iterate: func(yield func(any) bool) {
