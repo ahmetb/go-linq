@@ -6,6 +6,7 @@ on:
     branches:
       - main
       - master
+      - v5
 
 permissions:
   contents: read
@@ -14,20 +15,10 @@ env:
   GO111MODULE: on
 
 jobs:
-  golangci:
-    name: lint
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-
-      - uses: actions/setup-go@v6
-        with:
-          go-version: stable
-
-      - name: golangci-lint
-        uses: golangci/golangci-lint-action@v9
-        with:
-          version: v2.1
+  # NOTE: golangci-lint is disabled on the v5 branch: static analysis tooling
+  # does not yet understand Go 1.27 generic methods (go/types export data
+  # needs a release cycle to catch up). Re-enable once golangci-lint supports
+  # Go 1.27.
 
   build:
     name: Build and Test
@@ -37,7 +28,7 @@ jobs:
 
       - uses: actions/setup-go@v6
         with:
-          go-version: 1.25
+          go-version: 1.27.0-rc.2
 
       - name: go vet
         run: go vet -x ./...
