@@ -1,7 +1,5 @@
 package linq
 
-import "reflect"
-
 // GroupJoin correlates the elements of two collections based on key equality
 // and groups the results.
 //
@@ -16,89 +14,34 @@ import "reflect"
 // function is invoked on pairs that contain one element from outer and one
 // element from inner.
 //
+// GroupJoin is a generic method: the inner element type TInner, the key type TKey, and
+// the result type TResult are all inferred from the supplied functions. The key type
+// TKey must be comparable.
+//
 // GroupJoin preserves the order of the elements of outer, and for each element
 // of outer, the order of the matching elements from inner.
-func (q Query) GroupJoin(inner Query,
-	outerKeySelector func(any) any,
-	innerKeySelector func(any) any,
-	resultSelector func(outer any, inners []any) any) Query {
+func (q Query[T]) GroupJoin[TInner any, TKey comparable, TResult any](inner Query[TInner],
+	outerKeySelector func(T) TKey,
+	innerKeySelector func(TInner) TKey,
+	resultSelector func(outer T, inners []TInner) TResult) Query[TResult] {
 
-	return Query{
-		Iterate: func(yield func(any) bool) {
-			innerLookup := make(map[any][]any)
+	return Query[TResult]{
+		Iterate: func(yield func(TResult) bool) {
+			innerLookup := make(map[TKey][]TInner)
 			for innerItem := range inner.Iterate {
 				innerKey := innerKeySelector(innerItem)
 				innerLookup[innerKey] = append(innerLookup[innerKey], innerItem)
 			}
 
-			q.Iterate(func(outerItem any) bool {
+			q.Iterate(func(outerItem T) bool {
 				outerKey := outerKeySelector(outerItem)
 				innerGroup, ok := innerLookup[outerKey]
-
-				var result any
-				if ok {
-					result = resultSelector(outerItem, innerGroup)
-				} else {
-					result = resultSelector(outerItem, []any{})
+				if !ok {
+					innerGroup = []TInner{}
 				}
 
-				return yield(result)
+				return yield(resultSelector(outerItem, innerGroup))
 			})
 		},
 	}
-}
-
-// GroupJoinT is the typed version of GroupJoin.
-//
-//   - inner: The query to join to the outer query.
-//   - outerKeySelectorFn is of type "func(TOuter) TKey"
-//   - innerKeySelectorFn is of type "func(TInner) TKey"
-//   - resultSelectorFn: is of type "func(TOuter, inners []TInner) TResult"
-//
-// NOTE: GroupJoin has better performance than GroupJoinT.
-func (q Query) GroupJoinT(inner Query,
-	outerKeySelectorFn any,
-	innerKeySelectorFn any,
-	resultSelectorFn any) Query {
-	outerKeySelectorGenericFunc, err := newGenericFunc(
-		"GroupJoinT", "outerKeySelectorFn", outerKeySelectorFn,
-		simpleParamValidator(newElemTypeSlice(new(genericType)), newElemTypeSlice(new(genericType))),
-	)
-	if err != nil {
-		panic(err)
-	}
-
-	outerKeySelectorFunc := func(item any) any {
-		return outerKeySelectorGenericFunc.Call(item)
-	}
-
-	innerKeySelectorFuncGenericFunc, err := newGenericFunc(
-		"GroupJoinT", "innerKeySelectorFn", innerKeySelectorFn,
-		simpleParamValidator(newElemTypeSlice(new(genericType)), newElemTypeSlice(new(genericType))),
-	)
-	if err != nil {
-		panic(err)
-	}
-
-	innerKeySelectorFunc := func(item any) any {
-		return innerKeySelectorFuncGenericFunc.Call(item)
-	}
-
-	resultSelectorGenericFunc, err := newGenericFunc(
-		"GroupJoinT", "resultSelectorFn", resultSelectorFn,
-		simpleParamValidator(newElemTypeSlice(new(genericType), new(genericType)), newElemTypeSlice(new(genericType))),
-	)
-	if err != nil {
-		panic(err)
-	}
-
-	resultSelectorFunc := func(outer any, inners []any) any {
-		innerSliceType := reflect.MakeSlice(resultSelectorGenericFunc.Cache.TypesIn[1], 0, 0)
-		innersSlicePointer := reflect.New(innerSliceType.Type())
-		From(inners).ToSlice(innersSlicePointer.Interface())
-		innersTyped := reflect.Indirect(innersSlicePointer).Interface()
-		return resultSelectorGenericFunc.Call(outer, innersTyped)
-	}
-
-	return q.GroupJoin(inner, outerKeySelectorFunc, innerKeySelectorFunc, resultSelectorFunc)
 }

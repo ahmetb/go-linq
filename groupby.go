@@ -1,30 +1,40 @@
 package linq
 
-// Group is a type used to store the result of GroupBy method.
-type Group struct {
-	Key   any
-	Group []any
+// Group is a type used to store the result of the GroupBy method.
+type Group[TKey comparable, TElement any] struct {
+	Key   TKey
+	Group []TElement
 }
 
 // GroupBy method groups the elements of a collection according to a specified
 // key selector function and projects the elements for each group by using a
 // specified function.
-func (q Query) GroupBy(keySelector func(any) any,
-	elementSelector func(any) any) Query {
-	return Query{
-		Iterate: func(yield func(any) bool) {
-			groups := make(map[any][]any)
+//
+// GroupBy is a generic method: the key type TKey and the element type TElement are
+// inferred from the supplied functions. The key type TKey must be comparable.
+//
+// Groups are yielded in the order of the first appearance of their key in the
+// source collection, and elements within each group preserve the order they
+// appear in the source.
+func (q Query[T]) GroupBy[TKey comparable, TElement any](keySelector func(T) TKey,
+	elementSelector func(T) TElement) Query[Group[TKey, TElement]] {
+	return Query[Group[TKey, TElement]]{
+		Iterate: func(yield func(Group[TKey, TElement]) bool) {
+			groups := make(map[TKey][]TElement)
+			var keys []TKey
 
 			for item := range q.Iterate {
 				key := keySelector(item)
-				element := elementSelector(item)
-				groups[key] = append(groups[key], element)
+				if _, ok := groups[key]; !ok {
+					keys = append(keys, key)
+				}
+				groups[key] = append(groups[key], elementSelector(item))
 			}
 
-			for key, group := range groups {
-				group := Group{
+			for _, key := range keys {
+				group := Group[TKey, TElement]{
 					Key:   key,
-					Group: group,
+					Group: groups[key],
 				}
 				if !yield(group) {
 					return
@@ -32,40 +42,4 @@ func (q Query) GroupBy(keySelector func(any) any,
 			}
 		},
 	}
-}
-
-// GroupByT is the typed version of GroupBy.
-//
-//   - keySelectorFn is of type "func(TSource) TKey"
-//   - elementSelectorFn is of type "func(TSource) TElement"
-//
-// NOTE: GroupBy has better performance than GroupByT.
-func (q Query) GroupByT(keySelectorFn any,
-	elementSelectorFn any) Query {
-	keySelectorGenericFunc, err := newGenericFunc(
-		"GroupByT", "keySelectorFn", keySelectorFn,
-		simpleParamValidator(newElemTypeSlice(new(genericType)), newElemTypeSlice(new(genericType))),
-	)
-	if err != nil {
-		panic(err)
-	}
-
-	keySelectorFunc := func(item any) any {
-		return keySelectorGenericFunc.Call(item)
-	}
-
-	elementSelectorGenericFunc, err := newGenericFunc(
-		"GroupByT", "elementSelectorFn", elementSelectorFn,
-		simpleParamValidator(newElemTypeSlice(new(genericType)), newElemTypeSlice(new(genericType))),
-	)
-	if err != nil {
-		panic(err)
-	}
-
-	elementSelectorFunc := func(item any) any {
-		return elementSelectorGenericFunc.Call(item)
-
-	}
-
-	return q.GroupBy(keySelectorFunc, elementSelectorFunc)
 }

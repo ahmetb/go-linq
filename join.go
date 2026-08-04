@@ -8,22 +8,26 @@ package linq
 // differs from the use of SelectMany, which requires more than one method call
 // to perform the same operation.
 //
+// Join is a generic method: the inner element type TInner, the key type TKey, and the
+// result type TResult are all inferred from the supplied functions. The key type TKey
+// must be comparable.
+//
 // Join preserves the order of the elements of outer collection, and for each of
 // these elements, the order of the matching elements of inner.
-func (q Query) Join(inner Query,
-	outerKeySelector func(any) any,
-	innerKeySelector func(any) any,
-	resultSelector func(outer any, inner any) any) Query {
+func (q Query[T]) Join[TInner any, TKey comparable, TResult any](inner Query[TInner],
+	outerKeySelector func(T) TKey,
+	innerKeySelector func(TInner) TKey,
+	resultSelector func(outer T, inner TInner) TResult) Query[TResult] {
 
-	return Query{
-		Iterate: func(yield func(any) bool) {
-			innerLookup := make(map[any][]any)
+	return Query[TResult]{
+		Iterate: func(yield func(TResult) bool) {
+			innerLookup := make(map[TKey][]TInner)
 			for innerItem := range inner.Iterate {
 				innerKey := innerKeySelector(innerItem)
 				innerLookup[innerKey] = append(innerLookup[innerKey], innerItem)
 			}
 
-			q.Iterate(func(outerItem any) bool {
+			q.Iterate(func(outerItem T) bool {
 				outerKey := outerKeySelector(outerItem)
 
 				if innerGroup, ok := innerLookup[outerKey]; ok {
@@ -38,55 +42,4 @@ func (q Query) Join(inner Query,
 			})
 		},
 	}
-}
-
-// JoinT is the typed version of Join.
-//
-//   - outerKeySelectorFn is of type "func(TOuter) TKey"
-//   - innerKeySelectorFn is of type "func(TInner) TKey"
-//   - resultSelectorFn is of type "func(TOuter,TInner) TResult"
-//
-// NOTE: Join has better performance than JoinT.
-func (q Query) JoinT(inner Query,
-	outerKeySelectorFn any,
-	innerKeySelectorFn any,
-	resultSelectorFn any) Query {
-	outerKeySelectorGenericFunc, err := newGenericFunc(
-		"JoinT", "outerKeySelectorFn", outerKeySelectorFn,
-		simpleParamValidator(newElemTypeSlice(new(genericType)), newElemTypeSlice(new(genericType))),
-	)
-	if err != nil {
-		panic(err)
-	}
-
-	outerKeySelectorFunc := func(item any) any {
-		return outerKeySelectorGenericFunc.Call(item)
-	}
-
-	innerKeySelectorFuncGenericFunc, err := newGenericFunc(
-		"JoinT", "innerKeySelectorFn",
-		innerKeySelectorFn,
-		simpleParamValidator(newElemTypeSlice(new(genericType)), newElemTypeSlice(new(genericType))),
-	)
-	if err != nil {
-		panic(err)
-	}
-
-	innerKeySelectorFunc := func(item any) any {
-		return innerKeySelectorFuncGenericFunc.Call(item)
-	}
-
-	resultSelectorGenericFunc, err := newGenericFunc(
-		"JoinT", "resultSelectorFn", resultSelectorFn,
-		simpleParamValidator(newElemTypeSlice(new(genericType), new(genericType)), newElemTypeSlice(new(genericType))),
-	)
-	if err != nil {
-		panic(err)
-	}
-
-	resultSelectorFunc := func(outer any, inner any) any {
-		return resultSelectorGenericFunc.Call(outer, inner)
-	}
-
-	return q.Join(inner, outerKeySelectorFunc, innerKeySelectorFunc, resultSelectorFunc)
 }

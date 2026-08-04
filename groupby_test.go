@@ -7,63 +7,48 @@ import (
 
 func TestGroupBy(t *testing.T) {
 	input := []int{1, 2, 3, 4, 5, 6, 7, 8, 9}
-	wantEven := []any{2, 4, 6, 8}
-	wantOdd := []any{1, 3, 5, 7, 9}
-
-	q := From(input).GroupBy(
-		func(i any) any { return i.(int) % 2 },
-		func(i any) any { return i.(int) },
-	)
-
-	eq := true
-	for item := range q.Iterate {
-		group := item.(Group)
-		switch group.Key.(int) {
-		case 0:
-			if !reflect.DeepEqual(group.Group, wantEven) {
-				eq = false
-			}
-		case 1:
-			if !reflect.DeepEqual(group.Group, wantOdd) {
-				eq = false
-			}
-		default:
-			eq = false
-		}
+	// Groups are yielded in order of first appearance of their key:
+	// key 1 is seen first (element 1), then key 0 (element 2).
+	want := []Group[int, int]{
+		{Key: 1, Group: []int{1, 3, 5, 7, 9}},
+		{Key: 0, Group: []int{2, 4, 6, 8}},
 	}
 
-	if !eq {
-		t.Errorf("From(%v).GroupBy()=%v", input, toSlice(q))
+	q := FromSlice(input).GroupBy(
+		func(i int) int { return i % 2 },
+		func(i int) int { return i },
+	)
+
+	if got := toSlice(q); !reflect.DeepEqual(got, want) {
+		t.Errorf("FromSlice(%v).GroupBy()=%v expected %v", input, got, want)
+	}
+}
+
+func TestGroupBy_TypeChanging(t *testing.T) {
+	input := []string{"apple", "avocado", "banana"}
+
+	q := FromSlice(input).GroupBy(
+		func(s string) byte { return s[0] },
+		func(s string) int { return len(s) },
+	)
+
+	want := []Group[byte, int]{
+		{Key: 'a', Group: []int{5, 7}},
+		{Key: 'b', Group: []int{6}},
+	}
+
+	if got := toSlice(q); !reflect.DeepEqual(got, want) {
+		t.Errorf("GroupBy()=%v expected %v", got, want)
 	}
 }
 
 func TestGroupBy_Abort(t *testing.T) {
 	input := []int{1, 2, 3, 4, 5, 6, 7, 8, 9}
 
-	q := From(input).GroupBy(
-		func(i any) any { return i.(int) % 2 },
-		func(i any) any { return i.(int) },
+	q := FromSlice(input).GroupBy(
+		func(i int) int { return i % 2 },
+		func(i int) int { return i },
 	)
 
 	runDryIteration(q)
-}
-
-func TestGroupByT_PanicWhenKeySelectorFnIsInvalid(t *testing.T) {
-	mustPanicWithError(t, "GroupByT: parameter [keySelectorFn] has a invalid function signature. Expected: 'func(T)T', actual: 'func(int,int)bool'", func() {
-		var r []int
-		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).GroupByT(
-			func(i, j int) bool { return true },
-			func(i int) int { return i },
-		).ToSlice(&r)
-	})
-}
-
-func TestGroupByT_PanicWhenElementSelectorFnIsInvalid(t *testing.T) {
-	mustPanicWithError(t, "GroupByT: parameter [elementSelectorFn] has a invalid function signature. Expected: 'func(T)T', actual: 'func(int,int)int'", func() {
-		var r []int
-		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).GroupByT(
-			func(i int) bool { return true },
-			func(i, j int) int { return i },
-		).ToSlice(&r)
-	})
 }
