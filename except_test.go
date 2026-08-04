@@ -5,27 +5,21 @@ import "testing"
 func TestExcept(t *testing.T) {
 	input1 := []int{1, 2, 3, 4, 5, 1, 2, 5}
 	input2 := []int{1, 2}
-	want := []any{3, 4, 5, 5}
+	want := []int{3, 4, 5, 5}
 
-	if q := From(input1).Except(From(input2)); !testQueryIteration(q, want) {
-		t.Errorf("From(%v).Except(%v)=%v expected %v", input1, input2, toSlice(q), want)
+	if q := FromSlice(input1).Except(FromSlice(input2)); !testQueryIteration(q, want) {
+		t.Errorf("FromSlice(%v).Except(%v)=%v expected %v", input1, input2, toSlice(q), want)
 	}
 }
 
 func TestExceptBy(t *testing.T) {
 	input1 := []int{1, 2, 3, 4, 5, 1, 2, 5}
 	input2 := []int{1}
-	want := []any{2, 4, 2}
+	want := []int{2, 4, 2}
 
-	if q := From(input1).ExceptBy(From(input2), func(i any) any {
-		return i.(int) % 2
+	if q := FromSlice(input1).ExceptBy(FromSlice(input2), func(i int) int {
+		return i % 2
 	}); !testQueryIteration(q, want) {
-		t.Errorf("From(%v).ExceptBy(%v)=%v expected %v", input1, input2, toSlice(q), want)
+		t.Errorf("FromSlice(%v).ExceptBy(%v)=%v expected %v", input1, input2, toSlice(q), want)
 	}
-}
-
-func TestExceptByT_PanicWhenSelectorFnIsInvalid(t *testing.T) {
-	mustPanicWithError(t, "ExceptByT: parameter [selectorFn] has a invalid function signature. Expected: 'func(T)T', actual: 'func(int,int)int'", func() {
-		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).ExceptByT(From([]int{1}), func(x, item int) int { return item + 2 })
-	})
 }

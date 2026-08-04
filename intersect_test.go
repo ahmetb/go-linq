@@ -5,29 +5,21 @@ import "testing"
 func TestIntersect(t *testing.T) {
 	input1 := []int{1, 2, 3}
 	input2 := []int{1, 4, 7, 9, 12, 3}
-	want := []any{1, 3}
+	want := []int{1, 3}
 
-	if q := From(input1).Intersect(From(input2)); !testQueryIteration(q, want) {
-		t.Errorf("From(%v).Intersect(%v)=%v expected %v", input1, input2, toSlice(q), want)
+	if q := FromSlice(input1).Intersect(FromSlice(input2)); !testQueryIteration(q, want) {
+		t.Errorf("FromSlice(%v).Intersect(%v)=%v expected %v", input1, input2, toSlice(q), want)
 	}
 }
 
 func TestIntersectBy(t *testing.T) {
 	input1 := []int{5, 7, 8}
 	input2 := []int{1, 4, 7, 9, 12, 3}
-	want := []any{5, 8}
+	want := []int{5, 8}
 
-	if q := From(input1).IntersectBy(From(input2), func(i any) any {
-		return i.(int) % 2
+	if q := FromSlice(input1).IntersectBy(FromSlice(input2), func(i int) int {
+		return i % 2
 	}); !testQueryIteration(q, want) {
-		t.Errorf("From(%v).IntersectBy(%v)=%v expected %v", input1, input2, toSlice(q), want)
+		t.Errorf("FromSlice(%v).IntersectBy(%v)=%v expected %v", input1, input2, toSlice(q), want)
 	}
-}
-
-func TestIntersectByT_PanicWhenSelectorFnIsInvalid(t *testing.T) {
-	mustPanicWithError(t, "IntersectByT: parameter [selectorFn] has a invalid function signature. Expected: 'func(T)T', actual: 'func(int,int)int'", func() {
-		From([]int{5, 7, 8}).IntersectByT(From([]int{1, 4, 7, 9, 12, 3}), func(i, x int) int {
-			return i % 2
-		})
-	})
 }
