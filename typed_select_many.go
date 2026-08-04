@@ -50,3 +50,24 @@ func (q query[T]) SelectManyBy[U, R any](
 		},
 	}
 }
+
+func (q query[T]) SelectManyByIndexed[U, R any](
+	selector func(int, T) query[U],
+	resultSelector func(U, T) R,
+) query[R] {
+	return query[R]{
+		iterate: func(yield func(R) bool) {
+			index := 0
+			q.iterate(func(outer T) bool {
+				innerQuery := selector(index, outer)
+				index++
+				keepGoing := true
+				innerQuery.iterate(func(inner U) bool {
+					keepGoing = yield(resultSelector(inner, outer))
+					return keepGoing
+				})
+				return keepGoing
+			})
+		},
+	}
+}
