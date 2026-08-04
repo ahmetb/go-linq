@@ -1,6 +1,6 @@
 package linq
 
-func (q query[T]) Aggregate(accumulator func(T, T) T) T {
+func (q Query[T]) Aggregate(accumulator func(T, T) T) T {
 	var result T
 	first := true
 	for value := range q.iterate {
@@ -14,7 +14,7 @@ func (q query[T]) Aggregate(accumulator func(T, T) T) T {
 	return result
 }
 
-func (q query[T]) AggregateWithSeed[A any](seed A, accumulator func(A, T) A) A {
+func (q Query[T]) AggregateWithSeed[A any](seed A, accumulator func(A, T) A) A {
 	result := seed
 	for value := range q.iterate {
 		result = accumulator(result, value)
@@ -22,7 +22,7 @@ func (q query[T]) AggregateWithSeed[A any](seed A, accumulator func(A, T) A) A {
 	return result
 }
 
-func (q query[T]) AggregateWithSeedBy[A, R any](
+func (q Query[T]) AggregateWithSeedBy[A, R any](
 	seed A,
 	accumulator func(A, T) A,
 	resultSelector func(A) R,

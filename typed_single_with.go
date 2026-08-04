@@ -1,6 +1,6 @@
 package linq
 
-func (q query[T]) SingleWith(predicate func(T) bool) T {
+func (q Query[T]) SingleWith(predicate func(T) bool) T {
 	var result T
 	found := false
 	for value := range q.iterate {

@@ -7,7 +7,7 @@ import (
 
 func TestTypedSelectManyIndexed(t *testing.T) {
 	got := fromSlice([]string{"a", "b", "c"}).
-		SelectManyIndexed(func(index int, value string) query[string] {
+		SelectManyIndexed(func(index int, value string) Query[string] {
 			return fromSlice([]string{value, value + string(rune('0'+index))})
 		}).
 		toSlice()
@@ -20,7 +20,7 @@ func TestTypedSelectManyIndexed(t *testing.T) {
 
 func TestTypedSelectManyIndexedStopsBothIterators(t *testing.T) {
 	var indices []int
-	q := fromSlice([][]int{{1, 2}, {3, 4}}).SelectManyIndexed(func(index int, values []int) query[int] {
+	q := fromSlice([][]int{{1, 2}, {3, 4}}).SelectManyIndexed(func(index int, values []int) Query[int] {
 		indices = append(indices, index)
 		return fromSlice(values)
 	})
@@ -32,9 +32,9 @@ func TestTypedSelectManyIndexedStopsBothIterators(t *testing.T) {
 	}
 }
 
-func selectManyIndexedLegacy(_ int, values []int) Query { return FromSlice(values) }
+func selectManyIndexedLegacy(_ int, values []int) legacyQuery { return FromSlice(values) }
 
-func selectManyIndexedTyped(_ int, values []int) query[int] { return fromSlice(values) }
+func selectManyIndexedTyped(_ int, values []int) Query[int] { return fromSlice(values) }
 
 var benchmarkSelectManyIndexedSum int
 

@@ -1,7 +1,7 @@
 package linq
 
-func (q query[T]) DistinctBy[K comparable](selector func(T) K) query[T] {
-	return query[T]{
+func (q Query[T]) DistinctBy[K comparable](selector func(T) K) Query[T] {
+	return Query[T]{
 		iterate: func(yield func(T) bool) {
 			seen := make(map[K]struct{})
 			q.iterate(func(value T) bool {

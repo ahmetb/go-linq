@@ -18,12 +18,11 @@ import "reflect"
 //
 // GroupJoin preserves the order of the elements of outer, and for each element
 // of outer, the order of the matching elements from inner.
-func (q Query) GroupJoin(inner Query,
-	outerKeySelector func(any) any,
+func (q legacyQuery) GroupJoin(inner legacyQuery, outerKeySelector func(any) any,
 	innerKeySelector func(any) any,
-	resultSelector func(outer any, inners []any) any) Query {
+	resultSelector func(outer any, inners []any) any) legacyQuery {
 
-	return Query{
+	return legacyQuery{
 		Iterate: func(yield func(any) bool) {
 			innerLookup := make(map[any][]any)
 			for innerItem := range inner.Iterate {
@@ -56,10 +55,9 @@ func (q Query) GroupJoin(inner Query,
 //   - resultSelectorFn: is of type "func(TOuter, inners []TInner) TResult"
 //
 // NOTE: GroupJoin has better performance than GroupJoinT.
-func (q Query) GroupJoinT(inner Query,
-	outerKeySelectorFn any,
+func (q legacyQuery) GroupJoinT(inner legacyQuery, outerKeySelectorFn any,
 	innerKeySelectorFn any,
-	resultSelectorFn any) Query {
+	resultSelectorFn any) legacyQuery {
 	outerKeySelectorGenericFunc, err := newGenericFunc(
 		"GroupJoinT", "outerKeySelectorFn", outerKeySelectorFn,
 		simpleParamValidator(newElemTypeSlice(new(genericType)), newElemTypeSlice(new(genericType))),

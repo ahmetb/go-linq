@@ -9,9 +9,9 @@ type Group struct {
 // GroupBy method groups the elements of a collection according to a specified
 // key selector function and projects the elements for each group by using a
 // specified function.
-func (q Query) GroupBy(keySelector func(any) any,
-	elementSelector func(any) any) Query {
-	return Query{
+func (q legacyQuery) GroupBy(keySelector func(any) any,
+	elementSelector func(any) any) legacyQuery {
+	return legacyQuery{
 		Iterate: func(yield func(any) bool) {
 			groups := make(map[any][]any)
 
@@ -40,8 +40,8 @@ func (q Query) GroupBy(keySelector func(any) any,
 //   - elementSelectorFn is of type "func(TSource) TElement"
 //
 // NOTE: GroupBy has better performance than GroupByT.
-func (q Query) GroupByT(keySelectorFn any,
-	elementSelectorFn any) Query {
+func (q legacyQuery) GroupByT(keySelectorFn any,
+	elementSelectorFn any) legacyQuery {
 	keySelectorGenericFunc, err := newGenericFunc(
 		"GroupByT", "keySelectorFn", keySelectorFn,
 		simpleParamValidator(newElemTypeSlice(new(genericType)), newElemTypeSlice(new(genericType))),

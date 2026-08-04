@@ -2,8 +2,8 @@ package linq
 
 // DefaultIfEmpty returns the elements of the specified sequence
 // if the sequence is empty.
-func (q Query) DefaultIfEmpty(defaultValue any) Query {
-	return Query{
+func (q legacyQuery) DefaultIfEmpty(defaultValue any) legacyQuery {
+	return legacyQuery{
 		Iterate: func(yield func(any) bool) {
 			var yieldedAnyThing bool
 			var stopped bool

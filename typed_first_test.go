@@ -16,7 +16,7 @@ func TestTypedFirstReturnsZeroForEmptyQuery(t *testing.T) {
 
 func TestTypedFirstStopsAfterFirstElement(t *testing.T) {
 	visited := 0
-	q := query[int]{iterate: func(yield func(int) bool) {
+	q := Query[int]{iterate: func(yield func(int) bool) {
 		for _, value := range []int{1, 2, 3} {
 			visited++
 			if !yield(value) {

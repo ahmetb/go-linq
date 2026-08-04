@@ -10,12 +10,11 @@ package linq
 //
 // Join preserves the order of the elements of outer collection, and for each of
 // these elements, the order of the matching elements of inner.
-func (q Query) Join(inner Query,
-	outerKeySelector func(any) any,
+func (q legacyQuery) Join(inner legacyQuery, outerKeySelector func(any) any,
 	innerKeySelector func(any) any,
-	resultSelector func(outer any, inner any) any) Query {
+	resultSelector func(outer any, inner any) any) legacyQuery {
 
-	return Query{
+	return legacyQuery{
 		Iterate: func(yield func(any) bool) {
 			innerLookup := make(map[any][]any)
 			for innerItem := range inner.Iterate {
@@ -47,10 +46,9 @@ func (q Query) Join(inner Query,
 //   - resultSelectorFn is of type "func(TOuter,TInner) TResult"
 //
 // NOTE: Join has better performance than JoinT.
-func (q Query) JoinT(inner Query,
-	outerKeySelectorFn any,
+func (q legacyQuery) JoinT(inner legacyQuery, outerKeySelectorFn any,
 	innerKeySelectorFn any,
-	resultSelectorFn any) Query {
+	resultSelectorFn any) legacyQuery {
 	outerKeySelectorGenericFunc, err := newGenericFunc(
 		"JoinT", "outerKeySelectorFn", outerKeySelectorFn,
 		simpleParamValidator(newElemTypeSlice(new(genericType)), newElemTypeSlice(new(genericType))),

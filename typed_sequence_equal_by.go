@@ -2,8 +2,8 @@ package linq
 
 import "iter"
 
-func (q query[T]) SequenceEqualBy[U any, K comparable](
-	other query[U],
+func (q Query[T]) SequenceEqualBy[U any, K comparable](
+	other Query[U],
 	leftSelector func(T) K,
 	rightSelector func(U) K,
 ) bool {

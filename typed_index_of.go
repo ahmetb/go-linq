@@ -1,6 +1,6 @@
 package linq
 
-func (q query[T]) IndexOf(predicate func(T) bool) int {
+func (q Query[T]) IndexOf(predicate func(T) bool) int {
 	result := -1
 	index := 0
 	q.iterate(func(value T) bool {

@@ -1,7 +1,7 @@
 package linq
 
-func (q query[T]) Where(predicate func(T) bool) query[T] {
-	return query[T]{
+func (q Query[T]) Where(predicate func(T) bool) Query[T] {
+	return Query[T]{
 		iterate: func(yield func(T) bool) {
 			q.iterate(func(value T) bool {
 				if predicate(value) {
@@ -13,8 +13,8 @@ func (q query[T]) Where(predicate func(T) bool) query[T] {
 	}
 }
 
-func (q query[T]) WhereIndexed(predicate func(int, T) bool) query[T] {
-	return query[T]{
+func (q Query[T]) WhereIndexed(predicate func(int, T) bool) Query[T] {
+	return Query[T]{
 		iterate: func(yield func(T) bool) {
 			index := 0
 			q.iterate(func(value T) bool {

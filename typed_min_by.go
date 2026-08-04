@@ -2,7 +2,7 @@ package linq
 
 import "cmp"
 
-func (q query[T]) MinBy[K cmp.Ordered](selector func(T) K) T {
+func (q Query[T]) MinBy[K cmp.Ordered](selector func(T) K) T {
 	var result T
 	var minimum K
 	found := false

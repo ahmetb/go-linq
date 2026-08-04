@@ -1,7 +1,7 @@
 package linq
 
-func (q query[T]) IntersectBy[K comparable](other query[T], selector func(T) K) query[T] {
-	return query[T]{iterate: func(yield func(T) bool) {
+func (q Query[T]) IntersectBy[K comparable](other Query[T], selector func(T) K) Query[T] {
+	return Query[T]{iterate: func(yield func(T) bool) {
 		available := make(map[K]struct{})
 		for value := range other.iterate {
 			available[selector(value)] = struct{}{}

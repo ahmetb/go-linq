@@ -9,7 +9,7 @@ type selectManyWidget struct {
 	values []int
 }
 
-func (w *selectManyWidget) Values() query[int] {
+func (w *selectManyWidget) Values() Query[int] {
 	return fromSlice(w.values)
 }
 
@@ -28,7 +28,7 @@ func TestTypedSelectManyMethodExpression(t *testing.T) {
 
 func TestTypedSelectManyStopsBothIterators(t *testing.T) {
 	selectorCalls := 0
-	q := fromSlice([][]int{{1, 2}, {3, 4}}).SelectMany(func(values []int) query[int] {
+	q := fromSlice([][]int{{1, 2}, {3, 4}}).SelectMany(func(values []int) Query[int] {
 		selectorCalls++
 		return fromSlice(values)
 	})
@@ -47,9 +47,9 @@ func TestTypedSelectManyStopsBothIterators(t *testing.T) {
 	}
 }
 
-func selectManyLegacy(values []int) Query { return FromSlice(values) }
+func selectManyLegacy(values []int) legacyQuery { return FromSlice(values) }
 
-func selectManyTyped(values []int) query[int] { return fromSlice(values) }
+func selectManyTyped(values []int) Query[int] { return fromSlice(values) }
 
 var benchmarkSelectManySum int
 

@@ -32,8 +32,8 @@ func TestDistinctForOrderedQuery(t *testing.T) {
 	for _, test := range tests {
 		if q := From(test.input).OrderBy(func(i any) any {
 			return i
-		}).Distinct(); !testQueryIteration(q.Query, test.output) {
-			t.Errorf("From(%v).Distinct()=%v expected %v", test.input, toSlice(q.Query), test.output)
+		}).Distinct(); !testQueryIteration(q.legacyQuery, test.output) {
+			t.Errorf("From(%v).Distinct()=%v expected %v", test.input, toSlice(q.legacyQuery), test.output)
 		}
 	}
 }

@@ -1,7 +1,7 @@
 package linq
 
-func (q query[T]) Take(count int) query[T] {
-	return query[T]{iterate: func(yield func(T) bool) {
+func (q Query[T]) Take(count int) Query[T] {
+	return Query[T]{iterate: func(yield func(T) bool) {
 		remaining := count
 		if remaining <= 0 {
 			return

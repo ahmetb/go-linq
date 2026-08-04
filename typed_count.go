@@ -1,6 +1,6 @@
 package linq
 
-func (q query[T]) Count() int {
+func (q Query[T]) Count() int {
 	count := 0
 	q.iterate(func(T) bool {
 		count++

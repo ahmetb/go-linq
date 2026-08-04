@@ -12,7 +12,7 @@ type selectManyPerson struct {
 	pets []selectManyPet
 }
 
-func (p selectManyPerson) Pets() query[selectManyPet] { return fromSlice(p.pets) }
+func (p selectManyPerson) Pets() Query[selectManyPet] { return fromSlice(p.pets) }
 
 func petOwner(pet selectManyPet, person selectManyPerson) string {
 	return person.name + ":" + pet.name
@@ -37,7 +37,7 @@ func TestTypedSelectManyByMethodExpression(t *testing.T) {
 func TestTypedSelectManyByStopsBothIterators(t *testing.T) {
 	selectorCalls := 0
 	q := fromSlice([][]int{{1, 2}, {3, 4}}).SelectManyBy(
-		func(values []int) query[int] {
+		func(values []int) Query[int] {
 			selectorCalls++
 			return fromSlice(values)
 		},

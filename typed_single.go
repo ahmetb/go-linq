@@ -1,6 +1,6 @@
 package linq
 
-func (q query[T]) Single() T {
+func (q Query[T]) Single() T {
 	var result T
 	found := false
 	q.iterate(func(value T) bool {

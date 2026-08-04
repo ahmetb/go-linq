@@ -1,5 +1,5 @@
 package linq
 
-func (q query[T]) Results() []T {
+func (q Query[T]) Results() []T {
 	return q.toSlice()
 }

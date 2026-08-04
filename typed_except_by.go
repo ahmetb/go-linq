@@ -1,7 +1,7 @@
 package linq
 
-func (q query[T]) ExceptBy[K comparable](other query[T], selector func(T) K) query[T] {
-	return query[T]{
+func (q Query[T]) ExceptBy[K comparable](other Query[T], selector func(T) K) Query[T] {
+	return Query[T]{
 		iterate: func(yield func(T) bool) {
 			excluded := make(map[K]struct{})
 			for value := range other.iterate {

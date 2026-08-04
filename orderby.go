@@ -11,18 +11,18 @@ type order struct {
 // OrderedQuery is the type returned from OrderBy, OrderByDescending ThenBy and
 // ThenByDescending functions.
 type OrderedQuery struct {
-	Query
-	original Query
+	legacyQuery
+	original legacyQuery
 	orders   []order
 }
 
 // OrderBy sorts the elements of a collection in ascending order. Elements are
 // sorted according to a key.
-func (q Query) OrderBy(selector func(any) any) OrderedQuery {
+func (q legacyQuery) OrderBy(selector func(any) any) OrderedQuery {
 	return OrderedQuery{
 		orders:   []order{{selector: selector}},
 		original: q,
-		Query: Query{
+		legacyQuery: legacyQuery{
 			Iterate: func(yield func(any) bool) {
 				{
 					items := q.sort([]order{{selector: selector}})
@@ -42,7 +42,7 @@ func (q Query) OrderBy(selector func(any) any) OrderedQuery {
 //   - selectorFn is of type "func(TSource) TKey"
 //
 // NOTE: OrderBy has better performance than OrderByT.
-func (q Query) OrderByT(selectorFn any) OrderedQuery {
+func (q legacyQuery) OrderByT(selectorFn any) OrderedQuery {
 	selectorGenericFunc, err := newGenericFunc(
 		"OrderByT", "selectorFn", selectorFn,
 		simpleParamValidator(newElemTypeSlice(new(genericType)), newElemTypeSlice(new(genericType))),
@@ -60,11 +60,11 @@ func (q Query) OrderByT(selectorFn any) OrderedQuery {
 
 // OrderByDescending sorts the elements of a collection in descending order.
 // Elements are sorted according to a key.
-func (q Query) OrderByDescending(selector func(any) any) OrderedQuery {
+func (q legacyQuery) OrderByDescending(selector func(any) any) OrderedQuery {
 	return OrderedQuery{
 		orders:   []order{{selector: selector, desc: true}},
 		original: q,
-		Query: Query{
+		legacyQuery: legacyQuery{
 			Iterate: func(yield func(any) bool) {
 				items := q.sort([]order{{selector: selector, desc: true}})
 				for _, item := range items {
@@ -81,7 +81,7 @@ func (q Query) OrderByDescending(selector func(any) any) OrderedQuery {
 //   - selectorFn is of type "func(TSource) TKey"
 //
 // NOTE: OrderByDescending has better performance than OrderByDescendingT.
-func (q Query) OrderByDescendingT(selectorFn any) OrderedQuery {
+func (q legacyQuery) OrderByDescendingT(selectorFn any) OrderedQuery {
 	selectorGenericFunc, err := newGenericFunc(
 		"OrderByDescendingT", "selectorFn", selectorFn,
 		simpleParamValidator(newElemTypeSlice(new(genericType)), newElemTypeSlice(new(genericType))),
@@ -105,7 +105,7 @@ func (oq OrderedQuery) ThenBy(
 	return OrderedQuery{
 		orders:   append(oq.orders, order{selector: selector}),
 		original: oq.original,
-		Query: Query{
+		legacyQuery: legacyQuery{
 			Iterate: func(yield func(any) bool) {
 				items := oq.original.sort(append(oq.orders, order{selector: selector}))
 				for _, item := range items {
@@ -145,7 +145,7 @@ func (oq OrderedQuery) ThenByDescending(selector func(any) any) OrderedQuery {
 	return OrderedQuery{
 		orders:   append(oq.orders, order{selector: selector, desc: true}),
 		original: oq.original,
-		Query: Query{
+		legacyQuery: legacyQuery{
 			Iterate: func(yield func(any) bool) {
 				items := oq.original.sort(append(oq.orders, order{selector: selector, desc: true}))
 				for _, item := range items {
@@ -185,8 +185,8 @@ func (oq OrderedQuery) ThenByDescendingT(selectorFn any) OrderedQuery {
 // is less than j. While this method is uglier than chaining OrderBy,
 // OrderByDescending, ThenBy and ThenByDescending methods, its performance is
 // much better.
-func (q Query) Sort(less func(i, j any) bool) Query {
-	return Query{
+func (q legacyQuery) Sort(less func(i, j any) bool) legacyQuery {
+	return legacyQuery{
 		Iterate: func(yield func(any) bool) {
 			items := q.lessSort(less)
 			for _, item := range items {
@@ -202,7 +202,7 @@ func (q Query) Sort(less func(i, j any) bool) Query {
 //   - lessFn is of type "func(TSource,TSource) bool"
 //
 // NOTE: Sort has better performance than SortT.
-func (q Query) SortT(lessFn any) Query {
+func (q legacyQuery) SortT(lessFn any) legacyQuery {
 	lessGenericFunc, err := newGenericFunc(
 		"SortT", "lessFn", lessFn,
 		simpleParamValidator(newElemTypeSlice(new(genericType), new(genericType)), newElemTypeSlice(new(bool))),
@@ -235,7 +235,7 @@ func (s sorter) Less(i, j int) bool {
 	return s.less(s.items[i], s.items[j])
 }
 
-func (q Query) sort(orders []order) (r []any) {
+func (q legacyQuery) sort(orders []order) (r []any) {
 	for item := range q.Iterate {
 		r = append(r, item)
 	}
@@ -270,7 +270,7 @@ func (q Query) sort(orders []order) (r []any) {
 	return
 }
 
-func (q Query) lessSort(less func(i, j any) bool) (r []any) {
+func (q legacyQuery) lessSort(less func(i, j any) bool) (r []any) {
 	for item := range q.Iterate {
 		r = append(r, item)
 	}

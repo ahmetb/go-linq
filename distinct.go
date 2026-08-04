@@ -2,8 +2,8 @@ package linq
 
 // Distinct method returns distinct elements from a collection. The result is an
 // unordered collection that contains no duplicate values.
-func (q Query) Distinct() Query {
-	return Query{
+func (q legacyQuery) Distinct() legacyQuery {
+	return legacyQuery{
 		Iterate: func(yield func(any) bool) {
 			set := make(map[any]struct{})
 
@@ -27,7 +27,7 @@ func (q Query) Distinct() Query {
 func (oq OrderedQuery) Distinct() OrderedQuery {
 	return OrderedQuery{
 		orders: oq.orders,
-		Query: Query{
+		legacyQuery: legacyQuery{
 			Iterate: func(yield func(any) bool) {
 				var previous any
 				isFirst := true
@@ -49,8 +49,8 @@ func (oq OrderedQuery) Distinct() OrderedQuery {
 // DistinctBy method returns distinct elements from a collection. This method
 // executes selector function for each element to determine a value to compare.
 // The result is an unordered collection that contains no duplicate values.
-func (q Query) DistinctBy(selector func(any) any) Query {
-	return Query{
+func (q legacyQuery) DistinctBy(selector func(any) any) legacyQuery {
+	return legacyQuery{
 		Iterate: func(yield func(any) bool) {
 			set := make(map[any]struct{})
 
@@ -73,7 +73,7 @@ func (q Query) DistinctBy(selector func(any) any) Query {
 //   - selectorFn is of type "func(TSource) TSource".
 //
 // NOTE: DistinctBy has better performance than DistinctByT.
-func (q Query) DistinctByT(selectorFn any) Query {
+func (q legacyQuery) DistinctByT(selectorFn any) legacyQuery {
 	selectorFunc, ok := selectorFn.(func(any) any)
 	if !ok {
 		selectorGenericFunc, err := newGenericFunc(

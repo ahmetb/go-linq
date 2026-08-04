@@ -8,7 +8,7 @@ import (
 )
 
 // All determines whether all elements of a collection satisfy a condition.
-func (q Query) All(predicate func(any) bool) bool {
+func (q legacyQuery) All(predicate func(any) bool) bool {
 	for item := range q.Iterate {
 		if !predicate(item) {
 			return false
@@ -23,7 +23,7 @@ func (q Query) All(predicate func(any) bool) bool {
 //   - predicateFn is of type "func(TSource) bool"
 //
 // NOTE: All has better performance than AllT.
-func (q Query) AllT(predicateFn any) bool {
+func (q legacyQuery) AllT(predicateFn any) bool {
 
 	predicateGenericFunc, err := newGenericFunc(
 		"AllT", "predicateFn", predicateFn,
@@ -40,7 +40,7 @@ func (q Query) AllT(predicateFn any) bool {
 }
 
 // Any determines whether any element of a collection exists.
-func (q Query) Any() bool {
+func (q legacyQuery) Any() bool {
 	for range q.Iterate {
 		return true
 	}
@@ -49,7 +49,7 @@ func (q Query) Any() bool {
 }
 
 // AnyWith determines whether any element of a collection satisfies a condition.
-func (q Query) AnyWith(predicate func(any) bool) bool {
+func (q legacyQuery) AnyWith(predicate func(any) bool) bool {
 	for item := range q.Iterate {
 		if predicate(item) {
 			return true
@@ -64,7 +64,7 @@ func (q Query) AnyWith(predicate func(any) bool) bool {
 //   - predicateFn is of type "func(TSource) bool"
 //
 // NOTE: AnyWith has better performance than AnyWithT.
-func (q Query) AnyWithT(predicateFn any) bool {
+func (q legacyQuery) AnyWithT(predicateFn any) bool {
 
 	predicateGenericFunc, err := newGenericFunc(
 		"AnyWithT", "predicateFn", predicateFn,
@@ -84,7 +84,7 @@ func (q Query) AnyWithT(predicateFn any) bool {
 // Average computes the average of a collection of numeric values.
 // It panics if the sequence contains non-numeric types.
 // It returns math.NaN() if the sequence is empty.
-func (q Query) Average() (r float64) {
+func (q legacyQuery) Average() (r float64) {
 	next, stop := iter.Pull(q.Iterate)
 	defer stop()
 
@@ -129,7 +129,7 @@ func (q Query) Average() (r float64) {
 }
 
 // Contains determines whether a collection contains a specified element.
-func (q Query) Contains(value any) bool {
+func (q legacyQuery) Contains(value any) bool {
 	for item := range q.Iterate {
 		if item == value {
 			return true
@@ -139,7 +139,7 @@ func (q Query) Contains(value any) bool {
 }
 
 // Count returns the number of elements in a collection.
-func (q Query) Count() int {
+func (q legacyQuery) Count() int {
 	count := 0
 	for range q.Iterate {
 		count++
@@ -149,7 +149,7 @@ func (q Query) Count() int {
 
 // CountWith returns a number that represents how many elements in the specified
 // collection satisfy a condition.
-func (q Query) CountWith(predicate func(any) bool) int {
+func (q legacyQuery) CountWith(predicate func(any) bool) int {
 	count := 0
 	for item := range q.Iterate {
 		if predicate(item) {
@@ -164,7 +164,7 @@ func (q Query) CountWith(predicate func(any) bool) int {
 //   - predicateFn is of type "func(TSource) bool"
 //
 // NOTE: CountWith has better performance than CountWithT.
-func (q Query) CountWithT(predicateFn any) int {
+func (q legacyQuery) CountWithT(predicateFn any) int {
 
 	predicateGenericFunc, err := newGenericFunc(
 		"CountWithT", "predicateFn", predicateFn,
@@ -182,7 +182,7 @@ func (q Query) CountWithT(predicateFn any) int {
 }
 
 // First returns the first element of a collection.
-func (q Query) First() any {
+func (q legacyQuery) First() any {
 	for item := range q.Iterate {
 		return item
 	}
@@ -192,7 +192,7 @@ func (q Query) First() any {
 
 // FirstWith returns the first element of a collection that satisfies a
 // specified condition.
-func (q Query) FirstWith(predicate func(any) bool) any {
+func (q legacyQuery) FirstWith(predicate func(any) bool) any {
 	for item := range q.Iterate {
 		if predicate(item) {
 			return item
@@ -207,7 +207,7 @@ func (q Query) FirstWith(predicate func(any) bool) any {
 //   - predicateFn is of type "func(TSource) bool"
 //
 // NOTE: FirstWith has better performance than FirstWithT.
-func (q Query) FirstWithT(predicateFn any) any {
+func (q legacyQuery) FirstWithT(predicateFn any) any {
 
 	predicateGenericFunc, err := newGenericFunc(
 		"FirstWithT", "predicateFn", predicateFn,
@@ -225,7 +225,7 @@ func (q Query) FirstWithT(predicateFn any) any {
 }
 
 // ForEach performs the specified action on each element of a collection.
-func (q Query) ForEach(action func(any)) {
+func (q legacyQuery) ForEach(action func(any)) {
 	for item := range q.Iterate {
 		action(item)
 	}
@@ -236,7 +236,7 @@ func (q Query) ForEach(action func(any)) {
 //   - actionFn is of type "func(TSource)"
 //
 // NOTE: ForEach has better performance than ForEachT.
-func (q Query) ForEachT(actionFn any) {
+func (q legacyQuery) ForEachT(actionFn any) {
 	actionGenericFunc, err := newGenericFunc(
 		"ForEachT", "actionFn", actionFn,
 		simpleParamValidator(newElemTypeSlice(new(genericType)), nil),
@@ -261,7 +261,7 @@ func (q Query) ForEachT(actionFn any) {
 // index, for example. It can also be useful if you want to retrieve the index
 // of one or more elements. The second argument to action represents the
 // element to process.
-func (q Query) ForEachIndexed(action func(int, any)) {
+func (q legacyQuery) ForEachIndexed(action func(int, any)) {
 	index := 0
 	for item := range q.Iterate {
 		action(index, item)
@@ -274,7 +274,7 @@ func (q Query) ForEachIndexed(action func(int, any)) {
 //   - actionFn is of type "func(int, TSource)"
 //
 // NOTE: ForEachIndexed has better performance than ForEachIndexedT.
-func (q Query) ForEachIndexedT(actionFn any) {
+func (q legacyQuery) ForEachIndexedT(actionFn any) {
 	actionGenericFunc, err := newGenericFunc(
 		"ForEachIndexedT", "actionFn", actionFn,
 		simpleParamValidator(newElemTypeSlice(new(int), new(genericType)), nil),
@@ -292,7 +292,7 @@ func (q Query) ForEachIndexedT(actionFn any) {
 }
 
 // Last returns the last element of a collection.
-func (q Query) Last() (r any) {
+func (q legacyQuery) Last() (r any) {
 	for r = range q.Iterate {
 	}
 
@@ -301,7 +301,7 @@ func (q Query) Last() (r any) {
 
 // LastWith returns the last element of a collection that satisfies a specified
 // condition.
-func (q Query) LastWith(predicate func(any) bool) (r any) {
+func (q legacyQuery) LastWith(predicate func(any) bool) (r any) {
 	for item := range q.Iterate {
 		if predicate(item) {
 			r = item
@@ -316,7 +316,7 @@ func (q Query) LastWith(predicate func(any) bool) (r any) {
 //   - predicateFn is of type "func(TSource) bool"
 //
 // NOTE: LastWith has better performance than LastWithT.
-func (q Query) LastWithT(predicateFn any) any {
+func (q legacyQuery) LastWithT(predicateFn any) any {
 
 	predicateGenericFunc, err := newGenericFunc(
 		"LastWithT", "predicateFn", predicateFn,
@@ -334,7 +334,7 @@ func (q Query) LastWithT(predicateFn any) any {
 }
 
 // Max returns the maximum value in a collection of values.
-func (q Query) Max() any {
+func (q legacyQuery) Max() any {
 	next, stop := iter.Pull(q.Iterate)
 	defer stop()
 
@@ -355,7 +355,7 @@ func (q Query) Max() any {
 }
 
 // Min returns the minimum value in a collection of values.
-func (q Query) Min() any {
+func (q legacyQuery) Min() any {
 	next, stop := iter.Pull(q.Iterate)
 	defer stop()
 
@@ -376,12 +376,12 @@ func (q Query) Min() any {
 }
 
 // Results collects all items from a query into a slice.
-func (q Query) Results() []any {
+func (q legacyQuery) Results() []any {
 	return slices.Collect(q.Iterate)
 }
 
 // SequenceEqual determines whether two collections are equal.
-func (q Query) SequenceEqual(q2 Query) bool {
+func (q legacyQuery) SequenceEqual(q2 legacyQuery) bool {
 	next, stop := iter.Pull(q.Iterate)
 	defer stop()
 
@@ -401,7 +401,7 @@ func (q Query) SequenceEqual(q2 Query) bool {
 
 // Single returns the only element of a collection, and nil if there is not
 // exactly one element in the collection.
-func (q Query) Single() (r any) {
+func (q legacyQuery) Single() (r any) {
 	visited := false
 	for item := range q.Iterate {
 		if visited {
@@ -417,7 +417,7 @@ func (q Query) Single() (r any) {
 
 // SingleWith returns the only element of a collection that satisfies a
 // specified condition, and nil if more than one such element exists.
-func (q Query) SingleWith(predicate func(any) bool) (r any) {
+func (q legacyQuery) SingleWith(predicate func(any) bool) (r any) {
 	found := false
 	for item := range q.Iterate {
 		if !predicate(item) {
@@ -441,7 +441,7 @@ func (q Query) SingleWith(predicate func(any) bool) (r any) {
 //   - predicateFn is of type "func(TSource) bool"
 //
 // NOTE: SingleWith has better performance than SingleWithT.
-func (q Query) SingleWithT(predicateFn any) any {
+func (q legacyQuery) SingleWithT(predicateFn any) any {
 	predicateGenericFunc, err := newGenericFunc(
 		"SingleWithT", "predicateFn", predicateFn,
 		simpleParamValidator(newElemTypeSlice(new(genericType)), newElemTypeSlice(new(bool))),
@@ -461,7 +461,7 @@ func (q Query) SingleWithT(predicateFn any) any {
 //
 // Values can be of any integer type: int, int8, int16, int32, int64. The result
 // is int64. Method returns zero if the collection contains no elements.
-func (q Query) SumInts() (r int64) {
+func (q legacyQuery) SumInts() (r int64) {
 	next, stop := iter.Pull(q.Iterate)
 	defer stop()
 
@@ -485,7 +485,7 @@ func (q Query) SumInts() (r int64) {
 // Values can be of any unsigned integer type: uint, uint8, uint16, uint32,
 // uint64. The result is uint64. Method returns zero if the collection contains no
 // elements.
-func (q Query) SumUInts() (r uint64) {
+func (q legacyQuery) SumUInts() (r uint64) {
 	next, stop := iter.Pull(q.Iterate)
 	defer stop()
 
@@ -508,7 +508,7 @@ func (q Query) SumUInts() (r uint64) {
 //
 // Values can be of any float type: float32 or float64. The result is float64.
 // Method returns zero if the collection contains no elements.
-func (q Query) SumFloats() (r float64) {
+func (q legacyQuery) SumFloats() (r float64) {
 	next, stop := iter.Pull(q.Iterate)
 	defer stop()
 
@@ -529,7 +529,7 @@ func (q Query) SumFloats() (r float64) {
 
 // ToChannel iterates over a collection and outputs each element to a channel,
 // then closes it.
-func (q Query) ToChannel(result chan<- any) {
+func (q legacyQuery) ToChannel(result chan<- any) {
 	defer close(result)
 
 	for item := range q.Iterate {
@@ -542,7 +542,7 @@ func (q Query) ToChannel(result chan<- any) {
 //   - result is of type "chan TSource"
 //
 // NOTE: ToChannel has better performance than ToChannelT.
-func (q Query) ToChannelT(result any) {
+func (q legacyQuery) ToChannelT(result any) {
 	r := reflect.ValueOf(result)
 
 	for item := range q.Iterate {
@@ -556,7 +556,7 @@ func (q Query) ToChannelT(result any) {
 // Collection elements have to be of KeyValue type to use this method. To
 // populate a map with elements of different types, use the ToMapBy method. ToMap
 // doesn't empty the result map before populating it.
-func (q Query) ToMap(result any) {
+func (q legacyQuery) ToMap(result any) {
 	q.ToMapBy(
 		result,
 		func(i any) any {
@@ -572,7 +572,7 @@ func (q Query) ToMap(result any) {
 // element of the collection to generate key and value for the map. Generated
 // key and value types must be assignable to the map's key and value types.
 // ToMapBy doesn't empty the result map before populating it.
-func (q Query) ToMapBy(result any,
+func (q legacyQuery) ToMapBy(result any,
 	keySelector func(any) any,
 	valueSelector func(any) any) {
 	res := reflect.ValueOf(result)
@@ -594,7 +594,7 @@ func (q Query) ToMapBy(result any,
 //   - valueSelectorFn is of type "func(TSource)TValue"
 //
 // NOTE: ToMapBy has better performance than ToMapByT.
-func (q Query) ToMapByT(result any,
+func (q legacyQuery) ToMapByT(result any,
 	keySelectorFn any, valueSelectorFn any) {
 	keySelectorGenericFunc, err := newGenericFunc(
 		"ToMapByT", "keySelectorFn", keySelectorFn,
@@ -633,7 +633,7 @@ func (q Query) ToMapByT(result any,
 // Note: Starting with go-linq v4, ToSlice panics if v is not a pointer to a slice.
 // If the query type is not assignable to the slice element type, ToSlice will
 // attempt to convert the query elements to the slice element type.
-func (q Query) ToSlice(v any) {
+func (q legacyQuery) ToSlice(v any) {
 	ptrValue := reflect.ValueOf(v)
 	if ptrValue.Kind() != reflect.Pointer || ptrValue.IsNil() {
 		panic("ToSlice: v must be a pointer to a slice")

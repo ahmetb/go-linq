@@ -7,7 +7,7 @@ import (
 
 func TestTypedSelectManyByIndexed(t *testing.T) {
 	got := fromSlice([]string{"a", "b"}).SelectManyByIndexed(
-		func(index int, value string) query[int] {
+		func(index int, value string) Query[int] {
 			return fromSlice([]int{index, len(value)})
 		},
 		func(inner int, outer string) string { return outer + string(rune('0'+inner)) },
@@ -22,7 +22,7 @@ func TestTypedSelectManyByIndexed(t *testing.T) {
 func TestTypedSelectManyByIndexedStopsBothIterators(t *testing.T) {
 	var indices []int
 	q := fromSlice([][]int{{1, 2}, {3, 4}}).SelectManyByIndexed(
-		func(index int, values []int) query[int] {
+		func(index int, values []int) Query[int] {
 			indices = append(indices, index)
 			return fromSlice(values)
 		},

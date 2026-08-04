@@ -12,10 +12,9 @@ import "iter"
 // combines elements until it reaches the end of one of the collections. For
 // example, if one collection has three elements and the other one has four, the
 // result collection has only three elements.
-func (q Query) Zip(q2 Query,
-	resultSelector func(any, any) any) Query {
+func (q legacyQuery) Zip(q2 legacyQuery, resultSelector func(any, any) any) legacyQuery {
 
-	return Query{
+	return legacyQuery{
 		Iterate: func(yield func(any) bool) {
 			next1, stop1 := iter.Pull(q.Iterate)
 			defer stop1()
@@ -45,8 +44,7 @@ func (q Query) Zip(q2 Query,
 //   - resultSelectorFn is of type "func(TFirst,TSecond)TResult"
 //
 // NOTE: Zip has better performance than ZipT.
-func (q Query) ZipT(q2 Query,
-	resultSelectorFn any) Query {
+func (q legacyQuery) ZipT(q2 legacyQuery, resultSelectorFn any) legacyQuery {
 	resultSelectorGenericFunc, err := newGenericFunc(
 		"ZipT", "resultSelectorFn", resultSelectorFn,
 		simpleParamValidator(newElemTypeSlice(new(genericType), new(genericType)), newElemTypeSlice(new(genericType))),

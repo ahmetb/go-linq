@@ -1,7 +1,7 @@
 package linq
 
-func (q query[T]) TakeWhile(predicate func(T) bool) query[T] {
-	return query[T]{iterate: func(yield func(T) bool) {
+func (q Query[T]) TakeWhile(predicate func(T) bool) Query[T] {
+	return Query[T]{iterate: func(yield func(T) bool) {
 		q.iterate(func(value T) bool {
 			if !predicate(value) {
 				return false

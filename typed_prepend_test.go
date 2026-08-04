@@ -21,7 +21,7 @@ func TestTypedPrependAddsValueToEmptyQuery(t *testing.T) {
 
 func TestTypedPrependDoesNotEnumerateSourceAfterConsumerStops(t *testing.T) {
 	visited := 0
-	source := query[int]{iterate: func(yield func(int) bool) {
+	source := Query[int]{iterate: func(yield func(int) bool) {
 		visited++
 		yield(2)
 	}}

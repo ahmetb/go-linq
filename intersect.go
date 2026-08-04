@@ -4,8 +4,8 @@ package linq
 // provided input collection. The intersection of two sets A and B is defined as
 // the set that contains all the elements of A that also appear in B, but no
 // other elements.
-func (q Query) Intersect(q2 Query) Query {
-	return Query{
+func (q legacyQuery) Intersect(q2 legacyQuery) legacyQuery {
+	return legacyQuery{
 		Iterate: func(yield func(any) bool) {
 			set := make(map[any]struct{})
 			for item := range q2.Iterate {
@@ -30,10 +30,9 @@ func (q Query) Intersect(q2 Query) Query {
 // other elements.
 //
 // IntersectBy invokes a transform function on each element of both collections.
-func (q Query) IntersectBy(q2 Query,
-	selector func(any) any) Query {
+func (q legacyQuery) IntersectBy(q2 legacyQuery, selector func(any) any) legacyQuery {
 
-	return Query{
+	return legacyQuery{
 		Iterate: func(yield func(any) bool) {
 			set := make(map[any]struct{})
 			for item := range q2.Iterate {
@@ -59,8 +58,7 @@ func (q Query) IntersectBy(q2 Query,
 //   - selectorFn is of type "func(TSource) TSource"
 //
 // NOTE: IntersectBy has better performance than IntersectByT.
-func (q Query) IntersectByT(q2 Query,
-	selectorFn any) Query {
+func (q legacyQuery) IntersectByT(q2 legacyQuery, selectorFn any) legacyQuery {
 	selectorGenericFunc, err := newGenericFunc(
 		"IntersectByT", "selectorFn", selectorFn,
 		simpleParamValidator(newElemTypeSlice(new(genericType)), newElemTypeSlice(new(genericType))),

@@ -10,16 +10,16 @@ type typedOrder[T any] struct {
 }
 
 type orderedQuery[T any] struct {
-	query[T]
-	original query[T]
+	Query[T]
+	original Query[T]
 	orders   []typedOrder[T]
 }
 
-func (q query[T]) OrderBy[K cmp.Ordered](selector func(T) K) orderedQuery[T] {
+func (q Query[T]) OrderBy[K cmp.Ordered](selector func(T) K) orderedQuery[T] {
 	return newOrderedQuery(q, []typedOrder[T]{newTypedOrder(selector)})
 }
 
-func (q query[T]) OrderByDescending[K cmp.Ordered](selector func(T) K) orderedQuery[T] {
+func (q Query[T]) OrderByDescending[K cmp.Ordered](selector func(T) K) orderedQuery[T] {
 	return newOrderedQuery(q, []typedOrder[T]{newTypedOrderDescending(selector)})
 }
 
@@ -49,9 +49,9 @@ func newTypedOrderDescending[T any, K cmp.Ordered](selector func(T) K) typedOrde
 	}
 }
 
-func newOrderedQuery[T any](original query[T], orders []typedOrder[T]) orderedQuery[T] {
+func newOrderedQuery[T any](original Query[T], orders []typedOrder[T]) orderedQuery[T] {
 	ordered := orderedQuery[T]{original: original, orders: orders}
-	ordered.query = query[T]{
+	ordered.Query = Query[T]{
 		iterate: func(yield func(T) bool) {
 			items := original.toSlice()
 			slices.SortStableFunc(items, func(left, right T) int {

@@ -1,6 +1,6 @@
 package linq
 
-func (q query[T]) ToMapBy[K comparable, V any](
+func (q Query[T]) ToMapBy[K comparable, V any](
 	keySelector func(T) K,
 	valueSelector func(T) V,
 ) map[K]V {

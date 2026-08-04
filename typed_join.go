@@ -1,12 +1,12 @@
 package linq
 
-func (q query[T]) Join[U any, K comparable, R any](
-	inner query[U],
+func (q Query[T]) Join[U any, K comparable, R any](
+	inner Query[U],
 	outerKeySelector func(T) K,
 	innerKeySelector func(U) K,
 	resultSelector func(T, U) R,
-) query[R] {
-	return query[R]{
+) Query[R] {
+	return Query[R]{
 		iterate: func(yield func(R) bool) {
 			lookup := make(map[K][]U)
 			for value := range inner.iterate {

@@ -5,8 +5,8 @@ package linq
 // Unlike OrderBy, this sorting method does not consider the actual values
 // themselves in determining the order. Rather, it just returns the elements in
 // the reverse order from which they are produced by the underlying source.
-func (q Query) Reverse() Query {
-	return Query{
+func (q legacyQuery) Reverse() legacyQuery {
+	return legacyQuery{
 		Iterate: func(yield func(any) bool) {
 			var items []any
 			for item := range q.Iterate {

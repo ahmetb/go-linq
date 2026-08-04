@@ -2,8 +2,8 @@ package linq
 
 import "iter"
 
-func (q query[T]) Zip[U, R any](other query[U], resultSelector func(T, U) R) query[R] {
-	return query[R]{
+func (q Query[T]) Zip[U, R any](other Query[U], resultSelector func(T, U) R) Query[R] {
+	return Query[R]{
 		iterate: func(yield func(R) bool) {
 			nextLeft, stopLeft := iter.Pull(q.iterate)
 			defer stopLeft()

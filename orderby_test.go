@@ -111,7 +111,7 @@ func TestThenBy_Abort(t *testing.T) {
 		return i.(int)
 	})
 
-	runDryIteration(q.Query)
+	runDryIteration(q.legacyQuery)
 }
 
 func TestThenByT_PanicWhenSelectorFnIsInvalid(t *testing.T) {
@@ -154,7 +154,7 @@ func TestThenByDescending_Abort(t *testing.T) {
 		return i.(int)
 	})
 
-	runDryIteration(q.Query)
+	runDryIteration(q.legacyQuery)
 }
 
 func TestThenByDescendingT_PanicWhenSelectorFnIsInvalid(t *testing.T) {

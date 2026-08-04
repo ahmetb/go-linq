@@ -14,7 +14,7 @@ func TestTypedTakeYieldsRequestedPrefix(t *testing.T) {
 
 func TestTypedTakeNonPositiveCountDoesNotEnumerateSource(t *testing.T) {
 	visited := 0
-	source := query[int]{iterate: func(func(int) bool) { visited++ }}
+	source := Query[int]{iterate: func(func(int) bool) { visited++ }}
 
 	if got := source.Take(0).toSlice(); len(got) != 0 {
 		t.Fatalf("Take(0) = %v, want empty", got)

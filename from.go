@@ -9,7 +9,7 @@ import (
 
 // Query is the type returned from query functions. It can be iterated manually
 // as shown in the example.
-type Query struct {
+type legacyQuery struct {
 	Iterate iter.Seq[any]
 }
 
@@ -27,8 +27,8 @@ type Iterable interface {
 }
 
 // FromSlice initializes a linq query with a passed slice.
-func FromSlice[S ~[]T, T any](source S) Query {
-	return Query{
+func FromSlice[S ~[]T, T any](source S) legacyQuery {
+	return legacyQuery{
 		Iterate: func(yield func(any) bool) {
 			for _, item := range source {
 				if !yield(item) {
@@ -40,8 +40,8 @@ func FromSlice[S ~[]T, T any](source S) Query {
 }
 
 // FromMap initializes a linq query with a passed map.
-func FromMap[M ~map[K]V, K comparable, V any](source M) Query {
-	return Query{
+func FromMap[M ~map[K]V, K comparable, V any](source M) legacyQuery {
+	return legacyQuery{
 		Iterate: func(yield func(any) bool) {
 			for k, v := range source {
 				if !yield(KeyValue{
@@ -57,8 +57,8 @@ func FromMap[M ~map[K]V, K comparable, V any](source M) Query {
 
 // FromChannel initializes a linq query with a passed channel, linq iterates over
 // the channel until it is closed.
-func FromChannel[T any](source <-chan T) Query {
-	return Query{
+func FromChannel[T any](source <-chan T) legacyQuery {
+	return legacyQuery{
 		Iterate: func(yield func(any) bool) {
 			for item := range source {
 				if !yield(item) {
@@ -71,8 +71,8 @@ func FromChannel[T any](source <-chan T) Query {
 
 // FromChannelWithContext initializes a linq query with a passed channel
 // and stops iterating either when the channel is closed or when the context is canceled.
-func FromChannelWithContext[T any](ctx context.Context, source <-chan T) Query {
-	return Query{
+func FromChannelWithContext[T any](ctx context.Context, source <-chan T) legacyQuery {
+	return legacyQuery{
 		Iterate: func(yield func(any) bool) {
 			for {
 				select {
@@ -91,8 +91,8 @@ func FromChannelWithContext[T any](ctx context.Context, source <-chan T) Query {
 }
 
 // FromString initializes a query from a string, iterating over its runes.
-func FromString[S ~string](source S) Query {
-	return Query{
+func FromString[S ~string](source S) legacyQuery {
+	return legacyQuery{
 		Iterate: func(yield func(any) bool) {
 			for _, ch := range string(source) {
 				if !yield(ch) {
@@ -105,8 +105,8 @@ func FromString[S ~string](source S) Query {
 
 // FromIterable initializes a linq query with a custom collection passed. This
 // collection has to implement Iterable.
-func FromIterable(source Iterable) Query {
-	return Query{
+func FromIterable(source Iterable) legacyQuery {
+	return legacyQuery{
 		Iterate: source.Iterate(),
 	}
 }
@@ -117,9 +117,9 @@ func FromIterable(source Iterable) Query {
 // NOTE: It is recommended to call the specific From* function directly
 // (e.g., FromSlice, FromMap, etc.). This unified function is less efficient
 // because it relies on runtime reflection.
-func From(source any) Query {
+func From(source any) legacyQuery {
 	if source == nil {
-		return Query{
+		return legacyQuery{
 			Iterate: func(yield func(any) bool) {},
 		}
 	}
@@ -134,7 +134,7 @@ func From(source any) Query {
 	sourceValue := reflect.ValueOf(source)
 	switch sourceValue.Kind() {
 	case reflect.Slice, reflect.Array:
-		return Query{
+		return legacyQuery{
 			Iterate: func(yield func(any) bool) {
 				length := sourceValue.Len()
 				for i := 0; i < length; i++ {
@@ -146,7 +146,7 @@ func From(source any) Query {
 		}
 
 	case reflect.Map:
-		return Query{
+		return legacyQuery{
 			Iterate: func(yield func(any) bool) {
 				for _, key := range sourceValue.MapKeys() {
 					value := sourceValue.MapIndex(key)
@@ -158,7 +158,7 @@ func From(source any) Query {
 		}
 
 	case reflect.Chan:
-		return Query{
+		return legacyQuery{
 			Iterate: func(yield func(any) bool) {
 				for {
 					value, ok := sourceValue.Recv()
@@ -175,8 +175,8 @@ func From(source any) Query {
 }
 
 // Range generates a sequence of integral numbers within a specified range.
-func Range(start, count int) Query {
-	return Query{
+func Range(start, count int) legacyQuery {
+	return legacyQuery{
 		Iterate: func(yield func(any) bool) {
 			end := start + count
 			for i := start; i < end; i++ {
@@ -189,8 +189,8 @@ func Range(start, count int) Query {
 }
 
 // Repeat generates a sequence that contains one repeated value.
-func Repeat[T any](value T, count int) Query {
-	return Query{
+func Repeat[T any](value T, count int) legacyQuery {
+	return legacyQuery{
 		Iterate: func(yield func(any) bool) {
 			for i := 0; i < count; i++ {
 				if !yield(value) {

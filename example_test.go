@@ -91,7 +91,7 @@ func ExampleQuery() {
 }
 
 // The following code example demonstrates how to use Aggregate function
-func ExampleQuery_Aggregate() {
+func ExamplelegacyQuery_Aggregate() {
 	fruits := []string{"apple", "mango", "orange", "passionfruit", "grape"}
 
 	// Determine which string in the slice is the longest.
@@ -111,7 +111,7 @@ func ExampleQuery_Aggregate() {
 }
 
 // The following code example demonstrates how to use AggregateWithSeed function
-func ExampleQuery_AggregateWithSeed() {
+func ExamplelegacyQuery_AggregateWithSeed() {
 	ints := []int{4, 8, 8, 3, 9, 0, 7, 8, 2}
 
 	// Count the even numbers in the array, using a seed value of 0.
@@ -131,7 +131,7 @@ func ExampleQuery_AggregateWithSeed() {
 }
 
 // The following code example demonstrates how to use AggregateWithSeedBy function
-func ExampleQuery_AggregateWithSeedBy() {
+func ExamplelegacyQuery_AggregateWithSeedBy() {
 	input := []string{"apple", "mango", "orange", "passionfruit", "grape"}
 
 	// Determine whether any string in the array is longer than "banana".
@@ -243,7 +243,7 @@ func ExampleOrderedQuery_ThenBy() {
 // whether all the elements in a slice satisfy a condition.
 // Variable allStartWithB is true if all the pet names start with "B"
 // or if the pets array is empty.
-func ExampleQuery_All() {
+func ExamplelegacyQuery_All() {
 
 	type Pet struct {
 		Name string
@@ -271,7 +271,7 @@ func ExampleQuery_All() {
 
 // The following code example demonstrates how to use Any to determine
 // whether a slice contains any elements.
-func ExampleQuery_Any() {
+func ExamplelegacyQuery_Any() {
 
 	numbers := []int{1, 2}
 	hasElements := From(numbers).Any()
@@ -283,7 +283,7 @@ func ExampleQuery_Any() {
 
 // The following code example demonstrates how to use AnyWith
 // to determine whether any element in a slice satisfies a condition.
-func ExampleQuery_AnyWith() {
+func ExamplelegacyQuery_AnyWith() {
 
 	type Pet struct {
 		Name       string
@@ -313,7 +313,7 @@ func ExampleQuery_AnyWith() {
 
 // The following code example demonstrates how to use Append
 // to include an elements in the last position of a slice.
-func ExampleQuery_Append() {
+func ExamplelegacyQuery_Append() {
 	input := []int{1, 2, 3, 4}
 
 	q := From(input).Append(5)
@@ -327,7 +327,7 @@ func ExampleQuery_Append() {
 
 // The following code example demonstrates how to use Average
 // to calculate the average of a slice of values.
-func ExampleQuery_Average() {
+func ExamplelegacyQuery_Average() {
 	grades := []int{78, 92, 100, 37, 81}
 	average := From(grades).Average()
 
@@ -338,7 +338,7 @@ func ExampleQuery_Average() {
 
 // The following code example demonstrates how to use Count
 // to count the elements in an array.
-func ExampleQuery_Count() {
+func ExamplelegacyQuery_Count() {
 	fruits := []string{"apple", "banana", "mango", "orange", "passionfruit", "grape"}
 	numberOfFruits := From(fruits).Count()
 
@@ -349,7 +349,7 @@ func ExampleQuery_Count() {
 
 // The following code example demonstrates how to use Contains
 // to determine whether a slice contains a specific element.
-func ExampleQuery_Contains() {
+func ExamplelegacyQuery_Contains() {
 	slice := []int{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
 
 	has5 := From(slice).Contains(5)
@@ -361,7 +361,7 @@ func ExampleQuery_Contains() {
 
 // The following code example demonstrates how to use CountWith
 // to count the even numbers in an array.
-func ExampleQuery_CountWith() {
+func ExamplelegacyQuery_CountWith() {
 	slice := []int{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
 
 	evenCount := From(slice).
@@ -389,7 +389,7 @@ func ExampleQuery_CountWith() {
 // The method returns a collection that contains a single, default value if the sequence
 // of matching Pet elements is empty for any Person element, thereby ensuring that each
 // Person element is represented in the result collection.
-func ExampleQuery_DefaultIfEmpty() {
+func ExamplelegacyQuery_DefaultIfEmpty() {
 	type Person struct {
 		FirstName string
 		LastName  string
@@ -424,7 +424,7 @@ func ExampleQuery_DefaultIfEmpty() {
 			func(person Person, pets []Pet) Group { return Group{Key: person, Group: From(pets).Results()} },
 		).
 		SelectManyByT(
-			func(g Group) Query { return From(g.Group).DefaultIfEmpty(Pet{}) },
+			func(g Group) legacyQuery { return From(g.Group).DefaultIfEmpty(Pet{}) },
 			func(pet Pet, group Group) string {
 				return fmt.Sprintf("%s: %s", group.Key.(Person).FirstName, pet.Name)
 			},
@@ -446,7 +446,7 @@ func ExampleQuery_DefaultIfEmpty() {
 
 // The following code example demonstrates how to use Distinct
 // to return distinct elements from a slice of integers.
-func ExampleQuery_Distinct() {
+func ExamplelegacyQuery_Distinct() {
 	ages := []int{21, 46, 46, 55, 17, 21, 55, 55}
 
 	var distinctAges []int
@@ -461,7 +461,7 @@ func ExampleQuery_Distinct() {
 
 // The following code example demonstrates how to
 // use DistinctBy to return distinct elements from a ordered slice of elements.
-func ExampleQuery_DistinctBy() {
+func ExamplelegacyQuery_DistinctBy() {
 	type Product struct {
 		Name string
 		Code int
@@ -495,7 +495,7 @@ func ExampleQuery_DistinctBy() {
 // The following code example demonstrates how to use the Except
 // method to compare two slices of numbers and return elements
 // that appear only in the first slice.
-func ExampleQuery_Except() {
+func ExamplelegacyQuery_Except() {
 	numbers1 := []float32{2.0, 2.1, 2.2, 2.3, 2.4, 2.5}
 	numbers2 := []float32{2.2}
 
@@ -519,7 +519,7 @@ func ExampleQuery_Except() {
 // The following code example demonstrates how to use the Except
 // method to compare two slices of numbers and return elements
 // that appear only in the first slice.
-func ExampleQuery_ExceptBy() {
+func ExamplelegacyQuery_ExceptBy() {
 	type Product struct {
 		Name string
 		Code int
@@ -555,7 +555,7 @@ func ExampleQuery_ExceptBy() {
 
 // The following code example demonstrates how to use First
 // to return the first element of an array.
-func ExampleQuery_First() {
+func ExamplelegacyQuery_First() {
 	numbers := []int{9, 34, 65, 92, 87, 435, 3, 54, 83, 23, 87, 435, 67, 12, 19}
 
 	first := From(numbers).First()
@@ -568,7 +568,7 @@ func ExampleQuery_First() {
 
 // The following code example demonstrates how to use FirstWith
 // to return the first element of an array that satisfies a condition.
-func ExampleQuery_FirstWith() {
+func ExamplelegacyQuery_FirstWith() {
 	numbers := []int{9, 34, 65, 92, 87, 435, 3, 54, 83, 23, 87, 435, 67, 12, 19}
 
 	first := From(numbers).
@@ -584,7 +584,7 @@ func ExampleQuery_FirstWith() {
 
 // The following code example demonstrates how to use Intersect
 // to return the elements that appear in each of two slices of integers.
-func ExampleQuery_Intersect() {
+func ExamplelegacyQuery_Intersect() {
 	id1 := []int{44, 26, 92, 30, 71, 38}
 	id2 := []int{39, 59, 83, 47, 26, 4, 30}
 
@@ -604,7 +604,7 @@ func ExampleQuery_Intersect() {
 
 // The following code example demonstrates how to use IntersectBy
 // to return the elements that appear in each of two slices of products with same Code.
-func ExampleQuery_IntersectBy() {
+func ExamplelegacyQuery_IntersectBy() {
 	type Product struct {
 		Name string
 		Code int
@@ -637,7 +637,7 @@ func ExampleQuery_IntersectBy() {
 
 // The following code example demonstrates how to use Last
 // to return the last element of an array.
-func ExampleQuery_Last() {
+func ExamplelegacyQuery_Last() {
 	numbers := []int{9, 34, 65, 92, 87, 435, 3, 54,
 		83, 23, 87, 67, 12, 19}
 
@@ -652,7 +652,7 @@ func ExampleQuery_Last() {
 
 // The following code example demonstrates how to use LastWith
 // to return the last element of an array.
-func ExampleQuery_LastWith() {
+func ExamplelegacyQuery_LastWith() {
 	numbers := []int{9, 34, 65, 92, 87, 435, 3, 54,
 		83, 23, 87, 67, 12, 19}
 
@@ -670,7 +670,7 @@ func ExampleQuery_LastWith() {
 
 // The following code example demonstrates how to use Max
 // to determine the maximum value in a slice.
-func ExampleQuery_Max() {
+func ExamplelegacyQuery_Max() {
 	numbers := []int64{4294967296, 466855135, 81125}
 
 	last := From(numbers).Max()
@@ -684,7 +684,7 @@ func ExampleQuery_Max() {
 
 // The following code example demonstrates how to use Min
 // to determine the minimum value in a slice.
-func ExampleQuery_Min() {
+func ExamplelegacyQuery_Min() {
 	grades := []int{78, 92, 99, 37, 81}
 
 	min := From(grades).Min()
@@ -698,7 +698,7 @@ func ExampleQuery_Min() {
 
 // The following code example demonstrates how to use OrderByDescending
 // to sort the elements of a slice in descending order by using a selector function
-func ExampleQuery_OrderByDescending() {
+func ExamplelegacyQuery_OrderByDescending() {
 	names := []string{"Ned", "Ben", "Susan"}
 
 	var result []string
@@ -747,7 +747,7 @@ func ExampleOrderedQuery_ThenByDescending() {
 
 // The following code example demonstrates how to use Concat
 // to concatenate two slices.
-func ExampleQuery_Concat() {
+func ExamplelegacyQuery_Concat() {
 	q := From([]int{1, 2, 3}).
 		Concat(From([]int{4, 5, 6}))
 
@@ -756,7 +756,7 @@ func ExampleQuery_Concat() {
 	// [1 2 3 4 5 6]
 }
 
-func ExampleQuery_GroupBy() {
+func ExamplelegacyQuery_GroupBy() {
 	input := []int{1, 2, 3, 4, 5, 6, 7, 8, 9}
 
 	q := From(input).GroupBy(
@@ -772,7 +772,7 @@ func ExampleQuery_GroupBy() {
 
 // The following code example demonstrates how to use GroupJoin
 // to perform a grouped join on two slices
-func ExampleQuery_GroupJoin() {
+func ExamplelegacyQuery_GroupJoin() {
 	fruits := []string{
 		"apple",
 		"banana",
@@ -798,7 +798,7 @@ func ExampleQuery_GroupJoin() {
 // The following code example demonstrates how to use IndexOf
 // to retrieve the position of an item in the array and then
 // update that item.
-func ExampleQuery_IndexOf() {
+func ExamplelegacyQuery_IndexOf() {
 	type Item struct {
 		ID   uint64
 		Name string
@@ -838,7 +838,7 @@ func ExampleQuery_IndexOf() {
 
 // The following code example demonstrates how to use Join
 // to perform an inner join of two slices based on a common key.
-func ExampleQuery_Join() {
+func ExamplelegacyQuery_Join() {
 	fruits := []string{
 		"apple",
 		"banana",
@@ -863,7 +863,7 @@ func ExampleQuery_Join() {
 
 // The following code example demonstrates how to use OrderBy
 // to sort the elements of a slice.
-func ExampleQuery_OrderBy() {
+func ExamplelegacyQuery_OrderBy() {
 	q := Range(1, 10).
 		OrderBy(
 			func(i any) any { return i.(int) % 2 },
@@ -879,7 +879,7 @@ func ExampleQuery_OrderBy() {
 
 // The following code example demonstrates how to use Prepend
 // to include an elements in the first position of a slice.
-func ExampleQuery_Prepend() {
+func ExamplelegacyQuery_Prepend() {
 	input := []int{2, 3, 4, 5}
 
 	q := From(input).Prepend(1)
@@ -892,7 +892,7 @@ func ExampleQuery_Prepend() {
 
 // The following code example demonstrates how to use Reverse
 // to reverse the order of elements in a string.
-func ExampleQuery_Reverse() {
+func ExamplelegacyQuery_Reverse() {
 	input := "apple"
 
 	var output []rune
@@ -907,7 +907,7 @@ func ExampleQuery_Reverse() {
 
 // The following code example demonstrates how to use Select
 // to project over a slice of values.
-func ExampleQuery_Select() {
+func ExamplelegacyQuery_Select() {
 	squares := []int{}
 
 	Range(1, 10).
@@ -921,12 +921,12 @@ func ExampleQuery_Select() {
 	// [1 4 9 16 25 36 49 64 81 100]
 }
 
-func ExampleQuery_SelectMany() {
+func ExamplelegacyQuery_SelectMany() {
 	input := [][]int{{1, 2, 3}, {4, 5, 6, 7}}
 
 	q := From(input).
 		SelectMany(
-			func(i any) Query { return From(i) },
+			func(i any) legacyQuery { return From(i) },
 		)
 
 	fmt.Println(q.Results())
@@ -936,7 +936,7 @@ func ExampleQuery_SelectMany() {
 
 // The following code example demonstrates how to use Select
 // to project over a slice of values and use the index of each element.
-func ExampleQuery_SelectIndexed() {
+func ExamplelegacyQuery_SelectIndexed() {
 	fruits := []string{"apple", "banana", "mango", "orange", "passionfruit", "grape"}
 
 	result := []string{}
@@ -954,7 +954,7 @@ func ExampleQuery_SelectIndexed() {
 
 // The following code example demonstrates how to use SelectManyByIndexed
 // to perform a one-to-many projection over an array and use the index of each outer element.
-func ExampleQuery_SelectManyByIndexed() {
+func ExamplelegacyQuery_SelectManyByIndexed() {
 	type Pet struct {
 		Name string
 	}
@@ -983,7 +983,7 @@ func ExampleQuery_SelectManyByIndexed() {
 
 	From(people).
 		SelectManyByIndexed(
-			func(index int, person any) Query {
+			func(index int, person any) legacyQuery {
 				return From(person.(Person).Pets).
 					Select(func(pet any) any {
 						return fmt.Sprintf("%d - %s", index, pet.(Pet).Name)
@@ -1008,7 +1008,7 @@ func ExampleQuery_SelectManyByIndexed() {
 
 // The following code example demonstrates how to use SelectManyIndexed
 // to perform a one-to-many projection over an slice of log data and print out their contents.
-func ExampleQuery_SelectManyIndexed() {
+func ExamplelegacyQuery_SelectManyIndexed() {
 	type LogFile struct {
 		Name  string
 		Lines []string
@@ -1041,7 +1041,7 @@ func ExampleQuery_SelectManyIndexed() {
 	var results []string
 
 	From(logFiles).
-		SelectManyIndexedT(func(fileIndex int, file LogFile) Query {
+		SelectManyIndexedT(func(fileIndex int, file LogFile) legacyQuery {
 			return From(file.Lines).
 				SelectIndexedT(func(lineIndex int, line string) string {
 					return fmt.Sprintf("File:[%d] - %s => line: %d - %s", fileIndex+1, file.Name, lineIndex+1, line)
@@ -1063,7 +1063,7 @@ func ExampleQuery_SelectManyIndexed() {
 
 // The following code example demonstrates how to use SelectMany
 // to perform a one-to-many projection over a slice
-func ExampleQuery_SelectManyBy() {
+func ExamplelegacyQuery_SelectManyBy() {
 
 	type Pet struct {
 		Name string
@@ -1092,7 +1092,7 @@ func ExampleQuery_SelectManyBy() {
 	var results []string
 	From(people).
 		SelectManyBy(
-			func(person any) Query { return From(person.(Person).Pets) },
+			func(person any) legacyQuery { return From(person.(Person).Pets) },
 			func(pet, person any) any {
 				return fmt.Sprintf("Owner: %s, Pet: %s", person.(Person).Name, pet.(Pet).Name)
 			},
@@ -1111,7 +1111,7 @@ func ExampleQuery_SelectManyBy() {
 
 // The following code example demonstrates how to use SequenceEqual
 // to determine whether two slices are equal.
-func ExampleQuery_SequenceEqual() {
+func ExamplelegacyQuery_SequenceEqual() {
 	type Pet struct {
 		Name string
 		Age  int
@@ -1140,7 +1140,7 @@ func ExampleQuery_SequenceEqual() {
 
 // The following code example demonstrates how to use Single
 // to select the only element of a slice.
-func ExampleQuery_Single() {
+func ExamplelegacyQuery_Single() {
 	fruits1 := []string{"orange"}
 
 	fruit1 := From(fruits1).Single()
@@ -1152,7 +1152,7 @@ func ExampleQuery_Single() {
 
 // The following code example demonstrates how to use SingleWith
 // to select the only element of a slice that satisfies a condition.
-func ExampleQuery_SingleWith() {
+func ExamplelegacyQuery_SingleWith() {
 	fruits := []string{"apple", "banana", "mango", "orange", "passionfruit", "grape"}
 
 	fruit := From(fruits).
@@ -1168,7 +1168,7 @@ func ExampleQuery_SingleWith() {
 // The following code example demonstrates how to use Skip
 // to skip a specified number of elements in a sorted array
 // and return the remaining elements.
-func ExampleQuery_Skip() {
+func ExamplelegacyQuery_Skip() {
 	grades := []int{59, 82, 70, 56, 92, 98, 85}
 	var lowerGrades []int
 	From(grades).
@@ -1186,7 +1186,7 @@ func ExampleQuery_Skip() {
 
 // The following code example demonstrates how to use SkipWhile
 // to skip elements of an array as long as a condition is true.
-func ExampleQuery_SkipWhile() {
+func ExamplelegacyQuery_SkipWhile() {
 	grades := []int{59, 82, 70, 56, 92, 98, 85}
 	var lowerGrades []int
 	From(grades).
@@ -1207,7 +1207,7 @@ func ExampleQuery_SkipWhile() {
 // The following code example demonstrates how to use SkipWhileIndexed
 // to skip elements of an array as long as a condition that depends
 // on the element's index is true.
-func ExampleQuery_SkipWhileIndexed() {
+func ExamplelegacyQuery_SkipWhileIndexed() {
 	amounts := []int{5000, 2500, 9000, 8000, 6500, 4000, 1500, 5500}
 
 	var query []int
@@ -1225,7 +1225,7 @@ func ExampleQuery_SkipWhileIndexed() {
 
 // The following code example demonstrates how to use Sort
 // to order elements of an slice.
-func ExampleQuery_Sort() {
+func ExamplelegacyQuery_Sort() {
 	amounts := []int{5000, 2500, 9000, 8000, 6500, 4000, 1500, 5500}
 
 	var query []int
@@ -1243,7 +1243,7 @@ func ExampleQuery_Sort() {
 
 // The following code example demonstrates how to use SumFloats
 // to sum the values of a slice.
-func ExampleQuery_SumFloats() {
+func ExamplelegacyQuery_SumFloats() {
 	numbers := []float64{43.68, 1.25, 583.7, 6.5}
 
 	sum := From(numbers).SumFloats()
@@ -1256,7 +1256,7 @@ func ExampleQuery_SumFloats() {
 
 // The following code example demonstrates how to use SumInts
 // to sum the values of a slice.
-func ExampleQuery_SumInts() {
+func ExamplelegacyQuery_SumInts() {
 	numbers := []int{43, 1, 583, 6}
 
 	sum := From(numbers).SumInts()
@@ -1269,7 +1269,7 @@ func ExampleQuery_SumInts() {
 
 // The following code example demonstrates how to use SumUInts
 // to sum the values of a slice.
-func ExampleQuery_SumUInts() {
+func ExamplelegacyQuery_SumUInts() {
 	numbers := []uint{43, 1, 583, 6}
 
 	sum := From(numbers).SumUInts()
@@ -1282,7 +1282,7 @@ func ExampleQuery_SumUInts() {
 
 // The following code example demonstrates how to use Take
 // to return elements from the start of a slice.
-func ExampleQuery_Take() {
+func ExamplelegacyQuery_Take() {
 	grades := []int{59, 82, 70, 56, 92, 98, 85}
 
 	var topThreeGrades []int
@@ -1300,7 +1300,7 @@ func ExampleQuery_Take() {
 
 // The following code example demonstrates how to use TakeWhile
 // to return elements from the start of a slice.
-func ExampleQuery_TakeWhile() {
+func ExamplelegacyQuery_TakeWhile() {
 	fruits := []string{"apple", "banana", "mango", "orange", "passionfruit", "grape"}
 
 	var query []string
@@ -1318,7 +1318,7 @@ func ExampleQuery_TakeWhile() {
 // The following code example demonstrates how to use TakeWhileIndexed
 // to return elements from the start of a slice as long as
 // a condition that uses the element's index is true.
-func ExampleQuery_TakeWhileIndexed() {
+func ExamplelegacyQuery_TakeWhileIndexed() {
 
 	fruits := []string{"apple", "passionfruit", "banana", "mango",
 		"orange", "blueberry", "grape", "strawberry"}
@@ -1337,7 +1337,7 @@ func ExampleQuery_TakeWhileIndexed() {
 
 // The following code example demonstrates how to use ToChannel
 // to send a slice to a channel.
-func ExampleQuery_ToChannel() {
+func ExamplelegacyQuery_ToChannel() {
 	c := make(chan any)
 
 	go func() {
@@ -1355,7 +1355,7 @@ func ExampleQuery_ToChannel() {
 
 // The following code example demonstrates how to use ToChannelT
 // to send a slice to a typed channel.
-func ExampleQuery_ToChannelT() {
+func ExamplelegacyQuery_ToChannelT() {
 	c := make(chan string)
 
 	go Repeat("ten", 3).ToChannelT(c)
@@ -1370,7 +1370,7 @@ func ExampleQuery_ToChannelT() {
 }
 
 // The following code example demonstrates how to use ToMap to populate a map.
-func ExampleQuery_ToMap() {
+func ExamplelegacyQuery_ToMap() {
 	type Product struct {
 		Name string
 		Code int
@@ -1401,7 +1401,7 @@ func ExampleQuery_ToMap() {
 
 // The following code example demonstrates how to use ToMapBy
 // by using a key and value selectors to populate a map.
-func ExampleQuery_ToMapBy() {
+func ExamplelegacyQuery_ToMapBy() {
 	input := [][]any{{1, true}}
 
 	result := make(map[int]bool)
@@ -1421,7 +1421,7 @@ func ExampleQuery_ToMapBy() {
 }
 
 // The following code example demonstrates how to use ToSlice to populate a slice.
-func ExampleQuery_ToSlice() {
+func ExamplelegacyQuery_ToSlice() {
 	var result []int
 	Range(1, 10).ToSlice(&result)
 
@@ -1432,7 +1432,7 @@ func ExampleQuery_ToSlice() {
 
 // The following code example demonstrates how to use Union
 // to obtain the union of two slices of integers.
-func ExampleQuery_Union() {
+func ExamplelegacyQuery_Union() {
 	q := Range(1, 10).Union(Range(6, 10))
 
 	fmt.Println(q.Results())
@@ -1442,7 +1442,7 @@ func ExampleQuery_Union() {
 
 // The following code example demonstrates how to use Where
 // to filter a slices.
-func ExampleQuery_Where() {
+func ExamplelegacyQuery_Where() {
 	fruits := []string{"apple", "passionfruit", "banana", "mango",
 		"orange", "blueberry", "grape", "strawberry"}
 	var query []string
@@ -1459,7 +1459,7 @@ func ExampleQuery_Where() {
 
 // The following code example demonstrates how to use WhereIndexed
 // to filter a slice based on a predicate that involves the index of each element.
-func ExampleQuery_WhereIndexed() {
+func ExamplelegacyQuery_WhereIndexed() {
 	numbers := []int{0, 30, 20, 15, 90, 85, 40, 75}
 
 	var query []int
@@ -1476,7 +1476,7 @@ func ExampleQuery_WhereIndexed() {
 
 // The following code example demonstrates how to use the Zip
 // method to merge two slices.
-func ExampleQuery_Zip() {
+func ExamplelegacyQuery_Zip() {
 	number := []int{1, 2, 3, 4, 5}
 	words := []string{"one", "two", "three"}
 
@@ -1559,7 +1559,7 @@ func ExampleOrderedQuery_ThenByT() {
 
 // The following code example demonstrates how to reverse
 // the order of words in a string using AggregateT.
-func ExampleQuery_AggregateT() {
+func ExamplelegacyQuery_AggregateT() {
 	sentence := "the quick brown fox jumps over the lazy dog"
 	// Split the string into individual words.
 	words := strings.Split(sentence, " ")
@@ -1576,7 +1576,7 @@ func ExampleQuery_AggregateT() {
 }
 
 // The following code example demonstrates how to use AggregateWithSeed function
-func ExampleQuery_AggregateWithSeedT() {
+func ExamplelegacyQuery_AggregateWithSeedT() {
 
 	fruits := []string{"apple", "mango", "orange", "passionfruit", "grape"}
 
@@ -1598,7 +1598,7 @@ func ExampleQuery_AggregateWithSeedT() {
 }
 
 // The following code example demonstrates how to use AggregateWithSeedByT function
-func ExampleQuery_AggregateWithSeedByT() {
+func ExamplelegacyQuery_AggregateWithSeedByT() {
 	input := []string{"apple", "mango", "orange", "passionfruit", "grape"}
 
 	// Determine whether any string in the array is longer than "banana".
@@ -1623,7 +1623,7 @@ func ExampleQuery_AggregateWithSeedByT() {
 
 // The following code example demonstrates how to use AllT
 // to get the students having all marks greater than 70.
-func ExampleQuery_AllT() {
+func ExamplelegacyQuery_AllT() {
 
 	type Student struct {
 		Name  string
@@ -1661,7 +1661,7 @@ func ExampleQuery_AllT() {
 
 // The following code example demonstrates how to use AnyWithT
 // to get the students with any mark lower than 70.
-func ExampleQuery_AnyWithT() {
+func ExamplelegacyQuery_AnyWithT() {
 	type Student struct {
 		Name  string
 		Marks []int
@@ -1700,7 +1700,7 @@ func ExampleQuery_AnyWithT() {
 
 // The following code example demonstrates how to use CountWithT
 // to count the elements in an slice that satisfy a condition.
-func ExampleQuery_CountWithT() {
+func ExamplelegacyQuery_CountWithT() {
 	type Pet struct {
 		Name       string
 		Vaccinated bool
@@ -1725,7 +1725,7 @@ func ExampleQuery_CountWithT() {
 
 // The following code example demonstrates how to use DistinctByT
 // to return distinct elements from a slice of structs.
-func ExampleQuery_DistinctByT() {
+func ExamplelegacyQuery_DistinctByT() {
 	type Product struct {
 		Name string
 		Code int
@@ -1756,7 +1756,7 @@ func ExampleQuery_DistinctByT() {
 }
 
 // The following code example demonstrates how to use ExceptByT
-func ExampleQuery_ExceptByT() {
+func ExamplelegacyQuery_ExceptByT() {
 	type Product struct {
 		Name string
 		Code int
@@ -1792,7 +1792,7 @@ func ExampleQuery_ExceptByT() {
 
 // The following code example demonstrates how to use FirstWithT
 // to return the first element of an array that satisfies a condition.
-func ExampleQuery_FirstWithT() {
+func ExamplelegacyQuery_FirstWithT() {
 	numbers := []int{9, 34, 65, 92, 87, 435, 3, 54, 83, 23, 87, 435, 67, 12, 19}
 
 	first := From(numbers).
@@ -1808,7 +1808,7 @@ func ExampleQuery_FirstWithT() {
 
 // The following code example demonstrates how to use ForEach
 // to output all elements of an array.
-func ExampleQuery_ForEach() {
+func ExamplelegacyQuery_ForEach() {
 	fruits := []string{"orange", "apple", "lemon", "apple"}
 
 	From(fruits).ForEach(func(fruit any) {
@@ -1823,7 +1823,7 @@ func ExampleQuery_ForEach() {
 
 // The following code example demonstrates how to use ForEachIndexed
 // to output all elements of an array with its index.
-func ExampleQuery_ForEachIndexed() {
+func ExamplelegacyQuery_ForEachIndexed() {
 	fruits := []string{"orange", "apple", "lemon", "apple"}
 
 	From(fruits).ForEachIndexed(func(i int, fruit any) {
@@ -1838,7 +1838,7 @@ func ExampleQuery_ForEachIndexed() {
 
 // The following code example demonstrates how to use ForEachT
 // to output all elements of an array.
-func ExampleQuery_ForEachT() {
+func ExamplelegacyQuery_ForEachT() {
 	fruits := []string{"orange", "apple", "lemon", "apple"}
 
 	From(fruits).ForEachT(func(fruit string) {
@@ -1853,7 +1853,7 @@ func ExampleQuery_ForEachT() {
 
 // The following code example demonstrates how to use ForEachIndexedT
 // to output all elements of an array with its index.
-func ExampleQuery_ForEachIndexedT() {
+func ExamplelegacyQuery_ForEachIndexedT() {
 	fruits := []string{"orange", "apple", "lemon", "apple"}
 
 	From(fruits).ForEachIndexedT(func(i int, fruit string) {
@@ -1868,7 +1868,7 @@ func ExampleQuery_ForEachIndexedT() {
 
 // The following code example demonstrates how to use GroupByT
 // to group the elements of a slice.
-func ExampleQuery_GroupByT() {
+func ExamplelegacyQuery_GroupByT() {
 
 	type Pet struct {
 		Name string
@@ -1911,7 +1911,7 @@ func ExampleQuery_GroupByT() {
 
 // The following code example demonstrates how to use GroupJoinT
 // to perform a grouped join on two slices.
-func ExampleQuery_GroupJoinT() {
+func ExamplelegacyQuery_GroupJoinT() {
 
 	type Person struct {
 		Name string
@@ -1975,7 +1975,7 @@ func ExampleQuery_GroupJoinT() {
 // The following code example demonstrates how to use IntersectByT
 // to return the elements that appear in each of two slices of products
 // with same Code.
-func ExampleQuery_IntersectByT() {
+func ExamplelegacyQuery_IntersectByT() {
 	type Product struct {
 		Name string
 		Code int
@@ -2008,7 +2008,7 @@ func ExampleQuery_IntersectByT() {
 
 // The following code example demonstrates how to use JoinT
 // to perform an inner join of two slices based on a common key.
-func ExampleQuery_JoinT() {
+func ExamplelegacyQuery_JoinT() {
 	type Person struct {
 		Name string
 	}
@@ -2054,7 +2054,7 @@ func ExampleQuery_JoinT() {
 
 // The following code example demonstrates how to use LastWithT
 // to return the last element of an array.
-func ExampleQuery_LastWithT() {
+func ExamplelegacyQuery_LastWithT() {
 	numbers := []int{9, 34, 65, 92, 87, 435, 3, 54,
 		83, 23, 87, 67, 12, 19}
 
@@ -2072,7 +2072,7 @@ func ExampleQuery_LastWithT() {
 
 // The following code example demonstrates how to use OrderByDescendingT
 // to order an slice.
-func ExampleQuery_OrderByDescendingT() {
+func ExamplelegacyQuery_OrderByDescendingT() {
 	type Player struct {
 		Name   string
 		Points int64
@@ -2115,7 +2115,7 @@ func ExampleQuery_OrderByDescendingT() {
 
 // The following code example demonstrates how to use OrderByT
 // to sort the elements of a slice.
-func ExampleQuery_OrderByT() {
+func ExamplelegacyQuery_OrderByT() {
 	type Pet struct {
 		Name string
 		Age  int
@@ -2147,7 +2147,7 @@ func ExampleQuery_OrderByT() {
 
 // The following code example demonstrates how to use SelectT
 // to project over a slice.
-func ExampleQuery_SelectT() {
+func ExamplelegacyQuery_SelectT() {
 	squares := []int{}
 
 	Range(1, 10).
@@ -2164,7 +2164,7 @@ func ExampleQuery_SelectT() {
 // The following code example demonstrates how to use SelectIndexedT
 // to determine if the value in a slice of int match their position
 // in the slice.
-func ExampleQuery_SelectIndexedT() {
+func ExamplelegacyQuery_SelectIndexedT() {
 	numbers := []int{5, 4, 1, 3, 9, 8, 6, 7, 2, 0}
 
 	var numsInPlace []KeyValue
@@ -2196,7 +2196,7 @@ func ExampleQuery_SelectIndexedT() {
 
 // The following code example demonstrates how to use SelectManyT
 // to perform a one-to-many projection over a slice
-func ExampleQuery_SelectManyByT() {
+func ExamplelegacyQuery_SelectManyByT() {
 
 	type Pet struct {
 		Name string
@@ -2225,7 +2225,7 @@ func ExampleQuery_SelectManyByT() {
 	var results []string
 	From(people).
 		SelectManyByT(
-			func(person Person) Query { return From(person.Pets) },
+			func(person Person) legacyQuery { return From(person.Pets) },
 			func(pet Pet, person Person) any {
 				return fmt.Sprintf("Owner: %s, Pet: %s", person.Name, pet.Name)
 			},
@@ -2245,7 +2245,7 @@ func ExampleQuery_SelectManyByT() {
 // The following code example demonstrates how to use SelectManyT
 // to perform a projection over a list of sentences and rank the
 // top 5 most used words
-func ExampleQuery_SelectManyT() {
+func ExamplelegacyQuery_SelectManyT() {
 	sentences := []string{
 		"the quick brown fox jumps over the lazy dog",
 		"pack my box with five dozen liquor jugs",
@@ -2259,7 +2259,7 @@ func ExampleQuery_SelectManyT() {
 	var results []string
 	From(sentences).
 		//Split the sentences in words
-		SelectManyT(func(sentence string) Query {
+		SelectManyT(func(sentence string) legacyQuery {
 			return From(strings.Split(sentence, " "))
 		}).
 		//Grouping by word
@@ -2297,7 +2297,7 @@ func ExampleQuery_SelectManyT() {
 // The following code example demonstrates how to use SelectManyIndexedT
 // to perform a one-to-many projection over an slice of log files and
 // print out their contents.
-func ExampleQuery_SelectManyIndexedT() {
+func ExamplelegacyQuery_SelectManyIndexedT() {
 	type LogFile struct {
 		Name  string
 		Lines []string
@@ -2330,7 +2330,7 @@ func ExampleQuery_SelectManyIndexedT() {
 	var results []string
 
 	From(logFiles).
-		SelectManyIndexedT(func(fileIndex int, file LogFile) Query {
+		SelectManyIndexedT(func(fileIndex int, file LogFile) legacyQuery {
 			return From(file.Lines).
 				SelectIndexedT(func(lineIndex int, line string) string {
 					return fmt.Sprintf("File:[%d] - %s => line: %d - %s", fileIndex+1, file.Name, lineIndex+1, line)
@@ -2353,7 +2353,7 @@ func ExampleQuery_SelectManyIndexedT() {
 // The following code example demonstrates how to use SelectManyByIndexedT
 // to perform a one-to-many projection over an array and use the index of
 // each outer element.
-func ExampleQuery_SelectManyByIndexedT() {
+func ExamplelegacyQuery_SelectManyByIndexedT() {
 	type Pet struct {
 		Name string
 	}
@@ -2382,7 +2382,7 @@ func ExampleQuery_SelectManyByIndexedT() {
 
 	From(people).
 		SelectManyByIndexedT(
-			func(index int, person Person) Query {
+			func(index int, person Person) legacyQuery {
 				return From(person.Pets).
 					SelectT(func(pet Pet) string {
 						return fmt.Sprintf("%d - %s", index, pet.Name)
@@ -2407,7 +2407,7 @@ func ExampleQuery_SelectManyByIndexedT() {
 
 // The following code example demonstrates how to use SingleWithT
 // to select the only element of a slice that satisfies a condition.
-func ExampleQuery_SingleWithT() {
+func ExamplelegacyQuery_SingleWithT() {
 	fruits := []string{"apple", "banana", "mango", "orange", "passionfruit", "grape"}
 
 	fruit := From(fruits).
@@ -2422,7 +2422,7 @@ func ExampleQuery_SingleWithT() {
 
 // The following code example demonstrates how to use SkipWhileT
 // to skip elements of an array as long as a condition is true.
-func ExampleQuery_SkipWhileT() {
+func ExamplelegacyQuery_SkipWhileT() {
 	grades := []int{59, 82, 70, 56, 92, 98, 85}
 	var lowerGrades []int
 	From(grades).
@@ -2443,7 +2443,7 @@ func ExampleQuery_SkipWhileT() {
 // The following code example demonstrates how to use SkipWhileIndexedT
 // to skip elements of an array as long as a condition that depends
 // on the element's index is true.
-func ExampleQuery_SkipWhileIndexedT() {
+func ExamplelegacyQuery_SkipWhileIndexedT() {
 	amounts := []int{5000, 2500, 9000, 8000, 6500, 4000, 1500, 5500}
 
 	var query []int
@@ -2461,7 +2461,7 @@ func ExampleQuery_SkipWhileIndexedT() {
 
 // The following code example demonstrates how to use SortT
 // to order elements of an slice.
-func ExampleQuery_SortT() {
+func ExamplelegacyQuery_SortT() {
 	type Pet struct {
 		Name string
 		Age  int
@@ -2494,7 +2494,7 @@ func ExampleQuery_SortT() {
 
 // The following code example demonstrates how to use TakeWhileT
 // to return elements from the start of a slice.
-func ExampleQuery_TakeWhileT() {
+func ExamplelegacyQuery_TakeWhileT() {
 	fruits := []string{"apple", "banana", "mango", "orange", "passionfruit", "grape"}
 
 	var query []string
@@ -2512,7 +2512,7 @@ func ExampleQuery_TakeWhileT() {
 // The following code example demonstrates how to use TakeWhileIndexedT
 // to return elements from the start of a slice as long asa condition
 // that uses the element's index is true.
-func ExampleQuery_TakeWhileIndexedT() {
+func ExamplelegacyQuery_TakeWhileIndexedT() {
 
 	fruits := []string{"apple", "passionfruit", "banana", "mango",
 		"orange", "blueberry", "grape", "strawberry"}
@@ -2531,7 +2531,7 @@ func ExampleQuery_TakeWhileIndexedT() {
 
 // The following code example demonstrates how to use ToMapBy
 // by using a key and value selectors to populate a map.
-func ExampleQuery_ToMapByT() {
+func ExamplelegacyQuery_ToMapByT() {
 	type Product struct {
 		Name string
 		Code int
@@ -2562,7 +2562,7 @@ func ExampleQuery_ToMapByT() {
 
 // The following code example demonstrates how to use WhereT
 // to filter a slices.
-func ExampleQuery_WhereT() {
+func ExamplelegacyQuery_WhereT() {
 	fruits := []string{"apple", "passionfruit", "banana", "mango",
 		"orange", "blueberry", "grape", "strawberry"}
 	var query []string
@@ -2579,7 +2579,7 @@ func ExampleQuery_WhereT() {
 
 // The following code example demonstrates how to use WhereIndexedT
 // to filter a slice based on a predicate that involves the index of each element.
-func ExampleQuery_WhereIndexedT() {
+func ExamplelegacyQuery_WhereIndexedT() {
 	numbers := []int{0, 30, 20, 15, 90, 85, 40, 75}
 
 	var query []int
@@ -2596,7 +2596,7 @@ func ExampleQuery_WhereIndexedT() {
 
 // The following code example demonstrates how to use the ZipT
 // method to merge two slices.
-func ExampleQuery_ZipT() {
+func ExamplelegacyQuery_ZipT() {
 	number := []int{1, 2, 3, 4, 5}
 	words := []string{"one", "two", "three"}
 
@@ -2626,10 +2626,10 @@ func ExampleFromChannel() {
 	// [one two three]
 }
 
-type MyQuery Query
+type MyQuery legacyQuery
 
-func (q MyQuery) GreaterThan(threshold int) Query {
-	return Query{
+func (q MyQuery) GreaterThan(threshold int) legacyQuery {
+	return legacyQuery{
 		Iterate: func(yield func(any) bool) {
 			q.Iterate(func(item any) bool {
 				if item.(int) > threshold {

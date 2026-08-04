@@ -42,7 +42,7 @@ func (f foo) CompareTo(c Comparable) int {
 	return 0
 }
 
-func toSlice(q Query) (result []any) {
+func toSlice(q legacyQuery) (result []any) {
 	q.Iterate(func(item any) bool {
 		result = append(result, item)
 		return true
@@ -57,19 +57,19 @@ func toSlice(q Query) (result []any) {
 //
 // NOTE: This function might not behave as expected if the query does not
 // support reiteration, e.g., iteration over a channel.
-func testQueryIteration(q Query, expected []any) bool {
+func testQueryIteration(q legacyQuery, expected []any) bool {
 	runDryIteration(q)
 	return assertQueryOutput(q, expected)
 }
 
 // runDryIteration performs a no-op iteration over the query
 // to test whether it supports early abort and reiteration.
-func runDryIteration(q Query) {
+func runDryIteration(q legacyQuery) {
 	q.Iterate(func(item any) bool { return false })
 }
 
 // assertQueryOutput verifies that the output of a query is as expected.
-func assertQueryOutput(q Query, expected []any) (result bool) {
+func assertQueryOutput(q legacyQuery, expected []any) (result bool) {
 	actual := toSlice(q)
 	result = slices.Equal(actual, expected)
 	if !result {

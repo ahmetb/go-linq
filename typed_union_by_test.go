@@ -18,7 +18,7 @@ func TestTypedUnionByAcceptsMethodExpressionAndPreservesFirstValues(t *testing.T
 
 func TestTypedUnionByDoesNotEnumerateRightAfterConsumerStops(t *testing.T) {
 	rightVisited := 0
-	right := query[int]{iterate: func(yield func(int) bool) {
+	right := Query[int]{iterate: func(yield func(int) bool) {
 		rightVisited++
 		yield(2)
 	}}

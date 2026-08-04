@@ -1,6 +1,6 @@
 package linq
 
-func (q query[T]) ContainsBy[K comparable](key K, selector func(T) K) bool {
+func (q Query[T]) ContainsBy[K comparable](key K, selector func(T) K) bool {
 	found := false
 	q.iterate(func(value T) bool {
 		if selector(value) == key {

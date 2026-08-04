@@ -2,8 +2,8 @@ package linq
 
 // SelectMany projects each element of a collection to a Query, iterates and
 // flattens the resulting collection into one collection.
-func (q Query) SelectMany(selector func(any) Query) Query {
-	return Query{
+func (q legacyQuery) SelectMany(selector func(any) legacyQuery) legacyQuery {
+	return legacyQuery{
 		Iterate: func(yield func(any) bool) {
 			q.Iterate(func(outerItem any) bool {
 				keepGoing := true
@@ -28,18 +28,18 @@ func (q Query) SelectMany(selector func(any) Query) Query {
 //   - selectorFn is of type "func(TSource)Query"
 //
 // NOTE: SelectMany has better performance than SelectManyT.
-func (q Query) SelectManyT(selectorFn any) Query {
+func (q legacyQuery) SelectManyT(selectorFn any) legacyQuery {
 
 	selectManyGenericFunc, err := newGenericFunc(
 		"SelectManyT", "selectorFn", selectorFn,
-		simpleParamValidator(newElemTypeSlice(new(genericType)), newElemTypeSlice(new(Query))),
+		simpleParamValidator(newElemTypeSlice(new(genericType)), newElemTypeSlice(new(legacyQuery))),
 	)
 	if err != nil {
 		panic(err)
 	}
 
-	selectorFunc := func(inner any) Query {
-		return selectManyGenericFunc.Call(inner).(Query)
+	selectorFunc := func(inner any) legacyQuery {
+		return selectManyGenericFunc.Call(inner).(legacyQuery)
 	}
 	return q.SelectMany(selectorFunc)
 
@@ -54,8 +54,8 @@ func (q Query) SelectManyT(selectorFn any) Query {
 // index, for example. It can also be useful if you want to retrieve the index
 // of one or more elements. The second argument to selector represents the
 // element to process.
-func (q Query) SelectManyIndexed(selector func(index int, outer any) Query) Query {
-	return Query{
+func (q legacyQuery) SelectManyIndexed(selector func(index int, outer any) legacyQuery) legacyQuery {
+	return legacyQuery{
 		Iterate: func(yield func(any) bool) {
 			index := 0
 			q.Iterate(func(outerItem any) bool {
@@ -82,18 +82,18 @@ func (q Query) SelectManyIndexed(selector func(index int, outer any) Query) Quer
 //   - selectorFn is of type "func(int,TSource)Query"
 //
 // NOTE: SelectManyIndexed has better performance than SelectManyIndexedT.
-func (q Query) SelectManyIndexedT(selectorFn any) Query {
+func (q legacyQuery) SelectManyIndexedT(selectorFn any) legacyQuery {
 
 	selectManyIndexedGenericFunc, err := newGenericFunc(
 		"SelectManyIndexedT", "selectorFn", selectorFn,
-		simpleParamValidator(newElemTypeSlice(new(int), new(genericType)), newElemTypeSlice(new(Query))),
+		simpleParamValidator(newElemTypeSlice(new(int), new(genericType)), newElemTypeSlice(new(legacyQuery))),
 	)
 	if err != nil {
 		panic(err)
 	}
 
-	selectorFunc := func(index int, inner any) Query {
-		return selectManyIndexedGenericFunc.Call(index, inner).(Query)
+	selectorFunc := func(index int, inner any) legacyQuery {
+		return selectManyIndexedGenericFunc.Call(index, inner).(legacyQuery)
 	}
 
 	return q.SelectManyIndexed(selectorFunc)
@@ -102,11 +102,10 @@ func (q Query) SelectManyIndexedT(selectorFn any) Query {
 // SelectManyBy projects each element of a collection to a Query, iterates and
 // flattens the resulting collection into one collection, and invokes a result
 // selector function on each element therein.
-func (q Query) SelectManyBy(
-	selector func(outer any) Query,
-	resultSelector func(inner, outer any) any,
-) Query {
-	return Query{
+func (q legacyQuery) SelectManyBy(
+	selector func(outer any) legacyQuery, resultSelector func(inner, outer any) any,
+) legacyQuery {
+	return legacyQuery{
 		Iterate: func(yield func(any) bool) {
 			q.Iterate(func(outerItem any) bool {
 				keepGoing := true
@@ -134,19 +133,19 @@ func (q Query) SelectManyBy(
 //   - resultSelectorFn is of type "func(TSource,TCollection)TResult"
 //
 // NOTE: SelectManyBy has better performance than SelectManyByT.
-func (q Query) SelectManyByT(selectorFn any,
-	resultSelectorFn any) Query {
+func (q legacyQuery) SelectManyByT(selectorFn any,
+	resultSelectorFn any) legacyQuery {
 
 	selectorGenericFunc, err := newGenericFunc(
 		"SelectManyByT", "selectorFn", selectorFn,
-		simpleParamValidator(newElemTypeSlice(new(genericType)), newElemTypeSlice(new(Query))),
+		simpleParamValidator(newElemTypeSlice(new(genericType)), newElemTypeSlice(new(legacyQuery))),
 	)
 	if err != nil {
 		panic(err)
 	}
 
-	selectorFunc := func(outer any) Query {
-		return selectorGenericFunc.Call(outer).(Query)
+	selectorFunc := func(outer any) legacyQuery {
+		return selectorGenericFunc.Call(outer).(legacyQuery)
 	}
 
 	resultSelectorGenericFunc, err := newGenericFunc(
@@ -168,11 +167,10 @@ func (q Query) SelectManyByT(selectorFn any,
 // iterates and flattens the resulting collection into one collection, and
 // invokes a result selector function on each element therein. The index of each
 // source element is used in the intermediate projected form of that element.
-func (q Query) SelectManyByIndexed(
-	selector func(index int, outer any) Query,
-	resultSelector func(inner, outer any) any,
-) Query {
-	return Query{
+func (q legacyQuery) SelectManyByIndexed(
+	selector func(index int, outer any) legacyQuery, resultSelector func(inner, outer any) any,
+) legacyQuery {
+	return legacyQuery{
 		Iterate: func(yield func(any) bool) {
 			index := 0
 			q.Iterate(func(outerItem any) bool {
@@ -203,18 +201,18 @@ func (q Query) SelectManyByIndexed(
 //
 // NOTE: SelectManyByIndexed has better performance than
 // SelectManyByIndexedT.
-func (q Query) SelectManyByIndexedT(selectorFn any,
-	resultSelectorFn any) Query {
+func (q legacyQuery) SelectManyByIndexedT(selectorFn any,
+	resultSelectorFn any) legacyQuery {
 	selectorGenericFunc, err := newGenericFunc(
 		"SelectManyByIndexedT", "selectorFn", selectorFn,
-		simpleParamValidator(newElemTypeSlice(new(int), new(genericType)), newElemTypeSlice(new(Query))),
+		simpleParamValidator(newElemTypeSlice(new(int), new(genericType)), newElemTypeSlice(new(legacyQuery))),
 	)
 	if err != nil {
 		panic(err)
 	}
 
-	selectorFunc := func(index int, outer any) Query {
-		return selectorGenericFunc.Call(index, outer).(Query)
+	selectorFunc := func(index int, outer any) legacyQuery {
+		return selectorGenericFunc.Call(index, outer).(legacyQuery)
 	}
 
 	resultSelectorGenericFunc, err := newGenericFunc(

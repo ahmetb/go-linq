@@ -12,7 +12,7 @@ import "iter"
 // result of f() replaces the previous aggregated value.
 //
 // Aggregate returns the final result of f().
-func (q Query) Aggregate(f func(accumulator, item any) any) any {
+func (q legacyQuery) Aggregate(f func(accumulator, item any) any) any {
 	next, stop := iter.Pull(q.Iterate)
 	defer stop()
 
@@ -33,7 +33,7 @@ func (q Query) Aggregate(f func(accumulator, item any) any) any {
 //   - f is of type: func(TSource, TSource) TSource
 //
 // NOTE: Aggregate has better performance than AggregateT.
-func (q Query) AggregateT(f any) any {
+func (q legacyQuery) AggregateT(f any) any {
 	fGenericFunc, err := newGenericFunc(
 		"AggregateT", "f", f,
 		simpleParamValidator(newElemTypeSlice(new(genericType), new(genericType)), newElemTypeSlice(new(genericType))),
@@ -60,7 +60,7 @@ func (q Query) AggregateT(f any) any {
 // The result of f() replaces the previous aggregated value.
 //
 // Aggregate returns the final result of f().
-func (q Query) AggregateWithSeed(seed any,
+func (q legacyQuery) AggregateWithSeed(seed any,
 	f func(accumulator, item any) any) any {
 	result := seed
 
@@ -77,7 +77,7 @@ func (q Query) AggregateWithSeed(seed any,
 //
 // NOTE: AggregateWithSeed has better performance than
 // AggregateWithSeedT.
-func (q Query) AggregateWithSeedT(seed any,
+func (q legacyQuery) AggregateWithSeedT(seed any,
 	f any) any {
 	fGenericFunc, err := newGenericFunc(
 		"AggregateWithSeed", "f", f,
@@ -107,7 +107,7 @@ func (q Query) AggregateWithSeedT(seed any,
 //
 // The final result of func is passed to resultSelector to obtain the final
 // result of Aggregate.
-func (q Query) AggregateWithSeedBy(seed any,
+func (q legacyQuery) AggregateWithSeedBy(seed any,
 	f func(accumulator, item any) any,
 	resultSelector func(any) any) any {
 
@@ -127,7 +127,7 @@ func (q Query) AggregateWithSeedBy(seed any,
 //
 // NOTE: AggregateWithSeedBy has better performance than
 // AggregateWithSeedByT.
-func (q Query) AggregateWithSeedByT(seed any,
+func (q legacyQuery) AggregateWithSeedByT(seed any,
 	f any,
 	resultSelectorFn any) any {
 	fGenericFunc, err := newGenericFunc(

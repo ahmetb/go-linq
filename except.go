@@ -2,8 +2,8 @@ package linq
 
 // Except produces the set difference of two sequences. The set difference is
 // the members of the first sequence that don't appear in the second sequence.
-func (q Query) Except(q2 Query) Query {
-	return Query{
+func (q legacyQuery) Except(q2 legacyQuery) legacyQuery {
+	return legacyQuery{
 		Iterate: func(yield func(any) bool) {
 			set := make(map[any]struct{})
 			for item := range q2.Iterate {
@@ -23,8 +23,8 @@ func (q Query) Except(q2 Query) Query {
 // ExceptBy invokes a transform function on each element of a collection and
 // produces the set difference of two sequences. The set difference is the
 // members of the first sequence that don't appear in the second sequence.
-func (q Query) ExceptBy(q2 Query, selector func(any) any) Query {
-	return Query{
+func (q legacyQuery) ExceptBy(q2 legacyQuery, selector func(any) any) legacyQuery {
+	return legacyQuery{
 		Iterate: func(yield func(any) bool) {
 			set := make(map[any]struct{})
 			for item := range q2.Iterate {
@@ -48,8 +48,7 @@ func (q Query) ExceptBy(q2 Query, selector func(any) any) Query {
 //   - selectorFn is of type "func(TSource) TSource"
 //
 // NOTE: ExceptBy has better performance than ExceptByT.
-func (q Query) ExceptByT(q2 Query,
-	selectorFn any) Query {
+func (q legacyQuery) ExceptByT(q2 legacyQuery, selectorFn any) legacyQuery {
 	selectorGenericFunc, err := newGenericFunc(
 		"ExceptByT", "selectorFn", selectorFn,
 		simpleParamValidator(newElemTypeSlice(new(genericType)), newElemTypeSlice(new(genericType))),

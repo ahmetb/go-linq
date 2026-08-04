@@ -12,8 +12,8 @@ package linq
 // the SelectMany method instead of Select. Although SelectMany works similarly
 // to Select, it differs in that the transform function returns a collection
 // that is then expanded by SelectMany before it is returned.
-func (q Query) Select(selector func(any) any) Query {
-	return Query{
+func (q legacyQuery) Select(selector func(any) any) legacyQuery {
+	return legacyQuery{
 		Iterate: func(yield func(any) bool) {
 			q.Iterate(func(item any) bool {
 				return yield(selector(item))
@@ -26,7 +26,7 @@ func (q Query) Select(selector func(any) any) Query {
 //   - selectorFn is of type "func(TSource)TResult"
 //
 // NOTE: Select has better performance than SelectT.
-func (q Query) SelectT(selectorFn any) Query {
+func (q legacyQuery) SelectT(selectorFn any) legacyQuery {
 
 	selectGenericFunc, err := newGenericFunc(
 		"SelectT", "selectorFn", selectorFn,
@@ -62,8 +62,8 @@ func (q Query) SelectT(selectorFn any) Query {
 // the SelectMany method instead of Select. Although SelectMany works similarly
 // to Select, it differs in that the transform function returns a collection
 // that is then expanded by SelectMany before it is returned.
-func (q Query) SelectIndexed(selector func(int, any) any) Query {
-	return Query{
+func (q legacyQuery) SelectIndexed(selector func(int, any) any) legacyQuery {
+	return legacyQuery{
 		Iterate: func(yield func(any) bool) {
 			index := 0
 			q.Iterate(func(item any) bool {
@@ -79,7 +79,7 @@ func (q Query) SelectIndexed(selector func(int, any) any) Query {
 //   - selectorFn is of type "func(int,TSource)TResult"
 //
 // NOTE: SelectIndexed has better performance than SelectIndexedT.
-func (q Query) SelectIndexedT(selectorFn any) Query {
+func (q legacyQuery) SelectIndexedT(selectorFn any) legacyQuery {
 	selectGenericFunc, err := newGenericFunc(
 		"SelectIndexedT", "selectorFn", selectorFn,
 		simpleParamValidator(newElemTypeSlice(new(int), new(genericType)), newElemTypeSlice(new(genericType))),

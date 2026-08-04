@@ -1,5 +1,5 @@
 package linq
 
-func (q query[T]) Iterate(yield func(T) bool) {
+func (q Query[T]) Iterate(yield func(T) bool) {
 	q.iterate(yield)
 }

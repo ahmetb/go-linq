@@ -1,7 +1,7 @@
 package linq
 
-func (q query[T]) SelectMany[R any](selector func(T) query[R]) query[R] {
-	return query[R]{
+func (q Query[T]) SelectMany[R any](selector func(T) Query[R]) Query[R] {
+	return Query[R]{
 		iterate: func(yield func(R) bool) {
 			q.iterate(func(outer T) bool {
 				keepGoing := true
@@ -15,8 +15,8 @@ func (q query[T]) SelectMany[R any](selector func(T) query[R]) query[R] {
 	}
 }
 
-func (q query[T]) SelectManyIndexed[R any](selector func(int, T) query[R]) query[R] {
-	return query[R]{
+func (q Query[T]) SelectManyIndexed[R any](selector func(int, T) Query[R]) Query[R] {
+	return Query[R]{
 		iterate: func(yield func(R) bool) {
 			index := 0
 			q.iterate(func(outer T) bool {
@@ -33,11 +33,11 @@ func (q query[T]) SelectManyIndexed[R any](selector func(int, T) query[R]) query
 	}
 }
 
-func (q query[T]) SelectManyBy[U, R any](
-	selector func(T) query[U],
+func (q Query[T]) SelectManyBy[U, R any](
+	selector func(T) Query[U],
 	resultSelector func(U, T) R,
-) query[R] {
-	return query[R]{
+) Query[R] {
+	return Query[R]{
 		iterate: func(yield func(R) bool) {
 			q.iterate(func(outer T) bool {
 				keepGoing := true
@@ -51,11 +51,11 @@ func (q query[T]) SelectManyBy[U, R any](
 	}
 }
 
-func (q query[T]) SelectManyByIndexed[U, R any](
-	selector func(int, T) query[U],
+func (q Query[T]) SelectManyByIndexed[U, R any](
+	selector func(int, T) Query[U],
 	resultSelector func(U, T) R,
-) query[R] {
-	return query[R]{
+) Query[R] {
+	return Query[R]{
 		iterate: func(yield func(R) bool) {
 			index := 0
 			q.iterate(func(outer T) bool {

@@ -1,8 +1,8 @@
 package linq
 
 // Where filters a collection of values based on a predicate.
-func (q Query) Where(predicate func(any) bool) Query {
-	return Query{
+func (q legacyQuery) Where(predicate func(any) bool) legacyQuery {
+	return legacyQuery{
 		Iterate: func(yield func(any) bool) {
 			q.Iterate(func(item any) bool {
 				if predicate(item) {
@@ -19,7 +19,7 @@ func (q Query) Where(predicate func(any) bool) Query {
 //   - predicateFn is of type "func(TSource)bool"
 //
 // NOTE: Where has better performance than WhereT.
-func (q Query) WhereT(predicateFn any) Query {
+func (q legacyQuery) WhereT(predicateFn any) legacyQuery {
 
 	predicateGenericFunc, err := newGenericFunc(
 		"WhereT", "predicateFn", predicateFn,
@@ -41,8 +41,8 @@ func (q Query) WhereT(predicateFn any) Query {
 //
 // The first argument represents the zero-based index of the element within
 // the collection. The second argument of predicate represents the element to test.
-func (q Query) WhereIndexed(predicate func(int, any) bool) Query {
-	return Query{
+func (q legacyQuery) WhereIndexed(predicate func(int, any) bool) legacyQuery {
+	return legacyQuery{
 		Iterate: func(yield func(any) bool) {
 			index := 0
 			q.Iterate(func(item any) bool {
@@ -64,7 +64,7 @@ func (q Query) WhereIndexed(predicate func(int, any) bool) Query {
 //   - predicateFn is of type "func(int,TSource)bool"
 //
 // NOTE: WhereIndexed has better performance than WhereIndexedT.
-func (q Query) WhereIndexedT(predicateFn any) Query {
+func (q legacyQuery) WhereIndexedT(predicateFn any) legacyQuery {
 	predicateGenericFunc, err := newGenericFunc(
 		"WhereIndexedT", "predicateFn", predicateFn,
 		simpleParamValidator(newElemTypeSlice(new(int), new(genericType)), newElemTypeSlice(new(bool))),

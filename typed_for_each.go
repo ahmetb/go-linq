@@ -1,6 +1,6 @@
 package linq
 
-func (q query[T]) ForEach(action func(T)) {
+func (q Query[T]) ForEach(action func(T)) {
 	for value := range q.iterate {
 		action(value)
 	}

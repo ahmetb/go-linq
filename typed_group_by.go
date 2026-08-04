@@ -5,11 +5,11 @@ type group[K comparable, E any] struct {
 	Group []E
 }
 
-func (q query[T]) GroupBy[K comparable, E any](
+func (q Query[T]) GroupBy[K comparable, E any](
 	keySelector func(T) K,
 	elementSelector func(T) E,
-) query[group[K, E]] {
-	return query[group[K, E]]{
+) Query[group[K, E]] {
+	return Query[group[K, E]]{
 		iterate: func(yield func(group[K, E]) bool) {
 			groups := make(map[K][]E)
 			var keys []K

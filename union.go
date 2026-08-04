@@ -5,8 +5,8 @@ package linq
 // This method excludes duplicates from the return set. This is different
 // behavior to the Concat method, which returns all the elements in the input
 // collection, including duplicates.
-func (q Query) Union(q2 Query) Query {
-	return Query{
+func (q legacyQuery) Union(q2 legacyQuery) legacyQuery {
+	return legacyQuery{
 		Iterate: func(yield func(any) bool) {
 			set := make(map[any]struct{})
 			stopped := false

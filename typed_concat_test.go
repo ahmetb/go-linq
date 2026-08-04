@@ -21,7 +21,7 @@ func TestTypedConcatHandlesEmptyQueries(t *testing.T) {
 
 func TestTypedConcatDoesNotEnumerateRightAfterConsumerStops(t *testing.T) {
 	rightVisited := 0
-	right := query[int]{iterate: func(yield func(int) bool) {
+	right := Query[int]{iterate: func(yield func(int) bool) {
 		rightVisited++
 		yield(2)
 	}}

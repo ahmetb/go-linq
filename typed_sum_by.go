@@ -6,7 +6,7 @@ type number interface {
 		~float32 | ~float64
 }
 
-func (q query[T]) SumBy[N number](selector func(T) N) N {
+func (q Query[T]) SumBy[N number](selector func(T) N) N {
 	var result N
 	q.iterate(func(value T) bool {
 		result += selector(value)
