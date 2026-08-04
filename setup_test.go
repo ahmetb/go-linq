@@ -3,6 +3,7 @@ package linq
 import (
 	"fmt"
 	"iter"
+	"reflect"
 	"slices"
 	"testing"
 )
@@ -13,37 +14,23 @@ type foo struct {
 	f3 string
 }
 
-func (f foo) Iterate() iter.Seq[any] {
-	return func(yield func(any) bool) {
-		// Yield the first field and check if we should continue.
-		if !yield(f.f1) {
-			return
-		}
+// intCollection is a custom collection implementing Iterable[int].
+type intCollection struct {
+	items []int
+}
 
-		// Yield the second field and check if we should continue.
-		if !yield(f.f2) {
-			return
+func (c intCollection) Iterate() iter.Seq[int] {
+	return func(yield func(int) bool) {
+		for _, item := range c.items {
+			if !yield(item) {
+				return
+			}
 		}
-
-		// Yield the third and final field.
-		yield(f.f3)
 	}
 }
 
-func (f foo) CompareTo(c Comparable) int {
-	a, b := f.f1, c.(foo).f1
-
-	if a < b {
-		return -1
-	} else if a > b {
-		return 1
-	}
-
-	return 0
-}
-
-func toSlice(q Query) (result []any) {
-	q.Iterate(func(item any) bool {
+func toSlice[T any](q Query[T]) (result []T) {
+	q.Iterate(func(item T) bool {
 		result = append(result, item)
 		return true
 	})
@@ -57,33 +44,34 @@ func toSlice(q Query) (result []any) {
 //
 // NOTE: This function might not behave as expected if the query does not
 // support reiteration, e.g., iteration over a channel.
-func testQueryIteration(q Query, expected []any) bool {
+func testQueryIteration[T any](q Query[T], expected []T) bool {
 	runDryIteration(q)
 	return assertQueryOutput(q, expected)
 }
 
 // runDryIteration performs a no-op iteration over the query
 // to test whether it supports early abort and reiteration.
-func runDryIteration(q Query) {
-	q.Iterate(func(item any) bool { return false })
+func runDryIteration[T any](q Query[T]) {
+	q.Iterate(func(item T) bool { return false })
 }
 
 // assertQueryOutput verifies that the output of a query is as expected.
-func assertQueryOutput(q Query, expected []any) (result bool) {
+func assertQueryOutput[T any](q Query[T], expected []T) (result bool) {
 	actual := toSlice(q)
-	result = slices.Equal(actual, expected)
+	result = slices.EqualFunc(actual, expected, func(a, b T) bool {
+		return reflect.DeepEqual(a, b)
+	})
 	if !result {
 		fmt.Printf("got=[%v] expected=[%v]", actual, expected)
 	}
 	return
 }
 
-func mustPanicWithError(t *testing.T, expectedErr string, f func()) {
+func mustPanic(t *testing.T, f func()) {
+	t.Helper()
 	defer func() {
-		r := recover()
-		err := fmt.Sprintf("%s", r)
-		if err != expectedErr {
-			t.Fatalf("got=[%v] expected=[%v]", err, expectedErr)
+		if r := recover(); r == nil {
+			t.Fatalf("expected panic, got none")
 		}
 	}()
 	f()
