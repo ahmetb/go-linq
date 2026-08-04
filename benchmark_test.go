@@ -6,6 +6,31 @@ const (
 	size = 1000000
 )
 
+var benchmarkIntSlice []int
+
+func BenchmarkTypedCore(b *testing.B) {
+	source := make([]int, 1024)
+	for i := range source {
+		source[i] = i
+	}
+
+	b.Run("legacy", func(b *testing.B) {
+		b.ReportAllocs()
+		for b.Loop() {
+			var result []int
+			FromSlice(source).ToSlice(&result)
+			benchmarkIntSlice = result
+		}
+	})
+
+	b.Run("typed", func(b *testing.B) {
+		b.ReportAllocs()
+		for b.Loop() {
+			benchmarkIntSlice = fromSlice(source).toSlice()
+		}
+	})
+}
+
 func BenchmarkSelectWhereFirst(b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		Range(1, size).Select(func(i any) any {
