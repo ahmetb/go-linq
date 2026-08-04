@@ -19,10 +19,22 @@ func (q query[T]) OrderBy[K cmp.Ordered](selector func(T) K) orderedQuery[T] {
 	return newOrderedQuery(q, []typedOrder[T]{newTypedOrder(selector)})
 }
 
+func (q query[T]) OrderByDescending[K cmp.Ordered](selector func(T) K) orderedQuery[T] {
+	return newOrderedQuery(q, []typedOrder[T]{newTypedOrderDescending(selector)})
+}
+
 func newTypedOrder[T any, K cmp.Ordered](selector func(T) K) typedOrder[T] {
 	return typedOrder[T]{
 		compare: func(left, right T) int {
 			return cmp.Compare(selector(left), selector(right))
+		},
+	}
+}
+
+func newTypedOrderDescending[T any, K cmp.Ordered](selector func(T) K) typedOrder[T] {
+	return typedOrder[T]{
+		compare: func(left, right T) int {
+			return -cmp.Compare(selector(left), selector(right))
 		},
 	}
 }
