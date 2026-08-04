@@ -1,141 +1,99 @@
 package linq
 
 import (
-	"math"
 	"reflect"
 	"testing"
-	"unsafe"
 )
 
 func TestAll(t *testing.T) {
 	input := []int{2, 4, 6, 8}
 
-	r1 := From(input).All(func(i any) bool {
-		return i.(int)%2 == 0
+	r1 := FromSlice(input).All(func(i int) bool {
+		return i%2 == 0
 	})
-	r2 := From(input).All(func(i any) bool {
-		return i.(int)%2 != 0
+	r2 := FromSlice(input).All(func(i int) bool {
+		return i%2 != 0
 	})
 
 	if !r1 {
-		t.Errorf("From(%v).All()=%v", input, r1)
+		t.Errorf("FromSlice(%v).All()=%v", input, r1)
 	}
 
 	if r2 {
-		t.Errorf("From(%v).All()=%v", input, r2)
+		t.Errorf("FromSlice(%v).All()=%v", input, r2)
 	}
-}
-
-func TestAllT_PanicWhenPredicateFnIsInvalid(t *testing.T) {
-	mustPanicWithError(t, "AllT: parameter [predicateFn] has a invalid function signature. Expected: 'func(T)bool', actual: 'func(int)int'", func() {
-		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).AllT(func(item int) int { return item + 2 })
-	})
 }
 
 func TestAny(t *testing.T) {
 	tests := []struct {
-		input any
+		input []int
 		want  bool
 	}{
 		{[]int{1, 2, 2, 3, 1}, true},
-		{[9]int{1, 1, 1, 2, 1, 2, 3, 4, 2}, true},
-		{"sstr", true},
+		{[]int{1, 1, 1, 2, 1, 2, 3, 4, 2}, true},
 		{[]int{}, false},
 	}
 
 	for _, test := range tests {
-		if r := From(test.input).Any(); r != test.want {
-			t.Errorf("From(%v).Any()=%v expected %v", test.input, r, test.want)
+		if r := FromSlice(test.input).Any(); r != test.want {
+			t.Errorf("FromSlice(%v).Any()=%v expected %v", test.input, r, test.want)
 		}
 	}
 }
 
 func TestAnyWith(t *testing.T) {
 	tests := []struct {
-		input any
+		input []int
 		want  bool
 	}{
 		{[]int{1, 2, 2, 3, 1}, false},
-		{[9]int{1, 1, 1, 2, 1, 2, 3, 4, 2}, true},
+		{[]int{1, 1, 1, 2, 1, 2, 3, 4, 2}, true},
 		{[]int{}, false},
 	}
 
 	for _, test := range tests {
-		if r := From(test.input).AnyWith(func(i any) bool {
-			return i.(int) == 4
+		if r := FromSlice(test.input).AnyWith(func(i int) bool {
+			return i == 4
 		}); r != test.want {
-			t.Errorf("From(%v).Any()=%v expected %v", test.input, r, test.want)
+			t.Errorf("FromSlice(%v).AnyWith()=%v expected %v", test.input, r, test.want)
 		}
-	}
-}
-
-func TestAnyWithT_PanicWhenPredicateFnIsInvalid(t *testing.T) {
-	mustPanicWithError(t, "AnyWithT: parameter [predicateFn] has a invalid function signature. Expected: 'func(T)bool', actual: 'func(int)int'", func() {
-		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).AnyWithT(func(item int) int { return item + 2 })
-	})
-}
-
-func TestAverage(t *testing.T) {
-	tests := []struct {
-		input any
-		want  float64
-	}{
-		{[]int{1, 2, 2, 3, 1}, 1.8},
-		{[5]uint{1, 2, 5, 7, 10}, 5.},
-		{[]float32{1., 1.}, 1.},
-	}
-
-	for _, test := range tests {
-		if r := From(test.input).Average(); r != test.want {
-			t.Errorf("From(%v).Average()=%v expected %v", test.input, r, test.want)
-		}
-	}
-}
-
-func TestAverageForNaN(t *testing.T) {
-	if r := From([]int{}).Average(); !math.IsNaN(r) {
-		t.Errorf("From([]int{}).Average()=%v expected %v", r, math.NaN())
 	}
 }
 
 func TestContains(t *testing.T) {
-	tests := []struct {
-		input any
-		value any
-		want  bool
-	}{
-		{[]int{1, 2, 2, 3, 1}, 10, false},
-		{[5]uint{1, 2, 5, 7, 10}, uint(5), true},
-		{[]float32{}, 1., false},
+	if r := FromSlice([]int{1, 2, 2, 3, 1}).Contains(10); r {
+		t.Errorf("Contains(10)=%v expected false", r)
 	}
 
-	for _, test := range tests {
-		if r := From(test.input).Contains(test.value); r != test.want {
-			t.Errorf("From(%v).Contains(%v)=%v expected %v", test.input, test.value, r, test.want)
-		}
+	if r := FromSlice([]uint{1, 2, 5, 7, 10}).Contains(5); !r {
+		t.Errorf("Contains(5)=%v expected true", r)
+	}
+
+	if r := FromSlice([]float32{}).Contains(1.); r {
+		t.Errorf("Contains(1.)=%v expected false", r)
 	}
 }
 
 func TestCount(t *testing.T) {
 	tests := []struct {
-		input any
+		input []int
 		want  int
 	}{
 		{[]int{1, 2, 2, 3, 1}, 5},
-		{[7]uint{1, 2, 5, 7, 10, 12, 15}, 7},
-		{[]float32{}, 0},
+		{[]int{1, 2, 5, 7, 10, 12, 15}, 7},
+		{[]int{}, 0},
 	}
 
 	for _, test := range tests {
-		if r := From(test.input).Count(); r != test.want {
-			t.Errorf("From(%v).Count()=%v expected %v", test.input, r, test.want)
+		if r := FromSlice(test.input).Count(); r != test.want {
+			t.Errorf("FromSlice(%v).Count()=%v expected %v", test.input, r, test.want)
 		}
 	}
 }
 
 func TestCountWith(t *testing.T) {
 	tests := []struct {
-		input any
+		input []int
 		want  int
 	}{
 		{[]int{1, 2, 2, 3, 1}, 4},
@@ -143,340 +101,187 @@ func TestCountWith(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		if r := From(test.input).CountWith(func(i any) bool {
-			return i.(int) <= 2
+		if r := FromSlice(test.input).CountWith(func(i int) bool {
+			return i <= 2
 		}); r != test.want {
-			t.Errorf("From(%v).CountWith()=%v expected %v", test.input, r, test.want)
+			t.Errorf("FromSlice(%v).CountWith()=%v expected %v", test.input, r, test.want)
 		}
 	}
-}
-
-func TestCountWithT_PanicWhenPredicateFnIsInvalid(t *testing.T) {
-	mustPanicWithError(t, "CountWithT: parameter [predicateFn] has a invalid function signature. Expected: 'func(T)bool', actual: 'func(int)int'", func() {
-		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).CountWithT(func(item int) int { return item + 2 })
-	})
 }
 
 func TestFirst(t *testing.T) {
-	tests := []struct {
-		input any
-		want  any
-	}{
-		{[]int{1, 2, 2, 3, 1}, 1},
-		{[]int{}, nil},
+	if r, ok := FromSlice([]int{1, 2, 2, 3, 1}).First(); !ok || r != 1 {
+		t.Errorf("First()=%v,%v expected 1,true", r, ok)
 	}
 
-	for _, test := range tests {
-		if r := From(test.input).First(); r != test.want {
-			t.Errorf("From(%v).First()=%v expected %v", test.input, r, test.want)
-		}
+	if r, ok := FromSlice([]int{}).First(); ok || r != 0 {
+		t.Errorf("First()=%v,%v expected 0,false", r, ok)
 	}
 }
 
 func TestFirstWith(t *testing.T) {
-	tests := []struct {
-		input any
-		want  any
-	}{
-		{[]int{1, 2, 2, 3, 1}, 3},
-		{[]int{}, nil},
+	if r, ok := FromSlice([]int{1, 2, 2, 3, 1}).FirstWith(func(i int) bool {
+		return i > 2
+	}); !ok || r != 3 {
+		t.Errorf("FirstWith()=%v,%v expected 3,true", r, ok)
 	}
 
-	for _, test := range tests {
-		if r := From(test.input).FirstWith(func(i any) bool {
-			return i.(int) > 2
-		}); r != test.want {
-			t.Errorf("From(%v).FirstWith()=%v expected %v", test.input, r, test.want)
-		}
+	if r, ok := FromSlice([]int{}).FirstWith(func(i int) bool {
+		return i > 2
+	}); ok || r != 0 {
+		t.Errorf("FirstWith()=%v,%v expected 0,false", r, ok)
 	}
-}
-
-func TestFirstWithT_PanicWhenPredicateFnIsInvalid(t *testing.T) {
-	mustPanicWithError(t, "FirstWithT: parameter [predicateFn] has a invalid function signature. Expected: 'func(T)bool', actual: 'func(int)int'", func() {
-		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).FirstWithT(func(item int) int { return item + 2 })
-	})
 }
 
 func TestForEach(t *testing.T) {
 	tests := []struct {
-		input any
-		want  any
+		input []int
+		want  []int
 	}{
-		{[5]int{1, 2, 2, 35, 111}, []int{2, 4, 4, 70, 222}},
+		{[]int{1, 2, 2, 35, 111}, []int{2, 4, 4, 70, 222}},
 		{[]int{}, []int{}},
 	}
 
 	for _, test := range tests {
 		output := []int{}
-		From(test.input).ForEach(func(item any) {
-			output = append(output, item.(int)*2)
+		FromSlice(test.input).ForEach(func(item int) {
+			output = append(output, item*2)
 		})
 
 		if !reflect.DeepEqual(output, test.want) {
-			t.Fatalf("From(%#v).ForEach()=%#v expected=%#v", test.input, output, test.want)
+			t.Fatalf("FromSlice(%#v).ForEach()=%#v expected=%#v", test.input, output, test.want)
 		}
 	}
-}
-
-func TestForEachT_PanicWhenActionFnIsInvalid(t *testing.T) {
-	mustPanicWithError(t, "ForEachT: parameter [actionFn] has a invalid function signature. Expected: 'func(T)', actual: 'func(int,int)'", func() {
-		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).ForEachT(func(item, idx int) {})
-	})
 }
 
 func TestForEachIndexed(t *testing.T) {
 	tests := []struct {
-		input any
-		want  any
+		input []int
+		want  []int
 	}{
-		{[5]int{1, 2, 2, 35, 111}, []int{1, 3, 4, 38, 115}},
+		{[]int{1, 2, 2, 35, 111}, []int{1, 3, 4, 38, 115}},
 		{[]int{}, []int{}},
 	}
 
 	for _, test := range tests {
 		output := []int{}
-		From(test.input).ForEachIndexed(func(index int, item any) {
-			output = append(output, item.(int)+index)
+		FromSlice(test.input).ForEachIndexed(func(index int, item int) {
+			output = append(output, item+index)
 		})
 
 		if !reflect.DeepEqual(output, test.want) {
-			t.Fatalf("From(%#v).ForEachIndexed()=%#v expected=%#v", test.input, output, test.want)
+			t.Fatalf("FromSlice(%#v).ForEachIndexed()=%#v expected=%#v", test.input, output, test.want)
 		}
 	}
-}
-
-func TestForEachIndexedT_PanicWhenActionFnIsInvalid(t *testing.T) {
-	mustPanicWithError(t, "ForEachIndexedT: parameter [actionFn] has a invalid function signature. Expected: 'func(int,T)', actual: 'func(int)'", func() {
-		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).ForEachIndexedT(func(item int) {})
-	})
 }
 
 func TestLast(t *testing.T) {
-	tests := []struct {
-		input any
-		want  any
-	}{
-		{[]int{1, 2, 2, 3, 1}, 1},
-		{[]int{}, nil},
+	if r, ok := FromSlice([]int{1, 2, 2, 3, 5}).Last(); !ok || r != 5 {
+		t.Errorf("Last()=%v,%v expected 5,true", r, ok)
 	}
 
-	for _, test := range tests {
-		if r := From(test.input).Last(); r != test.want {
-			t.Errorf("From(%v).Last()=%v expected %v", test.input, r, test.want)
-		}
+	if r, ok := FromSlice([]int{}).Last(); ok || r != 0 {
+		t.Errorf("Last()=%v,%v expected 0,false", r, ok)
 	}
 }
 
 func TestLastWith(t *testing.T) {
-	tests := []struct {
-		input any
-		want  any
-	}{
-		{[]int{1, 2, 2, 3, 1, 4, 2, 5, 1, 1}, 5},
-		{[]int{}, nil},
+	if r, ok := FromSlice([]int{1, 2, 2, 3, 1, 4, 2, 5, 1, 1}).LastWith(func(i int) bool {
+		return i > 2
+	}); !ok || r != 5 {
+		t.Errorf("LastWith()=%v,%v expected 5,true", r, ok)
 	}
 
-	for _, test := range tests {
-		if r := From(test.input).LastWith(func(i any) bool {
-			return i.(int) > 2
-		}); r != test.want {
-			t.Errorf("From(%v).LastWith()=%v expected %v", test.input, r, test.want)
-		}
-	}
-}
-
-func TestLastWithT_PanicWhenPredicateFnIsInvalid(t *testing.T) {
-	mustPanicWithError(t, "LastWithT: parameter [predicateFn] has a invalid function signature. Expected: 'func(T)bool', actual: 'func(int)int'", func() {
-		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).LastWithT(func(item int) int { return item + 2 })
-	})
-}
-
-func TestMax(t *testing.T) {
-	tests := []struct {
-		input any
-		want  any
-	}{
-		{[]int{1, 2, 2, 3, 1}, 3},
-		{[]int{1}, 1},
-		{[]int{}, nil},
-	}
-
-	for _, test := range tests {
-		if r := From(test.input).Max(); r != test.want {
-			t.Errorf("From(%v).Max()=%v expected %v", test.input, r, test.want)
-		}
-	}
-}
-
-func TestMin(t *testing.T) {
-	tests := []struct {
-		input any
-		want  any
-	}{
-		{[]int{1, 2, 2, 3, 0}, 0},
-		{[]int{1}, 1},
-		{[]int{}, nil},
-	}
-
-	for _, test := range tests {
-		if r := From(test.input).Min(); r != test.want {
-			t.Errorf("From(%v).Min()=%v expected %v", test.input, r, test.want)
-		}
+	if r, ok := FromSlice([]int{}).LastWith(func(i int) bool {
+		return i > 2
+	}); ok || r != 0 {
+		t.Errorf("LastWith()=%v,%v expected 0,false", r, ok)
 	}
 }
 
 func TestResults(t *testing.T) {
 	input := []int{1, 2, 3}
-	want := []any{1, 2, 3}
+	want := []int{1, 2, 3}
 
-	if r := From(input).Results(); !reflect.DeepEqual(r, want) {
-		t.Errorf("From(%v).Raw()=%v expected %v", input, r, want)
+	if r := FromSlice(input).Results(); !reflect.DeepEqual(r, want) {
+		t.Errorf("FromSlice(%v).Results()=%v expected %v", input, r, want)
 	}
 }
 
 func TestSequenceEqual(t *testing.T) {
 	tests := []struct {
-		input  any
-		input2 any
+		input  []int
+		input2 []int
 		want   bool
 	}{
 		{[]int{1, 2, 2, 3, 1}, []int{4, 6}, false},
 		{[]int{1, -1, 100}, []int{1, -1, 100}, true},
 		{[]int{}, []int{}, true},
+		{[]int{1, 2}, []int{1, 2, 3}, false},
+		{[]int{1, 2, 3}, []int{1, 2}, false},
 	}
 
 	for _, test := range tests {
-		if r := From(test.input).SequenceEqual(From(test.input2)); r != test.want {
-			t.Errorf("From(%v).SequenceEqual(%v)=%v expected %v", test.input, test.input2, r, test.want)
+		if r := FromSlice(test.input).SequenceEqual(FromSlice(test.input2)); r != test.want {
+			t.Errorf("FromSlice(%v).SequenceEqual(%v)=%v expected %v", test.input, test.input2, r, test.want)
 		}
 	}
 }
 
 func TestSingle(t *testing.T) {
 	tests := []struct {
-		input any
-		want  any
+		input  []int
+		want   int
+		wantOk bool
 	}{
-		{[]int{1, 2, 2, 3, 1}, nil},
-		{[]int{1}, 1},
-		{[]int{}, nil},
+		{[]int{1, 2, 2, 3, 1}, 0, false},
+		{[]int{1}, 1, true},
+		{[]int{}, 0, false},
 	}
 
 	for _, test := range tests {
-		if r := From(test.input).Single(); r != test.want {
-			t.Errorf("From(%v).Single()=%v expected %v", test.input, r, test.want)
+		if r, ok := FromSlice(test.input).Single(); ok != test.wantOk || r != test.want {
+			t.Errorf("FromSlice(%v).Single()=%v,%v expected %v,%v", test.input, r, ok, test.want, test.wantOk)
 		}
 	}
 }
 
 func TestSingleWith(t *testing.T) {
 	tests := []struct {
-		input any
-		want  any
+		input  []int
+		want   int
+		wantOk bool
 	}{
-		{[]int{1, 2, 2, 3, 1}, 3},
-		{[]int{1, 1, 1}, nil},
-		{[]int{5, 1, 1, 10, 2, 2}, nil},
-		{[]int{}, nil},
+		{[]int{1, 2, 2, 3, 1}, 3, true},
+		{[]int{1, 1, 1}, 0, false},
+		{[]int{5, 1, 1, 10, 2, 2}, 0, false},
+		{[]int{}, 0, false},
 	}
 
 	for _, test := range tests {
-		if r := From(test.input).SingleWith(func(i any) bool {
-			return i.(int) > 2
-		}); r != test.want {
-			t.Errorf("From(%v).SingleWith()=%v expected %v", test.input, r, test.want)
-		}
-	}
-}
-
-func TestSingleWithT_PanicWhenPredicateFnIsInvalid(t *testing.T) {
-	mustPanicWithError(t, "SingleWithT: parameter [predicateFn] has a invalid function signature. Expected: 'func(T)bool', actual: 'func(int)int'", func() {
-		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).SingleWithT(func(item int) int { return item + 2 })
-	})
-}
-
-func TestSumInts(t *testing.T) {
-	tests := []struct {
-		input any
-		want  int64
-	}{
-		{[]int{1, 2, 2, 3, 1}, 9},
-		{[]int{1}, 1},
-		{[]int{}, 0},
-	}
-
-	for _, test := range tests {
-		if r := From(test.input).SumInts(); r != test.want {
-			t.Errorf("From(%v).SumInts()=%v expected %v", test.input, r, test.want)
-		}
-	}
-}
-
-func TestSumUInts(t *testing.T) {
-	tests := []struct {
-		input any
-		want  uint64
-	}{
-		{[]uint{1, 2, 2, 3, 1}, 9},
-		{[]uint{1}, 1},
-		{[]uint{}, 0},
-	}
-
-	for _, test := range tests {
-		if r := From(test.input).SumUInts(); r != test.want {
-			t.Errorf("From(%v).SumInts()=%v expected %v", test.input, r, test.want)
-		}
-	}
-}
-
-func TestSumFloats(t *testing.T) {
-	tests := []struct {
-		input any
-		want  float64
-	}{
-		{[]float32{1., 2., 2., 3., 1.}, 9.},
-		{[]float64{1.}, 1.},
-		{[]float32{}, 0.},
-	}
-
-	for _, test := range tests {
-		if r := From(test.input).SumFloats(); r != test.want {
-			t.Errorf("From(%v).SumFloats()=%v expected %v", test.input, r, test.want)
+		if r, ok := FromSlice(test.input).SingleWith(func(i int) bool {
+			return i > 2
+		}); ok != test.wantOk || r != test.want {
+			t.Errorf("FromSlice(%v).SingleWith()=%v,%v expected %v,%v", test.input, r, ok, test.want, test.wantOk)
 		}
 	}
 }
 
 func TestToChannel(t *testing.T) {
-	c := make(chan any)
+	c := make(chan int)
 	input := []int{1, 2, 3, 4, 5}
 
 	go func() {
-		From(input).ToChannel(c)
+		FromSlice(input).ToChannel(c)
 	}()
 
 	result := []int{}
-	for value := range c {
-		result = append(result, value.(int))
-	}
-
-	if !reflect.DeepEqual(result, input) {
-		t.Errorf("From(%v).ToChannel()=%v expected %v", input, result, input)
-	}
-}
-
-func TestToChannelT(t *testing.T) {
-	c := make(chan string)
-	input := []string{"1", "2", "3", "4", "5"}
-
-	go From(input).ToChannelT(c)
-
-	result := []string{}
 	for value := range c {
 		result = append(result, value)
 	}
 
 	if !reflect.DeepEqual(result, input) {
-		t.Errorf("From(%v).ToChannelT()=%v expected %v", input, result, input)
+		t.Errorf("FromSlice(%v).ToChannel()=%v expected %v", input, result, input)
 	}
 }
 
@@ -486,11 +291,10 @@ func TestToMap(t *testing.T) {
 	input[2] = false
 	input[3] = true
 
-	result := make(map[int]bool)
-	From(input).ToMap(&result)
+	result := ToMap(FromMap(input))
 
 	if !reflect.DeepEqual(result, input) {
-		t.Errorf("From(%v).ToMap()=%v expected %v", input, result, input)
+		t.Errorf("ToMap(FromMap(%v))=%v expected %v", input, result, input)
 	}
 }
 
@@ -500,152 +304,42 @@ func TestToMapBy(t *testing.T) {
 	input[2] = false
 	input[3] = true
 
-	result := make(map[int]bool)
-	From(input).ToMapBy(&result,
-		func(i any) any {
-			return i.(KeyValue).Key
+	result := FromMap(input).ToMapBy(
+		func(i KeyValue[int, bool]) int {
+			return i.Key
 		},
-		func(i any) any {
-			return i.(KeyValue).Value
+		func(i KeyValue[int, bool]) bool {
+			return i.Value
 		})
 
 	if !reflect.DeepEqual(result, input) {
-		t.Errorf("From(%v).ToMapBy()=%v expected %v", input, result, input)
+		t.Errorf("FromMap(%v).ToMapBy()=%v expected %v", input, result, input)
 	}
 }
 
-func TestToMapByT_PanicWhenKeySelectorFnIsInvalid(t *testing.T) {
-	mustPanicWithError(t, "ToMapByT: parameter [keySelectorFn] has a invalid function signature. Expected: 'func(T)T', actual: 'func(int,int)int'", func() {
-		result := make(map[int]bool)
-		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).ToMapByT(
-			&result,
-			func(item, j int) int { return item + 2 },
-			func(item int) int { return item + 2 },
-		)
-	})
-}
+func TestToMapBy_TypeChanging(t *testing.T) {
+	input := []string{"apple", "banana"}
+	want := map[string]int{"apple": 5, "banana": 6}
 
-func TestToMapByT_PanicWhenValueSelectorFnIsInvalid(t *testing.T) {
-	mustPanicWithError(t, "ToMapByT: parameter [valueSelectorFn] has a invalid function signature. Expected: 'func(T)T', actual: 'func(int,int)int'", func() {
-		result := make(map[int]bool)
-		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).ToMapByT(
-			&result,
-			func(item int) int { return item + 2 },
-			func(item, j int) int { return item + 2 },
-		)
-	})
+	result := FromSlice(input).ToMapBy(
+		func(s string) string { return s },
+		func(s string) int { return len(s) })
+
+	if !reflect.DeepEqual(result, want) {
+		t.Errorf("ToMapBy()=%v expected %v", result, want)
+	}
 }
 
 func TestToSlice(t *testing.T) {
-	tests := []struct {
-		input             []int
-		output            []int
-		want              []int
-		wantedOutputCap   int
-		outputIsANewSlice bool
-	}{
-		// output is nil slice
-		{
-			[]int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
-			nil,
-			[]int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
-			16,
-			true},
-		// output is empty slice (cap=0)
-		{
-			[]int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
-			[]int{},
-			[]int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
-			16,
-			true},
-		// ToSlice() overwrites existing elements and reslices.
-		{[]int{1, 2, 3},
-			[]int{99, 98, 97, 96, 95},
-			[]int{1, 2, 3},
-			5,
-			false},
-		// cap(out)>len(result): we get the same slice, resliced. cap unchanged.
-		{[]int{1, 2, 3, 4, 5},
-			make([]int, 0, 11),
-			[]int{1, 2, 3, 4, 5},
-			11,
-			false},
-		// cap(out)==len(result): we get the same slice, cap unchanged.
-		{[]int{1, 2, 3, 4, 5},
-			make([]int, 0, 5),
-			[]int{1, 2, 3, 4, 5},
-			5,
-			false},
-		// cap(out)<len(result): we get a new slice with len(out)=len(result) and cap doubled: cap(out')==2*cap(out)
-		{[]int{1, 2, 3, 4, 5},
-			make([]int, 0, 4),
-			[]int{1, 2, 3, 4, 5},
-			8,
-			true},
-		// cap(out)<<len(result): trigger capacity to double more than once (26 -> 52 -> 104)
-		{make([]int, 100),
-			make([]int, 0, 26),
-			make([]int, 100),
-			104,
-			true},
-		// len(out) > len(result): we get the same slice with len(out)=len(result) and cap unchanged: cap(out')==cap(out)
-		{[]int{1, 2, 3, 4, 5},
-			make([]int, 0, 50),
-			[]int{1, 2, 3, 4, 5},
-			50,
-			false},
+	input := []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
+
+	result := FromSlice(input).ToSlice()
+	if !reflect.DeepEqual(result, input) {
+		t.Errorf("FromSlice(%v).ToSlice()=%v expected %v", input, result, input)
 	}
 
-	for c, test := range tests {
-		initialOutputValue := test.output
-		From(test.input).ToSlice(&test.output)
-		modifiedOutputValue := test.output
-
-		// test slice values
-		if !reflect.DeepEqual(test.output, test.want) {
-			t.Fatalf("case #%d: From(%#v).ToSlice()=%#v expected=%#v", c, test.input, test.output, test.want)
-		}
-
-		// test capacity of output slice
-		if cap(test.output) < test.wantedOutputCap {
-			t.Fatalf("case #%d: cap(output)=%d expected not less then %d", c, cap(test.output), test.wantedOutputCap)
-		}
-
-		// test if a new slice is allocated
-		inPtr := uintptr(unsafe.Pointer(unsafe.SliceData(initialOutputValue)))
-		outPtr := uintptr(unsafe.Pointer(unsafe.SliceData(modifiedOutputValue)))
-		isNewSlice := inPtr != outPtr
-		if isNewSlice != test.outputIsANewSlice {
-			t.Fatalf("case #%d: isNewSlice=%v (in=0x%X out=0x%X) expected=%v", c, isNewSlice, inPtr, outPtr, test.outputIsANewSlice)
-		}
+	var empty []int
+	if result := FromSlice(empty).ToSlice(); len(result) != 0 {
+		t.Errorf("FromSlice(nil).ToSlice()=%v expected empty", result)
 	}
-}
-
-func TestToSlice_PanicWhenNil(t *testing.T) {
-	mustPanicWithError(t, "ToSlice: v must be a pointer to a slice", func() {
-		From([]int{1, 2, 3}).ToSlice(nil)
-	})
-}
-
-func TestToSlice_PanicWhenNotSlice(t *testing.T) {
-	mustPanicWithError(t, "ToSlice: v must point to a slice", func() {
-		i := 123
-		From([]int{1, 2, 3}).ToSlice(&i)
-	})
-}
-
-func TestToSlice_AutomaticConversion(t *testing.T) {
-	input := []int{1, 2, 3}
-	want := []float64{1, 2, 3}
-	output := make([]float64, 0, 3)
-	From(input).ToSlice(&output)
-	if !reflect.DeepEqual(output, want) {
-		t.Errorf("From(%v).ToSlice()=%v expected %v", input, output, want)
-	}
-}
-
-func TestToSlice_PanicWhenConversionIsNotPossible(t *testing.T) {
-	mustPanicWithError(t, "ToSlice: item type is not assignable/convertible to slice element type", func() {
-		From([]string{"1", "2", "3"}).ToSlice(&[]int{})
-	})
 }

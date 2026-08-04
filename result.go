@@ -2,13 +2,11 @@ package linq
 
 import (
 	"iter"
-	"math"
-	"reflect"
 	"slices"
 )
 
 // All determines whether all elements of a collection satisfy a condition.
-func (q Query) All(predicate func(any) bool) bool {
+func (q Query[T]) All(predicate func(T) bool) bool {
 	for item := range q.Iterate {
 		if !predicate(item) {
 			return false
@@ -18,29 +16,8 @@ func (q Query) All(predicate func(any) bool) bool {
 	return true
 }
 
-// AllT is the typed version of All.
-//
-//   - predicateFn is of type "func(TSource) bool"
-//
-// NOTE: All has better performance than AllT.
-func (q Query) AllT(predicateFn any) bool {
-
-	predicateGenericFunc, err := newGenericFunc(
-		"AllT", "predicateFn", predicateFn,
-		simpleParamValidator(newElemTypeSlice(new(genericType)), newElemTypeSlice(new(bool))),
-	)
-	if err != nil {
-		panic(err)
-	}
-	predicateFunc := func(item any) bool {
-		return predicateGenericFunc.Call(item).(bool)
-	}
-
-	return q.All(predicateFunc)
-}
-
 // Any determines whether any element of a collection exists.
-func (q Query) Any() bool {
+func (q Query[T]) Any() bool {
 	for range q.Iterate {
 		return true
 	}
@@ -49,7 +26,7 @@ func (q Query) Any() bool {
 }
 
 // AnyWith determines whether any element of a collection satisfies a condition.
-func (q Query) AnyWith(predicate func(any) bool) bool {
+func (q Query[T]) AnyWith(predicate func(T) bool) bool {
 	for item := range q.Iterate {
 		if predicate(item) {
 			return true
@@ -59,79 +36,14 @@ func (q Query) AnyWith(predicate func(any) bool) bool {
 	return false
 }
 
-// AnyWithT is the typed version of AnyWith.
-//
-//   - predicateFn is of type "func(TSource) bool"
-//
-// NOTE: AnyWith has better performance than AnyWithT.
-func (q Query) AnyWithT(predicateFn any) bool {
-
-	predicateGenericFunc, err := newGenericFunc(
-		"AnyWithT", "predicateFn", predicateFn,
-		simpleParamValidator(newElemTypeSlice(new(genericType)), newElemTypeSlice(new(bool))),
-	)
-	if err != nil {
-		panic(err)
-	}
-
-	predicateFunc := func(item any) bool {
-		return predicateGenericFunc.Call(item).(bool)
-	}
-
-	return q.AnyWith(predicateFunc)
-}
-
-// Average computes the average of a collection of numeric values.
-// It panics if the sequence contains non-numeric types.
-// It returns math.NaN() if the sequence is empty.
-func (q Query) Average() (r float64) {
-	next, stop := iter.Pull(q.Iterate)
-	defer stop()
-
-	item, ok := next()
-	if !ok {
-		return math.NaN()
-	}
-
-	n := 1
-	switch item.(type) {
-	case int, int8, int16, int32, int64:
-		conv := getIntConverter(item)
-		sum := conv(item)
-
-		for item, ok = next(); ok; item, ok = next() {
-			sum += conv(item)
-			n++
-		}
-
-		r = float64(sum)
-	case uint, uint8, uint16, uint32, uint64:
-		conv := getUIntConverter(item)
-		sum := conv(item)
-
-		for item, ok = next(); ok; item, ok = next() {
-			sum += conv(item)
-			n++
-		}
-
-		r = float64(sum)
-	default:
-		conv := getFloatConverter(item)
-		r = conv(item)
-
-		for item, ok = next(); ok; item, ok = next() {
-			r += conv(item)
-			n++
-		}
-	}
-
-	return r / float64(n)
-}
-
 // Contains determines whether a collection contains a specified element.
-func (q Query) Contains(value any) bool {
+//
+// Elements are compared as boxed (interface) values, so this method panics if
+// T is not a comparable type at runtime. AnyWith with an equality predicate
+// avoids the boxing and performs better.
+func (q Query[T]) Contains(value T) bool {
 	for item := range q.Iterate {
-		if item == value {
+		if any(item) == any(value) {
 			return true
 		}
 	}
@@ -139,7 +51,7 @@ func (q Query) Contains(value any) bool {
 }
 
 // Count returns the number of elements in a collection.
-func (q Query) Count() int {
+func (q Query[T]) Count() int {
 	count := 0
 	for range q.Iterate {
 		count++
@@ -149,7 +61,7 @@ func (q Query) Count() int {
 
 // CountWith returns a number that represents how many elements in the specified
 // collection satisfy a condition.
-func (q Query) CountWith(predicate func(any) bool) int {
+func (q Query[T]) CountWith(predicate func(T) bool) int {
 	count := 0
 	for item := range q.Iterate {
 		if predicate(item) {
@@ -159,98 +71,36 @@ func (q Query) CountWith(predicate func(any) bool) int {
 	return count
 }
 
-// CountWithT is the typed version of CountWith.
-//
-//   - predicateFn is of type "func(TSource) bool"
-//
-// NOTE: CountWith has better performance than CountWithT.
-func (q Query) CountWithT(predicateFn any) int {
-
-	predicateGenericFunc, err := newGenericFunc(
-		"CountWithT", "predicateFn", predicateFn,
-		simpleParamValidator(newElemTypeSlice(new(genericType)), newElemTypeSlice(new(bool))),
-	)
-	if err != nil {
-		panic(err)
-	}
-
-	predicateFunc := func(item any) bool {
-		return predicateGenericFunc.Call(item).(bool)
-	}
-
-	return q.CountWith(predicateFunc)
-}
-
-// First returns the first element of a collection.
-func (q Query) First() any {
+// First returns the first element of a collection and a boolean reporting
+// whether the collection was non-empty.
+func (q Query[T]) First() (T, bool) {
 	for item := range q.Iterate {
-		return item
+		return item, true
 	}
 
-	return nil
+	var zero T
+	return zero, false
 }
 
 // FirstWith returns the first element of a collection that satisfies a
-// specified condition.
-func (q Query) FirstWith(predicate func(any) bool) any {
+// specified condition and a boolean reporting whether such an element was
+// found.
+func (q Query[T]) FirstWith(predicate func(T) bool) (T, bool) {
 	for item := range q.Iterate {
 		if predicate(item) {
-			return item
+			return item, true
 		}
 	}
 
-	return nil
-}
-
-// FirstWithT is the typed version of FirstWith.
-//
-//   - predicateFn is of type "func(TSource) bool"
-//
-// NOTE: FirstWith has better performance than FirstWithT.
-func (q Query) FirstWithT(predicateFn any) any {
-
-	predicateGenericFunc, err := newGenericFunc(
-		"FirstWithT", "predicateFn", predicateFn,
-		simpleParamValidator(newElemTypeSlice(new(genericType)), newElemTypeSlice(new(bool))),
-	)
-	if err != nil {
-		panic(err)
-	}
-
-	predicateFunc := func(item any) bool {
-		return predicateGenericFunc.Call(item).(bool)
-	}
-
-	return q.FirstWith(predicateFunc)
+	var zero T
+	return zero, false
 }
 
 // ForEach performs the specified action on each element of a collection.
-func (q Query) ForEach(action func(any)) {
+func (q Query[T]) ForEach(action func(T)) {
 	for item := range q.Iterate {
 		action(item)
 	}
-}
-
-// ForEachT is the typed version of ForEach.
-//
-//   - actionFn is of type "func(TSource)"
-//
-// NOTE: ForEach has better performance than ForEachT.
-func (q Query) ForEachT(actionFn any) {
-	actionGenericFunc, err := newGenericFunc(
-		"ForEachT", "actionFn", actionFn,
-		simpleParamValidator(newElemTypeSlice(new(genericType)), nil),
-	)
-
-	if err != nil {
-		panic(err)
-	}
-
-	actionFunc := func(item any) {
-		actionGenericFunc.Call(item)
-	}
-
-	q.ForEach(actionFunc)
 }
 
 // ForEachIndexed performs the specified action on each element of a collection.
@@ -261,7 +111,7 @@ func (q Query) ForEachT(actionFn any) {
 // index, for example. It can also be useful if you want to retrieve the index
 // of one or more elements. The second argument to action represents the
 // element to process.
-func (q Query) ForEachIndexed(action func(int, any)) {
+func (q Query[T]) ForEachIndexed(action func(int, T)) {
 	index := 0
 	for item := range q.Iterate {
 		action(index, item)
@@ -269,267 +119,124 @@ func (q Query) ForEachIndexed(action func(int, any)) {
 	}
 }
 
-// ForEachIndexedT is the typed version of ForEachIndexed.
-//
-//   - actionFn is of type "func(int, TSource)"
-//
-// NOTE: ForEachIndexed has better performance than ForEachIndexedT.
-func (q Query) ForEachIndexedT(actionFn any) {
-	actionGenericFunc, err := newGenericFunc(
-		"ForEachIndexedT", "actionFn", actionFn,
-		simpleParamValidator(newElemTypeSlice(new(int), new(genericType)), nil),
-	)
-
-	if err != nil {
-		panic(err)
+// Last returns the last element of a collection and a boolean reporting
+// whether the collection was non-empty.
+func (q Query[T]) Last() (T, bool) {
+	var r T
+	found := false
+	for item := range q.Iterate {
+		r = item
+		found = true
 	}
 
-	actionFunc := func(index int, item any) {
-		actionGenericFunc.Call(index, item)
-	}
-
-	q.ForEachIndexed(actionFunc)
-}
-
-// Last returns the last element of a collection.
-func (q Query) Last() (r any) {
-	for r = range q.Iterate {
-	}
-
-	return
+	return r, found
 }
 
 // LastWith returns the last element of a collection that satisfies a specified
-// condition.
-func (q Query) LastWith(predicate func(any) bool) (r any) {
+// condition and a boolean reporting whether such an element was found.
+func (q Query[T]) LastWith(predicate func(T) bool) (T, bool) {
+	var r T
+	found := false
 	for item := range q.Iterate {
 		if predicate(item) {
 			r = item
+			found = true
 		}
 	}
 
-	return
+	return r, found
 }
 
-// LastWithT is the typed version of LastWith.
-//
-//   - predicateFn is of type "func(TSource) bool"
-//
-// NOTE: LastWith has better performance than LastWithT.
-func (q Query) LastWithT(predicateFn any) any {
-
-	predicateGenericFunc, err := newGenericFunc(
-		"LastWithT", "predicateFn", predicateFn,
-		simpleParamValidator(newElemTypeSlice(new(genericType)), newElemTypeSlice(new(bool))),
-	)
-	if err != nil {
-		panic(err)
-	}
-
-	predicateFunc := func(item any) bool {
-		return predicateGenericFunc.Call(item).(bool)
-	}
-
-	return q.LastWith(predicateFunc)
-}
-
-// Max returns the maximum value in a collection of values.
-func (q Query) Max() any {
-	next, stop := iter.Pull(q.Iterate)
-	defer stop()
-
-	r, ok := next()
-	if !ok {
-		return nil
-	}
-
-	compare := getComparer(r)
-
-	for item, ok := next(); ok; item, ok = next() {
-		if compare(item, r) > 0 {
-			r = item
-		}
-	}
-
-	return r
-}
-
-// Min returns the minimum value in a collection of values.
-func (q Query) Min() any {
-	next, stop := iter.Pull(q.Iterate)
-	defer stop()
-
-	r, ok := next()
-	if !ok {
-		return nil
-	}
-
-	compare := getComparer(r)
-
-	for item, ok := next(); ok; item, ok = next() {
-		if compare(item, r) < 0 {
-			r = item
-		}
-	}
-
-	return r
-}
-
-// Results collects all items from a query into a slice.
-func (q Query) Results() []any {
+// Results collects all items from a query into a slice. It is equivalent to
+// ToSlice and is kept for familiarity with earlier go-linq versions.
+func (q Query[T]) Results() []T {
 	return slices.Collect(q.Iterate)
 }
 
 // SequenceEqual determines whether two collections are equal.
-func (q Query) SequenceEqual(q2 Query) bool {
-	next, stop := iter.Pull(q.Iterate)
-	defer stop()
-
+//
+// Elements are compared as boxed (interface) values, so this method panics if
+// T is not a comparable type at runtime.
+func (q Query[T]) SequenceEqual(q2 Query[T]) bool {
 	next2, stop2 := iter.Pull(q2.Iterate)
 	defer stop2()
 
-	for item, ok := next(); ok; item, ok = next() {
+	equal := true
+	q.Iterate(func(item T) bool {
 		item2, ok2 := next2()
-		if !ok2 || item != item2 {
+		if !ok2 || any(item) != any(item2) {
+			equal = false
 			return false
 		}
+		return true
+	})
+
+	if !equal {
+		return false
 	}
 
 	_, ok2 := next2()
 	return !ok2
 }
 
-// Single returns the only element of a collection, and nil if there is not
-// exactly one element in the collection.
-func (q Query) Single() (r any) {
+// Single returns the only element of a collection and a boolean that is true
+// only if the collection contains exactly one element.
+func (q Query[T]) Single() (T, bool) {
+	var r T
+	var zero T
 	visited := false
-	for item := range q.Iterate {
+	ok := true
+
+	q.Iterate(func(item T) bool {
 		if visited {
-			return nil
+			ok = false
+			return false
 		}
 
 		r = item
 		visited = true
-	}
+		return true
+	})
 
-	return
+	if !visited || !ok {
+		return zero, false
+	}
+	return r, true
 }
 
 // SingleWith returns the only element of a collection that satisfies a
-// specified condition, and nil if more than one such element exists.
-func (q Query) SingleWith(predicate func(any) bool) (r any) {
+// specified condition and a boolean that is true only if exactly one such
+// element exists.
+func (q Query[T]) SingleWith(predicate func(T) bool) (T, bool) {
+	var r T
+	var zero T
 	found := false
-	for item := range q.Iterate {
+	ok := true
+
+	q.Iterate(func(item T) bool {
 		if !predicate(item) {
-			continue
+			return true
 		}
 
 		if found {
-			return nil
+			ok = false
+			return false
 		}
 
 		r = item
 		found = true
+		return true
+	})
 
+	if !found || !ok {
+		return zero, false
 	}
-
-	return
-}
-
-// SingleWithT is the typed version of SingleWith.
-//
-//   - predicateFn is of type "func(TSource) bool"
-//
-// NOTE: SingleWith has better performance than SingleWithT.
-func (q Query) SingleWithT(predicateFn any) any {
-	predicateGenericFunc, err := newGenericFunc(
-		"SingleWithT", "predicateFn", predicateFn,
-		simpleParamValidator(newElemTypeSlice(new(genericType)), newElemTypeSlice(new(bool))),
-	)
-	if err != nil {
-		panic(err)
-	}
-
-	predicateFunc := func(item any) bool {
-		return predicateGenericFunc.Call(item).(bool)
-	}
-
-	return q.SingleWith(predicateFunc)
-}
-
-// SumInts computes the sum of a collection of numeric values.
-//
-// Values can be of any integer type: int, int8, int16, int32, int64. The result
-// is int64. Method returns zero if the collection contains no elements.
-func (q Query) SumInts() (r int64) {
-	next, stop := iter.Pull(q.Iterate)
-	defer stop()
-
-	item, ok := next()
-	if !ok {
-		return 0
-	}
-
-	conv := getIntConverter(item)
-	r = conv(item)
-
-	for item, ok = next(); ok; item, ok = next() {
-		r += conv(item)
-	}
-
-	return
-}
-
-// SumUInts computes the sum of a collection of numeric values.
-//
-// Values can be of any unsigned integer type: uint, uint8, uint16, uint32,
-// uint64. The result is uint64. Method returns zero if the collection contains no
-// elements.
-func (q Query) SumUInts() (r uint64) {
-	next, stop := iter.Pull(q.Iterate)
-	defer stop()
-
-	item, ok := next()
-	if !ok {
-		return 0
-	}
-
-	conv := getUIntConverter(item)
-	r = conv(item)
-
-	for item, ok = next(); ok; item, ok = next() {
-		r += conv(item)
-	}
-
-	return
-}
-
-// SumFloats computes the sum of a collection of numeric values.
-//
-// Values can be of any float type: float32 or float64. The result is float64.
-// Method returns zero if the collection contains no elements.
-func (q Query) SumFloats() (r float64) {
-	next, stop := iter.Pull(q.Iterate)
-	defer stop()
-
-	item, ok := next()
-	if !ok {
-		return 0
-	}
-
-	conv := getFloatConverter(item)
-	r = conv(item)
-
-	for item, ok = next(); ok; item, ok = next() {
-		r += conv(item)
-	}
-
-	return
+	return r, true
 }
 
 // ToChannel iterates over a collection and outputs each element to a channel,
 // then closes it.
-func (q Query) ToChannel(result chan<- any) {
+func (q Query[T]) ToChannel(result chan<- T) {
 	defer close(result)
 
 	for item := range q.Iterate {
@@ -537,133 +244,34 @@ func (q Query) ToChannel(result chan<- any) {
 	}
 }
 
-// ToChannelT is the typed version of ToChannel.
-//
-//   - result is of type "chan TSource"
-//
-// NOTE: ToChannel has better performance than ToChannelT.
-func (q Query) ToChannelT(result any) {
-	r := reflect.ValueOf(result)
-
+// ToMap iterates over a collection of KeyValue elements and returns a map
+// populated with them. To populate a map from a collection of other types,
+// use the ToMapBy method.
+func ToMap[TKey comparable, TValue any](q Query[KeyValue[TKey, TValue]]) map[TKey]TValue {
+	result := make(map[TKey]TValue)
 	for item := range q.Iterate {
-		r.Send(reflect.ValueOf(item))
+		result[item.Key] = item.Value
 	}
-
-	r.Close()
+	return result
 }
 
-// ToMap iterates over a collection and populates a result map with elements.
-// Collection elements have to be of KeyValue type to use this method. To
-// populate a map with elements of different types, use the ToMapBy method. ToMap
-// doesn't empty the result map before populating it.
-func (q Query) ToMap(result any) {
-	q.ToMapBy(
-		result,
-		func(i any) any {
-			return i.(KeyValue).Key
-		},
-		func(i any) any {
-			return i.(KeyValue).Value
-		})
-}
-
-// ToMapBy iterates over a collection and populates the result map with
+// ToMapBy iterates over a collection and returns a map populated with
 // elements. Functions keySelector and valueSelector are executed for each
-// element of the collection to generate key and value for the map. Generated
-// key and value types must be assignable to the map's key and value types.
-// ToMapBy doesn't empty the result map before populating it.
-func (q Query) ToMapBy(result any,
-	keySelector func(any) any,
-	valueSelector func(any) any) {
-	res := reflect.ValueOf(result)
-	m := reflect.Indirect(res)
-
+// element of the collection to generate the key and value for the map.
+//
+// ToMapBy is a generic method: the map key type TKey and value type TValue are
+// inferred from the selector functions. The key type TKey must be comparable.
+func (q Query[T]) ToMapBy[TKey comparable, TValue any](
+	keySelector func(T) TKey,
+	valueSelector func(T) TValue) map[TKey]TValue {
+	result := make(map[TKey]TValue)
 	for item := range q.Iterate {
-		key := reflect.ValueOf(keySelector(item))
-		value := reflect.ValueOf(valueSelector(item))
-
-		m.SetMapIndex(key, value)
+		result[keySelector(item)] = valueSelector(item)
 	}
-
-	res.Elem().Set(m)
+	return result
 }
 
-// ToMapByT is the typed version of ToMapBy.
-//
-//   - keySelectorFn is of type "func(TSource)TKey"
-//   - valueSelectorFn is of type "func(TSource)TValue"
-//
-// NOTE: ToMapBy has better performance than ToMapByT.
-func (q Query) ToMapByT(result any,
-	keySelectorFn any, valueSelectorFn any) {
-	keySelectorGenericFunc, err := newGenericFunc(
-		"ToMapByT", "keySelectorFn", keySelectorFn,
-		simpleParamValidator(newElemTypeSlice(new(genericType)), newElemTypeSlice(new(genericType))),
-	)
-	if err != nil {
-		panic(err)
-	}
-
-	keySelectorFunc := func(item any) any {
-		return keySelectorGenericFunc.Call(item)
-	}
-
-	valueSelectorGenericFunc, err := newGenericFunc(
-		"ToMapByT", "valueSelectorFn", valueSelectorFn,
-		simpleParamValidator(newElemTypeSlice(new(genericType)), newElemTypeSlice(new(genericType))),
-	)
-	if err != nil {
-		panic(err)
-	}
-
-	valueSelectorFunc := func(item any) any {
-		return valueSelectorGenericFunc.Call(item)
-	}
-
-	q.ToMapBy(result, keySelectorFunc, valueSelectorFunc)
-}
-
-// ToSlice iterates over a collection and saves the results in the slice pointed
-// by v. It overwrites the existing slice, starting from index 0.
-//
-// If the slice pointed by v has sufficient capacity, v will be pointed to a
-// resliced slice. If it does not, a new underlying array will be allocated and
-// v will point to it.
-//
-// Note: Starting with go-linq v4, ToSlice panics if v is not a pointer to a slice.
-// If the query type is not assignable to the slice element type, ToSlice will
-// attempt to convert the query elements to the slice element type.
-func (q Query) ToSlice(v any) {
-	ptrValue := reflect.ValueOf(v)
-	if ptrValue.Kind() != reflect.Ptr || ptrValue.IsNil() {
-		panic("ToSlice: v must be a pointer to a slice")
-	}
-
-	sliceValue := reflect.Indirect(ptrValue)
-	if sliceValue.Kind() != reflect.Slice {
-		panic("ToSlice: v must point to a slice")
-	}
-
-	// Reset length to 0 but keep capacity (like s = s[:0])
-	// This preserves any existing capacity for reuse.
-	out := sliceValue.Slice(0, 0)
-
-	elemType := sliceValue.Type().Elem()
-	for item := range q.Iterate {
-		itemValue := reflect.ValueOf(item)
-
-		// Ensure type compatibility with the slice element type.
-		if !itemValue.Type().AssignableTo(elemType) {
-			if itemValue.Type().ConvertibleTo(elemType) {
-				itemValue = itemValue.Convert(elemType)
-			} else {
-				panic("ToSlice: item type is not assignable/convertible to slice element type")
-			}
-		}
-
-		out = reflect.Append(out, itemValue)
-	}
-
-	// Point v to the final slice (which may have a new backing array).
-	ptrValue.Elem().Set(out)
+// ToSlice iterates over a collection and returns the results as a slice.
+func (q Query[T]) ToSlice() []T {
+	return slices.Collect(q.Iterate)
 }

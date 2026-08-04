@@ -1,7 +1,5 @@
 package linq
 
-import "iter"
-
 // Aggregate applies an accumulator function over a sequence.
 //
 // Aggregate method makes it simple to perform a calculation over a sequence of
@@ -11,42 +9,22 @@ import "iter"
 // f()). The first element of the source is used as the initial aggregate value. The
 // result of f() replaces the previous aggregated value.
 //
-// Aggregate returns the final result of f().
-func (q Query) Aggregate(f func(accumulator, item any) any) any {
-	next, stop := iter.Pull(q.Iterate)
-	defer stop()
+// Aggregate returns the final result of f() and a boolean reporting whether
+// the sequence was non-empty.
+func (q Query[T]) Aggregate(f func(accumulator, item T) T) (T, bool) {
+	var result T
+	first := true
 
-	result, ok := next()
-	if !ok {
-		return nil
-	}
-
-	for current, ok := next(); ok; current, ok = next() {
+	for current := range q.Iterate {
+		if first {
+			result = current
+			first = false
+			continue
+		}
 		result = f(result, current)
 	}
 
-	return result
-}
-
-// AggregateT is the typed version of Aggregate.
-//
-//   - f is of type: func(TSource, TSource) TSource
-//
-// NOTE: Aggregate has better performance than AggregateT.
-func (q Query) AggregateT(f any) any {
-	fGenericFunc, err := newGenericFunc(
-		"AggregateT", "f", f,
-		simpleParamValidator(newElemTypeSlice(new(genericType), new(genericType)), newElemTypeSlice(new(genericType))),
-	)
-	if err != nil {
-		panic(err)
-	}
-
-	fFunc := func(result any, current any) any {
-		return fGenericFunc.Call(result, current)
-	}
-
-	return q.Aggregate(fFunc)
+	return result, !first
 }
 
 // AggregateWithSeed applies an accumulator function over a sequence. The
@@ -59,9 +37,12 @@ func (q Query) AggregateT(f any) any {
 // f()). The value of the seed parameter is used as the initial aggregate value.
 // The result of f() replaces the previous aggregated value.
 //
+// AggregateWithSeed is a generic method: the accumulator type TAccumulate is inferred
+// from the seed value and may differ from the element type T.
+//
 // Aggregate returns the final result of f().
-func (q Query) AggregateWithSeed(seed any,
-	f func(accumulator, item any) any) any {
+func (q Query[T]) AggregateWithSeed[TAccumulate any](seed TAccumulate,
+	f func(accumulator TAccumulate, item T) TAccumulate) TAccumulate {
 	result := seed
 
 	for current := range q.Iterate {
@@ -69,29 +50,6 @@ func (q Query) AggregateWithSeed(seed any,
 	}
 
 	return result
-}
-
-// AggregateWithSeedT is the typed version of AggregateWithSeed.
-//
-//   - f is of type "func(TAccumulate, TSource) TAccumulate"
-//
-// NOTE: AggregateWithSeed has better performance than
-// AggregateWithSeedT.
-func (q Query) AggregateWithSeedT(seed any,
-	f any) any {
-	fGenericFunc, err := newGenericFunc(
-		"AggregateWithSeed", "f", f,
-		simpleParamValidator(newElemTypeSlice(new(genericType), new(genericType)), newElemTypeSlice(new(genericType))),
-	)
-	if err != nil {
-		panic(err)
-	}
-
-	fFunc := func(result any, current any) any {
-		return fGenericFunc.Call(result, current)
-	}
-
-	return q.AggregateWithSeed(seed, fFunc)
 }
 
 // AggregateWithSeedBy applies an accumulator function over a sequence. The
@@ -105,11 +63,14 @@ func (q Query) AggregateWithSeedT(seed any,
 // seed parameter is used as the initial aggregate value. The result of func
 // replaces the previous aggregated value.
 //
+// AggregateWithSeedBy is a generic method: the accumulator type TAccumulate is inferred
+// from the seed value, and the result type TResult from the resultSelector function.
+//
 // The final result of func is passed to resultSelector to obtain the final
 // result of Aggregate.
-func (q Query) AggregateWithSeedBy(seed any,
-	f func(accumulator, item any) any,
-	resultSelector func(any) any) any {
+func (q Query[T]) AggregateWithSeedBy[TAccumulate, TResult any](seed TAccumulate,
+	f func(accumulator TAccumulate, item T) TAccumulate,
+	resultSelector func(TAccumulate) TResult) TResult {
 
 	result := seed
 
@@ -118,41 +79,4 @@ func (q Query) AggregateWithSeedBy(seed any,
 	}
 
 	return resultSelector(result)
-}
-
-// AggregateWithSeedByT is the typed version of AggregateWithSeedBy.
-//
-//   - f is of type "func(TAccumulate, TSource) TAccumulate"
-//   - resultSelectorFn is of type "func(TAccumulate) TResult"
-//
-// NOTE: AggregateWithSeedBy has better performance than
-// AggregateWithSeedByT.
-func (q Query) AggregateWithSeedByT(seed any,
-	f any,
-	resultSelectorFn any) any {
-	fGenericFunc, err := newGenericFunc(
-		"AggregateWithSeedByT", "f", f,
-		simpleParamValidator(newElemTypeSlice(new(genericType), new(genericType)), newElemTypeSlice(new(genericType))),
-	)
-	if err != nil {
-		panic(err)
-	}
-
-	fFunc := func(result any, current any) any {
-		return fGenericFunc.Call(result, current)
-	}
-
-	resultSelectorGenericFunc, err := newGenericFunc(
-		"AggregateWithSeedByT", "resultSelectorFn", resultSelectorFn,
-		simpleParamValidator(newElemTypeSlice(new(genericType)), newElemTypeSlice(new(genericType))),
-	)
-	if err != nil {
-		panic(err)
-	}
-
-	resultSelectorFunc := func(result any) any {
-		return resultSelectorGenericFunc.Call(result)
-	}
-
-	return q.AggregateWithSeedBy(seed, fFunc, resultSelectorFunc)
 }
