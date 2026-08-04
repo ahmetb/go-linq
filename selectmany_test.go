@@ -6,149 +6,95 @@ import (
 )
 
 func TestSelectMany(t *testing.T) {
-	tests := []struct {
-		input    any
-		selector func(any) Query
-		output   []any
-	}{
-		{[][]int{{1, 2, 3}, {4, 5, 6, 7}}, func(i any) Query {
-			return From(i)
-		}, []any{1, 2, 3, 4, 5, 6, 7}},
-		{[]string{"str", "ing"}, func(i any) Query {
-			return FromString(i.(string))
-		}, []any{'s', 't', 'r', 'i', 'n', 'g'}},
-	}
-
-	for _, test := range tests {
-		if q := From(test.input).SelectMany(test.selector); !testQueryIteration(q, test.output) {
-			t.Errorf("From(%v).SelectMany()=%v expected %v", test.input, toSlice(q), test.output)
-		}
+	want := []int{1, 2, 3, 4, 5, 6, 7}
+	if q := FromSlice([][]int{{1, 2, 3}, {4, 5, 6, 7}}).SelectMany(func(i []int) Query[int] {
+		return FromSlice(i)
+	}); !testQueryIteration(q, want) {
+		t.Errorf("SelectMany()=%v expected %v", toSlice(q), want)
 	}
 }
 
-func TestSelectManyT_PanicWhenSelectorFnIsInvalid(t *testing.T) {
-	mustPanicWithError(t, "SelectManyT: parameter [selectorFn] has a invalid function signature. Expected: 'func(T)linq.Query', actual: 'func(int)int'", func() {
-		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).SelectManyT(func(item int) int { return item + 2 })
-	})
+func TestSelectMany_TypeChanging(t *testing.T) {
+	want := []rune{'s', 't', 'r', 'i', 'n', 'g'}
+	if q := FromSlice([]string{"str", "ing"}).SelectMany(func(s string) Query[rune] {
+		return FromString(s)
+	}); !testQueryIteration(q, want) {
+		t.Errorf("SelectMany()=%v expected %v", toSlice(q), want)
+	}
 }
 
 func TestSelectManyIndexed(t *testing.T) {
 	tests := []struct {
-		input    any
-		selector func(int, any) Query
-		output   []any
+		input    [][]int
+		selector func(int, []int) Query[int]
+		output   []int
 	}{
-		{[][]int{{1, 2, 3}, {4, 5, 6, 7}}, func(i int, x any) Query {
+		{[][]int{{1, 2, 3}, {4, 5, 6, 7}}, func(i int, x []int) Query[int] {
 			if i > 0 {
-				return From(x.([]int)[1:])
+				return FromSlice(x[1:])
 			}
-			return From(x)
-		}, []any{1, 2, 3, 5, 6, 7}},
-		{[]string{"str", "ing"}, func(i int, x any) Query {
-			return FromString(x.(string) + strconv.Itoa(i))
-		}, []any{'s', 't', 'r', '0', 'i', 'n', 'g', '1'}},
+			return FromSlice(x)
+		}, []int{1, 2, 3, 5, 6, 7}},
 	}
 
 	for _, test := range tests {
-		if q := From(test.input).SelectManyIndexed(test.selector); !testQueryIteration(q, test.output) {
-			t.Errorf("From(%v).SelectManyIndexed()=%v expected %v", test.input, toSlice(q), test.output)
+		if q := FromSlice(test.input).SelectManyIndexed(test.selector); !testQueryIteration(q, test.output) {
+			t.Errorf("SelectManyIndexed()=%v expected %v", toSlice(q), test.output)
 		}
 	}
-}
 
-func TestSelectManyIndexedT_PanicWhenSelectorFnIsInvalid(t *testing.T) {
-	mustPanicWithError(t, "SelectManyIndexedT: parameter [selectorFn] has a invalid function signature. Expected: 'func(int,T)linq.Query', actual: 'func(int)int'", func() {
-		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).SelectManyIndexedT(func(item int) int { return item + 2 })
-	})
+	want := []rune{'s', 't', 'r', '0', 'i', 'n', 'g', '1'}
+	if q := FromSlice([]string{"str", "ing"}).SelectManyIndexed(func(i int, s string) Query[rune] {
+		return FromString(s + strconv.Itoa(i))
+	}); !testQueryIteration(q, want) {
+		t.Errorf("SelectManyIndexed()=%v expected %v", toSlice(q), want)
+	}
 }
 
 func TestSelectManyBy(t *testing.T) {
-	tests := []struct {
-		input          any
-		selector       func(any) Query
-		resultSelector func(any, any) any
-		output         []any
-	}{
-		{[][]int{{1, 2, 3}, {4, 5, 6, 7}}, func(i any) Query {
-			return From(i)
-		}, func(x any, y any) any {
-			return x.(int) + 1
-		}, []any{2, 3, 4, 5, 6, 7, 8}},
-		{[]string{"str", "ing"}, func(i any) Query {
-			return FromString(i.(string))
-		}, func(x any, y any) any {
-			return string(x.(rune)) + "_"
-		}, []any{"s_", "t_", "r_", "i_", "n_", "g_"}},
-	}
-
-	for _, test := range tests {
-		if q := From(test.input).SelectManyBy(test.selector, test.resultSelector); !testQueryIteration(q, test.output) {
-			t.Errorf("From(%v).SelectManyBy()=%v expected %v", test.input, toSlice(q), test.output)
-		}
+	want := []int{2, 3, 4, 5, 6, 7, 8}
+	if q := FromSlice([][]int{{1, 2, 3}, {4, 5, 6, 7}}).SelectManyBy(
+		func(i []int) Query[int] { return FromSlice(i) },
+		func(x int, y []int) int { return x + 1 },
+	); !testQueryIteration(q, want) {
+		t.Errorf("SelectManyBy()=%v expected %v", toSlice(q), want)
 	}
 }
 
-func TestSelectManyByT_PanicWhenSelectorFnIsInvalid(t *testing.T) {
-	mustPanicWithError(t, "SelectManyByT: parameter [selectorFn] has a invalid function signature. Expected: 'func(T)linq.Query', actual: 'func(int)interface {}'", func() {
-		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).SelectManyByT(func(item int) any { return item + 2 }, 2)
-	})
+func TestSelectManyBy_TypeChanging(t *testing.T) {
+	want := []string{"s_", "t_", "r_", "i_", "n_", "g_"}
+	if q := FromSlice([]string{"str", "ing"}).SelectManyBy(
+		func(s string) Query[rune] { return FromString(s) },
+		func(r rune, s string) string { return string(r) + "_" },
+	); !testQueryIteration(q, want) {
+		t.Errorf("SelectManyBy()=%v expected %v", toSlice(q), want)
+	}
 }
 
-func TestSelectManyByT_PanicWhenResultSelectorFnIsInvalid(t *testing.T) {
-	mustPanicWithError(t, "SelectManyByT: parameter [resultSelectorFn] has a invalid function signature. Expected: 'func(T,T)T', actual: 'func()'", func() {
-		From([][]int{{1, 1, 1, 2}, {1, 2, 3, 4, 2}}).SelectManyByT(
-			func(item any) Query { return From(item) },
-			func() {},
-		)
-	})
-}
-
-func TestSelectManyIndexedBy(t *testing.T) {
-	tests := []struct {
-		input          any
-		selector       func(int, any) Query
-		resultSelector func(any, any) any
-		output         []any
-	}{
-		{[][]int{{1, 2, 3}, {4, 5, 6, 7}}, func(i int, x any) Query {
+func TestSelectManyByIndexed(t *testing.T) {
+	want := []int{11, 21, 31, 5, 6, 7, 8}
+	if q := FromSlice([][]int{{1, 2, 3}, {4, 5, 6, 7}}).SelectManyByIndexed(
+		func(i int, x []int) Query[int] {
 			if i == 0 {
-				return From([]int{10, 20, 30})
+				return FromSlice([]int{10, 20, 30})
 			}
-			return From(x)
-		}, func(x any, y any) any {
-			return x.(int) + 1
-		}, []any{11, 21, 31, 5, 6, 7, 8}},
-		{[]string{"st", "ng"}, func(i int, x any) Query {
+			return FromSlice(x)
+		},
+		func(x int, y []int) int { return x + 1 },
+	); !testQueryIteration(q, want) {
+		t.Errorf("SelectManyByIndexed()=%v expected %v", toSlice(q), want)
+	}
+
+	wantStr := []string{"s_", "t_", "r_", "i_", "n_", "g_"}
+	if q := FromSlice([]string{"st", "ng"}).SelectManyByIndexed(
+		func(i int, s string) Query[rune] {
 			if i == 0 {
-				return FromString(x.(string) + "r")
+				return FromString(s + "r")
 			}
-			return FromString("i" + x.(string))
-		}, func(x any, y any) any {
-			return string(x.(rune)) + "_"
-		}, []any{"s_", "t_", "r_", "i_", "n_", "g_"}},
+			return FromString("i" + s)
+		},
+		func(r rune, s string) string { return string(r) + "_" },
+	); !testQueryIteration(q, wantStr) {
+		t.Errorf("SelectManyByIndexed()=%v expected %v", toSlice(q), wantStr)
 	}
-
-	for _, test := range tests {
-		if q := From(test.input).SelectManyByIndexed(test.selector, test.resultSelector); !testQueryIteration(q, test.output) {
-			t.Errorf("From(%v).SelectManyIndexedBy()=%v expected %v", test.input, toSlice(q), test.output)
-		}
-	}
-}
-
-func TestSelectManyIndexedByT_PanicWhenSelectorFnIsInvalid(t *testing.T) {
-	mustPanicWithError(t, "SelectManyByIndexedT: parameter [selectorFn] has a invalid function signature. Expected: 'func(int,T)linq.Query', actual: 'func(int)interface {}'", func() {
-		From([][]int{{1, 1, 1, 2}, {1, 2, 3, 4, 2}}).SelectManyByIndexedT(
-			func(item int) any { return item + 2 },
-			2,
-		)
-	})
-}
-
-func TestSelectManyIndexedByT_PanicWhenResultSelectorFnIsInvalid(t *testing.T) {
-	mustPanicWithError(t, "SelectManyByIndexedT: parameter [resultSelectorFn] has a invalid function signature. Expected: 'func(T,T)T', actual: 'func()'", func() {
-		From([][]int{{1, 1, 1, 2}, {1, 2, 3, 4, 2}}).SelectManyByIndexedT(
-			func(index int, item any) Query { return From(item) },
-			func() {},
-		)
-	})
 }
