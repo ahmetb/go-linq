@@ -21,3 +21,11 @@ func (q query[T]) AggregateWithSeed[A any](seed A, accumulator func(A, T) A) A {
 	}
 	return result
 }
+
+func (q query[T]) AggregateWithSeedBy[A, R any](
+	seed A,
+	accumulator func(A, T) A,
+	resultSelector func(A) R,
+) R {
+	return resultSelector(q.AggregateWithSeed(seed, accumulator))
+}
