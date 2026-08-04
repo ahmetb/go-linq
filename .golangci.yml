@@ -1,7 +1,0 @@
-version: "2"
-
-linters:
-  # staticcheck v0.7.0 (bundled with golangci-lint v2.12.2) does not yet
-  # terminate while analyzing exported Go 1.27 generic methods.
-  disable:
-    - staticcheck

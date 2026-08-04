@@ -207,10 +207,9 @@ to more than 50× for reflected predicate calls.
 go1.27rc2 fmt ./...
 go1.27rc2 vet ./...
 go1.27rc2 test ./...
-golangci-lint run ./...
 ```
 
-`staticcheck` is temporarily disabled in `.golangci.yml` because the version
-bundled with golangci-lint v2.12.2 does not terminate while analyzing exported
-Go 1.27 generic methods. The remaining standard linters and `go vet` stay
-enabled.
+`golangci-lint` is not part of the current development check because its
+bundled `staticcheck` does not terminate while analyzing exported Go 1.27
+generic methods. This branch deliberately carries no linter configuration
+workaround; `go vet` remains enabled while the lint toolchain catches up.
