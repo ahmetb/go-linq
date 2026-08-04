@@ -4,7 +4,7 @@ import "testing"
 
 type allNumber int
 
-func (number allNumber) Positive() bool { return number > 0 }
+func (Number allNumber) Positive() bool { return Number > 0 }
 
 func TestTypedAllAcceptsMethodExpression(t *testing.T) {
 	if !fromSlice([]allNumber{1, 2, 3}).All(allNumber.Positive) {

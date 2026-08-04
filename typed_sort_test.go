@@ -7,7 +7,7 @@ import (
 
 type sortNumber int
 
-func (number sortNumber) Less(other sortNumber) bool { return number < other }
+func (Number sortNumber) Less(other sortNumber) bool { return Number < other }
 
 func TestTypedSortAcceptsMethodExpression(t *testing.T) {
 	source := []sortNumber{3, 1, 2}

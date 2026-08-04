@@ -1,257 +1,216 @@
-# go-linq [![GoDoc](https://godoc.org/github.com/ahmetb/go-linq?status.svg)](https://godoc.org/github.com/ahmetb/go-linq) [![Build Status](https://github.com/ahmetb/go-linq/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/ahmetb/go-linq/actions/workflows/ci.yml) [![Coverage Status](https://coveralls.io/repos/github/ahmetb/go-linq/badge.svg?branch=master)](https://coveralls.io/github/ahmetb/go-linq?branch=master) [![Go Report Card](https://goreportcard.com/badge/github.com/ahmetb/go-linq)](https://goreportcard.com/report/github.com/ahmetb/go-linq)
+# go-linq v5
 
-A powerful language integrated query (LINQ) library for Go.
+[![Build Status](https://github.com/ahmetb/go-linq/actions/workflows/ci.yml/badge.svg)](https://github.com/ahmetb/go-linq/actions/workflows/ci.yml)
+[![Go Reference](https://pkg.go.dev/badge/github.com/ahmetb/go-linq/v5.svg)](https://pkg.go.dev/github.com/ahmetb/go-linq/v5)
 
-* Written in vanilla Go, no dependencies!
-* Complete lazy evaluation with iterator pattern
-* Safe for concurrent use
-* Supports generic functions to make your code cleaner and free of type assertions
-* Supports arrays, slices, maps, strings, channels and custom collections
+A lazy, statically typed LINQ-style query library for Go 1.27.
+
+Version 5 uses Go 1.27 generic methods. A query keeps its element type through
+filtering and ordering, and methods such as `Select`, `Join`, `GroupBy`, and
+`AggregateWithSeedBy` infer their own result, key, inner, and accumulator types.
+There is no reflection or `any` in production query execution.
+
+> Go 1.27 is not yet generally available. This development branch is pinned to
+> `go1.27rc2` in `go.mod` and CI.
 
 ## Installation
 
-When used with Go modules, use the following import path:
+```sh
+go get github.com/ahmetb/go-linq/v5
+```
 
-    go get github.com/ahmetb/go-linq/v4
+Use a Go 1.27 toolchain while the generic-method implementation is under
+development:
 
-Older versions of Go using different dependency management tools can use the
-following import path to prevent breaking API changes:
+```sh
+go install golang.org/dl/go1.27rc2@latest
+go1.27rc2 download
+go1.27rc2 test ./...
+```
 
-    go get gopkg.in/ahmetb/go-linq.v4
-
-## Quickstart
-
-Usage is as easy as chaining methods like:
-
-`From(slice)` `.Where(predicate)` `.Select(selector)` `.Union(data)`
-
-**Example 1: Find all owners of cars manufactured after 2015**
+## Quick start
 
 ```go
-import . "github.com/ahmetb/go-linq/v4"
+package main
+
+import (
+	"fmt"
+
+	linq "github.com/ahmetb/go-linq/v5"
+)
 
 type Car struct {
-    year int
-    owner, model string
+	Year  int
+	Owner string
 }
 
-...
+func (car Car) OwnerName() string { return car.Owner }
 
+func main() {
+	cars := []Car{
+		{Year: 2012, Owner: "Ada"},
+		{Year: 2024, Owner: "Grace"},
+		{Year: 2020, Owner: "Linus"},
+	}
 
-var owners []string
+	owners := linq.FromSlice(cars).
+		Where(func(car Car) bool { return car.Year >= 2015 }).
+		Select(Car.OwnerName).
+		OrderBy(func(owner string) string { return owner }).
+		Results()
 
-FromSlice(cars).Where(func(c any) bool {
-	return c.(Car).year >= 2015
-}).Select(func(c any) any {
-	return c.(Car).owner
-}).ToSlice(&owners)
-```
-
-Or, you can use generic functions, like `WhereT` and `SelectT` to simplify your code
-(at a performance penalty):
-
-```go
-var owners []string
-
-FromSlice(cars).WhereT(func(c Car) bool {
-	return c.year >= 2015
-}).SelectT(func(c Car) string {
-	return c.owner
-}).ToSlice(&owners)
-```
-
-**Example 2: Find the author who has written the most books**
-
-```go
-import . "github.com/ahmetb/go-linq/v4"
-
-type Book struct {
-	id      int
-	title   string
-	authors []string
-}
-
-author := FromSlice(books).SelectMany( // make a flat array of authors
-	func(book any) Query {
-		return From(book.(Book).authors)
-	}).GroupBy( // group by author
-	func(author any) any {
-		return author // author as key
-	}, func(author any) any {
-		return author // author as value
-	}).OrderByDescending( // sort groups by its length
-	func(group any) any {
-		return len(group.(Group).Group)
-	}).Select( // get authors out of groups
-	func(group any) any {
-		return group.(Group).Key
-	}).First() // take the first author
-```
-
-**Example 3: Implement a custom method that leaves only values greater than the specified threshold**
-
-```go
-type MyQuery Query
-
-func (q MyQuery) GreaterThan(threshold int) Query {
-    return Query{
-        Iterate: func(yield func(any) bool) {
-            q.Iterate(func(item any) bool {
-                if item.(int) > threshold {
-                    return yield(item)
-                }
-                return true
-            })
-        },
-    }
-}
-
-result := MyQuery(Range(1,10)).GreaterThan(5).Results()
-```
-
-## Generic Functions
-
-Although Go doesn't implement generics, with some reflection tricks, you can use go-linq without
-typing `any`s and type assertions. This will introduce a performance penalty (5x-10x slower)
-but will yield in a cleaner and more readable code.
-
-Methods with `T` suffix (such as `WhereT`) accept functions with generic types. So instead of
-
-    .Select(func(v any) any {...})
-
-you can type:
-
-    .SelectT(func(v YourType) YourOtherType {...})
-
-This will make your code free of `any` and type assertions.
-
-**Example 4: "MapReduce" in a slice of string sentences to list the top 5 most used words using generic functions**
-
-```go
-var results []string
-
-FromSlice(sentences).
-	// split sentences to words
-	SelectManyT(func(sentence string) Query {
-		return From(strings.Split(sentence, " "))
-	}).
-	// group the words
-	GroupByT(
-		func(word string) string { return word },
-		func(word string) string { return word },
-	).
-	// order by count
-	OrderByDescendingT(func(wordGroup Group) int {
-		return len(wordGroup.Group)
-	}).
-	// order by the word
-	ThenByT(func(wordGroup Group) string {
-		return wordGroup.Key.(string)
-	}).
-	Take(5).  // take the top 5
-	// project the words using the index as rank
-	SelectIndexedT(func(index int, wordGroup Group) string {
-		return fmt.Sprintf("Rank: #%d, Word: %s, Counts: %d", index+1, wordGroup.Key, len(wordGroup.Group))
-	}).
-	ToSlice(&results)
-```
-
-## Manual Iteration
-
-Since **go-linq v4** manual iteration follows Go’s standard iterator pattern introduced with the `iter` package.
-The Query type exposes an `Iterate` field of type `iter.Seq[any]`, making it easier to integrate with Go’s native
-iteration style.
-
-**Example 5: Iterate over a query using the standard `for ... range` loop**
-
-```go
-q := FromSlice([]int{1, 2, 3, 4})
-
-for v := range q.Iterate {
-	fmt.Println(v)
+	fmt.Println(owners) // [Grace Linus]
 }
 ```
 
-**More examples** can be found in the [documentation](https://godoc.org/github.com/ahmetb/go-linq).
+`Car.OwnerName` is a method expression with type `func(Car) string`. Go 1.27
+infers `Select`'s result type, so the expression changes `Query[Car]` into
+`Query[string]` without a `SelectT` variant or a type assertion.
 
-## Data Source Constructors
+## Generic methods
 
-Since **go-linq v4**, a new family of constructor functions provides a type-safe and efficient way to create queries from
-various data sources. Each function is optimized for its specific input type, avoiding the overhead of reflection.
+The methods can introduce types independently of the receiver:
 
-Available constructors:
-- `FromSlice` - creates a query from a slice
-- `FromMap` - creates a query from a map
-- `FromChannel` - creates a query from a channel
-- `FromChannelWithContext` - creates a query from a channel with `Context` support
-- `FromString` - creates a query from a string (iterating over runes)
-- `FromIterable` - creates a query from a custom collection implementing the `Iterable` interface
+```go
+type Person struct {
+	ID   int
+	Name string
+}
 
-The older `From` function remains available for backward compatibility, but it relies on runtime reflection and is
-significantly less efficient. For all new code, it’s recommended to use the explicit `From*` constructors.
+type Pet struct {
+	OwnerID int
+	Name    string
+}
 
-## Release Notes
+func (person Person) Key() int { return person.ID }
+func (pet Pet) OwnerKey() int  { return pet.OwnerID }
 
-```text
-v4.0.0 (2025-10-12)
-* Breaking change: Migrated to standard Go iterator pattern. (thanks @kalaninja!)
-* Added typed constructors: FromSlice(), FromMap(), FromChannel(),
- FromChannelWithContext(), FromString().
-* Breaking change: Removed FromChannelT() in favor of FromChannel().
-
-v3.2.0 (2020-12-29)
-* Added FromChannelT().
-* Added DefaultIfEmpty().
-
-v3.1.0 (2019-07-09)
-* Support for Go modules
-* Added IndexOf()/IndexOfT().
-
-v3.0.0 (2017-01-10)
-* Breaking change: ToSlice() now overwrites existing slice starting
-  from index 0 and grows/reslices it as needed.
-* Generic methods support (thanks @cleitonmarx!)
-  - Accepting parametrized functions was originally proposed in #26
-  - You can now avoid type assertions and interface{}s
-  - Functions with generic methods are named as "MethodNameT" and
-    signature for the existing LINQ methods are unchanged.
-* Added ForEach(), ForEachIndexed() and AggregateWithSeedBy().
-
-v2.0.0 (2016-09-02)
-* IMPORTANT: This release is a BREAKING CHANGE. The old version
-  is archived at the 'archive/0.9' branch or the 0.9 tags.
-* A COMPLETE REWRITE of go-linq with better performance and memory
-  efficiency. (thanks @kalaninja!)
-* API has significantly changed. Most notably:
-  - linq.T removed in favor of interface{}
-  - library methods no longer return errors
-  - PLINQ removed for now (see channels support)
-  - support for channels, custom collections and comparables
-
-v0.9-rc4
-* GroupBy()
-
-v0.9-rc3.2
-* bugfix: All() iterating over values instead of indices
-
-v0.9-rc3.1
-* bugfix: modifying result slice affects subsequent query methods
-
-v0.9-rc3
-* removed FirstOrNil, LastOrNil, ElementAtOrNil methods
-
-v0.9-rc2.5
-* slice-accepting methods accept slices of any type with reflections
-
-v0.9-rc2
-* parallel linq (plinq) implemented
-* Queryable separated into Query & ParallelQuery
-* fixed early termination for All
-
-v0.9-rc1
-* many linq methods are implemented
-* methods have error handling support
-* type assertion limitations are unresolved
-* travis-ci.org build integrated
-* open sourced on github, master & dev branches
+names := linq.FromSlice(people).Join(
+	linq.FromSlice(pets),
+	Person.Key,
+	Pet.OwnerKey,
+	func(person Person, pet Pet) string {
+		return person.Name + ":" + pet.Name
+	},
+).Results()
 ```
+
+Here `Join` infers the inner element (`Pet`), shared key (`int`), and result
+(`string`) types. The same pattern powers:
+
+- `Select`, `SelectIndexed`, `SelectMany`, and `Zip`
+- `Join`, `GroupJoin`, and `GroupBy`
+- `OrderBy`, `ThenBy`, and their descending variants
+- `AggregateWithSeed` and `AggregateWithSeedBy`
+- `ToMapBy`, `SumBy`, `AverageBy`, `MinBy`, and `MaxBy`
+- keyed set and equality operations such as `DistinctBy`, `UnionBy`,
+  `ExceptBy`, `IntersectBy`, `ContainsBy`, and `SequenceEqualBy`
+
+## Constructors
+
+All constructors preserve their source types:
+
+```go
+linq.FromSlice(values)                 // Query[T]
+linq.FromMap(values)                   // Query[KeyValue[K, V]]
+linq.FromChannel(ch)                   // Query[T]
+linq.FromChannelWithContext(ctx, ch)   // Query[T]
+linq.FromString(text)                  // Query[rune]
+linq.FromIterable(collection)          // Query[T]
+linq.FromSeq(sequence)                  // Query[T]
+linq.Range(10, 5)                      // Query[int]
+linq.Repeat(value, 5)                  // Query[T]
+```
+
+The reflection-based catch-all `From(any)` constructor was removed. Explicit
+constructors give the compiler enough information to infer `T`.
+
+## Grouping and ordering
+
+`GroupBy` returns typed groups and preserves first-key encounter order:
+
+```go
+groups := linq.FromSlice(words).GroupBy(
+	func(word string) int { return len(word) },
+	func(word string) string { return word },
+).Results()
+
+for _, group := range groups {
+	fmt.Println(group.Key, group.Group)
+}
+```
+
+Ordering is stable. `ThenBy` and `ThenByDescending` append keys without
+mutating their parent ordered query:
+
+```go
+ordered := linq.FromSlice(people).
+	OrderBy(Person.LastName).
+	ThenBy(Person.FirstName)
+```
+
+## Equality and set operations
+
+Go does not allow a method to narrow `Query[T any]` to `T comparable`.
+Consequently, equality-based operations use an inferred comparable key:
+
+```go
+unique := linq.FromSlice(people).DistinctBy(Person.Key)
+found := unique.ContainsBy(42, Person.Key)
+```
+
+This permits non-comparable source values while making key comparability a
+compile-time requirement. Set operators preserve first-occurrence order and
+use true set semantics.
+
+## Results and iteration
+
+Materialize a query with `Results` or iterate it directly:
+
+```go
+result := linq.Range(1, 3).Results() // []int{1, 2, 3}
+
+for value := range linq.Range(1, 3).Iterate {
+	fmt.Println(value)
+}
+```
+
+Queries are lazy unless an operation requires complete knowledge of the
+source, such as sorting, reversing, grouping, or building a lookup for a join.
+Consumer cancellation propagates through lazy pipelines.
+
+`First`, `Last`, `Single`, and their predicate variants preserve the historical
+single-return API and return the zero value of `T` when no result exists.
+`Single` also returns zero when more than one result exists. Use `Any` or
+`Count` when absence must be distinguished from a legitimate zero value.
+
+## Migrating from v4
+
+Version 5 is intentionally breaking:
+
+- `Query` is now `Query[T]`.
+- `From(any)` and reflection dispatch are removed.
+- `...T` method variants are removed; the primary methods are statically typed.
+- `Results` returns `[]T`; `ToMapBy` returns `map[K]V` directly.
+- map queries yield `KeyValue[K,V]`, and grouping yields `Group[K,E]`.
+- unconstrained equality operations use keyed `...By` forms.
+- `SumBy` and `AverageBy` replace runtime numeric conversion methods.
+
+Comparative benchmarks retain the v4 engine as test-only code. Typical generic
+method pipelines reduce thousands of reflection allocations to single digits,
+with improvements ranging from roughly 2× for materialization-heavy operations
+to more than 50× for reflected predicate calls.
+
+## Development
+
+```sh
+go1.27rc2 fmt ./...
+go1.27rc2 vet ./...
+go1.27rc2 test ./...
+golangci-lint run ./...
+```
+
+`staticcheck` is temporarily disabled in `.golangci.yml` because the version
+bundled with golangci-lint v2.12.2 does not terminate while analyzing exported
+Go 1.27 generic methods. The remaining standard linters and `go vet` stay
+enabled.
