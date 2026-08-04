@@ -44,7 +44,7 @@ func BenchmarkTypedSingleWith(b *testing.B) {
 	b.Run("legacy_typed", func(b *testing.B) {
 		b.ReportAllocs()
 		for b.Loop() {
-			benchmarkSingleWithResult = FromSlice(source).SingleWithT(singleWithBenchmarkPredicate).(int)
+			benchmarkSingleWithResult = legacyFromSlice(source).SingleWithT(singleWithBenchmarkPredicate).(int)
 		}
 	})
 

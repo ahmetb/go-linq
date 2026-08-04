@@ -47,7 +47,7 @@ func TestTypedSelectManyStopsBothIterators(t *testing.T) {
 	}
 }
 
-func selectManyLegacy(values []int) legacyQuery { return FromSlice(values) }
+func selectManyLegacy(values []int) legacyQuery { return legacyFromSlice(values) }
 
 func selectManyTyped(values []int) Query[int] { return fromSlice(values) }
 
@@ -66,7 +66,7 @@ func BenchmarkTypedSelectMany(b *testing.B) {
 		b.ReportAllocs()
 		for b.Loop() {
 			sum := 0
-			FromSlice(source).SelectManyT(selectManyLegacy).Iterate(func(value any) bool {
+			legacyFromSlice(source).SelectManyT(selectManyLegacy).Iterate(func(value any) bool {
 				sum += value.(int)
 				return true
 			})

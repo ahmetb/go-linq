@@ -13,7 +13,7 @@ func TestTake(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		if q := From(test.input).Take(3); !testQueryIteration(q, test.output) {
+		if q := legacyFrom(test.input).Take(3); !testQueryIteration(q, test.output) {
 			t.Errorf("From(%v).Take(3)=%v expected %v", test.input, toSlice(q), test.output)
 		}
 	}
@@ -37,7 +37,7 @@ func TestTakeWhile(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		if q := From(test.input).TakeWhile(test.predicate); !testQueryIteration(q, test.output) {
+		if q := legacyFrom(test.input).TakeWhile(test.predicate); !testQueryIteration(q, test.output) {
 			t.Errorf("From(%v).TakeWhile()=%v expected %v", test.input, toSlice(q), test.output)
 		}
 	}
@@ -45,7 +45,7 @@ func TestTakeWhile(t *testing.T) {
 
 func TestTakeWhileT_PanicWhenPredicateFnIsInvalid(t *testing.T) {
 	mustPanicWithError(t, "TakeWhileT: parameter [predicateFn] has a invalid function signature. Expected: 'func(T)bool', actual: 'func(int)int'", func() {
-		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).TakeWhileT(func(item int) int { return item + 2 })
+		legacyFrom([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).TakeWhileT(func(item int) int { return item + 2 })
 	})
 }
 
@@ -67,7 +67,7 @@ func TestTakeWhileIndexed(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		if q := From(test.input).TakeWhileIndexed(test.predicate); !testQueryIteration(q, test.output) {
+		if q := legacyFrom(test.input).TakeWhileIndexed(test.predicate); !testQueryIteration(q, test.output) {
 			t.Errorf("From(%v).TakeWhileIndexed()=%v expected %v", test.input, toSlice(q), test.output)
 		}
 	}
@@ -75,6 +75,6 @@ func TestTakeWhileIndexed(t *testing.T) {
 
 func TestTakeWhileIndexedT_PanicWhenPredicateFnIsInvalid(t *testing.T) {
 	mustPanicWithError(t, "TakeWhileIndexedT: parameter [predicateFn] has a invalid function signature. Expected: 'func(int,T)bool', actual: 'func(int)int'", func() {
-		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).TakeWhileIndexedT(func(item int) int { return item + 2 })
+		legacyFrom([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).TakeWhileIndexedT(func(item int) int { return item + 2 })
 	})
 }

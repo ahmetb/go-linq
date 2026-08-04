@@ -6,7 +6,7 @@ import (
 )
 
 func TestEmpty(t *testing.T) {
-	q := From([]string{}).OrderBy(func(in any) any {
+	q := legacyFrom([]string{}).OrderBy(func(in any) any {
 		return 0
 	})
 
@@ -26,7 +26,7 @@ func TestOrderBy(t *testing.T) {
 		slice[i].f1 = i
 	}
 
-	q := From(slice).OrderBy(func(i any) any {
+	q := legacyFrom(slice).OrderBy(func(i any) any {
 		return i.(foo).f1
 	})
 
@@ -45,7 +45,7 @@ func TestOrderBy(t *testing.T) {
 
 func TestOrderByT_PanicWhenSelectorFnIsInvalid(t *testing.T) {
 	mustPanicWithError(t, "OrderByT: parameter [selectorFn] has a invalid function signature. Expected: 'func(T)T', actual: 'func(int,int)int'", func() {
-		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).OrderByT(func(item, j int) int { return item + 2 })
+		legacyFrom([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).OrderByT(func(item, j int) int { return item + 2 })
 	})
 }
 
@@ -56,7 +56,7 @@ func TestOrderByDescending(t *testing.T) {
 		slice[i].f1 = i
 	}
 
-	q := From(slice).OrderByDescending(func(i any) any {
+	q := legacyFrom(slice).OrderByDescending(func(i any) any {
 		return i.(foo).f1
 	})
 
@@ -75,7 +75,7 @@ func TestOrderByDescending(t *testing.T) {
 
 func TestOrderByDescendingT_PanicWhenSelectorFnIsInvalid(t *testing.T) {
 	mustPanicWithError(t, "OrderByDescendingT: parameter [selectorFn] has a invalid function signature. Expected: 'func(T)T', actual: 'func(int,int)int'", func() {
-		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).OrderByDescendingT(func(item, j int) int { return item + 2 })
+		legacyFrom([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).OrderByDescendingT(func(item, j int) int { return item + 2 })
 	})
 }
 
@@ -87,7 +87,7 @@ func TestThenBy(t *testing.T) {
 		slice[i].f2 = i%2 == 0
 	}
 
-	q := From(slice).OrderBy(func(i any) any {
+	q := legacyFrom(slice).OrderBy(func(i any) any {
 		return i.(foo).f2
 	}).ThenBy(func(i any) any {
 		return i.(foo).f1
@@ -105,7 +105,7 @@ func TestThenBy(t *testing.T) {
 
 func TestThenBy_Abort(t *testing.T) {
 	input := []int{1, 2, 3, 4, 5, 6, 7, 8, 9}
-	q := From(input).OrderBy(func(i any) any {
+	q := legacyFrom(input).OrderBy(func(i any) any {
 		return i.(int)
 	}).ThenBy(func(i any) any {
 		return i.(int)
@@ -116,7 +116,7 @@ func TestThenBy_Abort(t *testing.T) {
 
 func TestThenByT_PanicWhenSelectorFnIsInvalid(t *testing.T) {
 	mustPanicWithError(t, "ThenByT: parameter [selectorFn] has a invalid function signature. Expected: 'func(T)T', actual: 'func(int,int)bool'", func() {
-		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).
+		legacyFrom([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).
 			OrderByT(func(item int) int { return item }).
 			ThenByT(func(item, j int) bool { return true })
 	})
@@ -130,7 +130,7 @@ func TestThenByDescending(t *testing.T) {
 		slice[i].f2 = i%2 == 0
 	}
 
-	q := From(slice).OrderBy(func(i any) any {
+	q := legacyFrom(slice).OrderBy(func(i any) any {
 		return i.(foo).f2
 	}).ThenByDescending(func(i any) any {
 		return i.(foo).f1
@@ -148,7 +148,7 @@ func TestThenByDescending(t *testing.T) {
 
 func TestThenByDescending_Abort(t *testing.T) {
 	input := []int{1, 2, 3, 4, 5, 6, 7, 8, 9}
-	q := From(input).OrderBy(func(i any) any {
+	q := legacyFrom(input).OrderBy(func(i any) any {
 		return i.(int)
 	}).ThenByDescending(func(i any) any {
 		return i.(int)
@@ -159,7 +159,7 @@ func TestThenByDescending_Abort(t *testing.T) {
 
 func TestThenByDescendingT_PanicWhenSelectorFnIsInvalid(t *testing.T) {
 	mustPanicWithError(t, "ThenByDescending: parameter [selectorFn] has a invalid function signature. Expected: 'func(T)T', actual: 'func(int,int)bool'", func() {
-		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).
+		legacyFrom([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).
 			OrderByT(func(item int) int { return item }).
 			ThenByDescendingT(func(item, j int) bool { return true })
 	})
@@ -172,7 +172,7 @@ func TestSort(t *testing.T) {
 		slice[i].f1 = i
 	}
 
-	q := From(slice).Sort(func(i, j any) bool {
+	q := legacyFrom(slice).Sort(func(i, j any) bool {
 		return i.(foo).f1 < j.(foo).f1
 	})
 
@@ -192,7 +192,7 @@ func TestSort(t *testing.T) {
 func TestSort_Abort(t *testing.T) {
 	input := []int{1, 2, 3, 4, 5, 6, 7, 8, 9}
 
-	q := From(input).Sort(func(i, j any) bool {
+	q := legacyFrom(input).Sort(func(i, j any) bool {
 		return i.(int) < j.(int)
 	})
 
@@ -201,6 +201,6 @@ func TestSort_Abort(t *testing.T) {
 
 func TestSortT_PanicWhenLessFnIsInvalid(t *testing.T) {
 	mustPanicWithError(t, "SortT: parameter [lessFn] has a invalid function signature. Expected: 'func(T,T)bool', actual: 'func(int,int)string'", func() {
-		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).SortT(func(i, j int) string { return "" })
+		legacyFrom([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).SortT(func(i, j int) string { return "" })
 	})
 }

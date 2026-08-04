@@ -60,7 +60,7 @@ func BenchmarkTypedSelect(b *testing.B) {
 		b.ReportAllocs()
 		for b.Loop() {
 			sum := 0
-			FromSlice(source).Select(selectDoubleAny).Iterate(func(value any) bool {
+			legacyFromSlice(source).Select(selectDoubleAny).Iterate(func(value any) bool {
 				sum += value.(int)
 				return true
 			})
@@ -72,7 +72,7 @@ func BenchmarkTypedSelect(b *testing.B) {
 		b.ReportAllocs()
 		for b.Loop() {
 			sum := 0
-			FromSlice(source).SelectT(selectDouble).Iterate(func(value any) bool {
+			legacyFromSlice(source).SelectT(selectDouble).Iterate(func(value any) bool {
 				sum += value.(int)
 				return true
 			})

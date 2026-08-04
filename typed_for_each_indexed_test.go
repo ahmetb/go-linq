@@ -38,7 +38,7 @@ func BenchmarkTypedForEachIndexed(b *testing.B) {
 		b.ReportAllocs()
 		for b.Loop() {
 			sum := 0
-			FromSlice(source).ForEachIndexedT(func(index, value int) {
+			legacyFromSlice(source).ForEachIndexedT(func(index, value int) {
 				sum += index + value
 			})
 			benchmarkForEachIndexedSum = sum

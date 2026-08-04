@@ -32,7 +32,7 @@ func BenchmarkTypedAggregateWithSeed(b *testing.B) {
 	b.Run("legacy_typed", func(b *testing.B) {
 		b.ReportAllocs()
 		for b.Loop() {
-			benchmarkAggregateWithSeedResult = FromSlice(source).AggregateWithSeedT(0, aggregateSum).(int)
+			benchmarkAggregateWithSeedResult = legacyFromSlice(source).AggregateWithSeedT(0, aggregateSum).(int)
 		}
 	})
 

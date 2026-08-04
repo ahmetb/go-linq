@@ -17,7 +17,7 @@ func TestWhere(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		if q := From(test.input).Where(test.predicate); !testQueryIteration(q, test.output) {
+		if q := legacyFrom(test.input).Where(test.predicate); !testQueryIteration(q, test.output) {
 			t.Errorf("From(%v).Where()=%v expected %v", test.input, toSlice(q), test.output)
 		}
 	}
@@ -25,7 +25,7 @@ func TestWhere(t *testing.T) {
 
 func TestWhereT_PanicWhenPredicateFnIsInvalid(t *testing.T) {
 	mustPanicWithError(t, "WhereT: parameter [predicateFn] has a invalid function signature. Expected: 'func(T)bool', actual: 'func(int)int'", func() {
-		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).WhereT(func(item int) int { return item + 2 })
+		legacyFrom([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).WhereT(func(item int) int { return item + 2 })
 	})
 }
 
@@ -47,7 +47,7 @@ func TestWhereIndexed(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		if q := From(test.input).WhereIndexed(test.predicate); !testQueryIteration(q, test.output) {
+		if q := legacyFrom(test.input).WhereIndexed(test.predicate); !testQueryIteration(q, test.output) {
 			t.Errorf("From(%v).WhereIndexed()=%v expected %v", test.input, toSlice(q), test.output)
 		}
 	}
@@ -55,6 +55,6 @@ func TestWhereIndexed(t *testing.T) {
 
 func TestWhereIndexedT_PanicWhenPredicateFnIsInvalid(t *testing.T) {
 	mustPanicWithError(t, "WhereIndexedT: parameter [predicateFn] has a invalid function signature. Expected: 'func(int,T)bool', actual: 'func(string)'", func() {
-		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).WhereIndexedT(func(item string) {})
+		legacyFrom([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).WhereIndexedT(func(item string) {})
 	})
 }

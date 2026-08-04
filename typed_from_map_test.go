@@ -8,8 +8,8 @@ import (
 func TestTypedFromMapPreservesKeyAndValueTypes(t *testing.T) {
 	source := map[int]string{1: "one", 2: "two"}
 	got := fromMap(source).ToMapBy(
-		func(item keyValue[int, string]) int { return item.Key },
-		func(item keyValue[int, string]) string { return item.Value },
+		func(item KeyValue[int, string]) int { return item.Key },
+		func(item KeyValue[int, string]) string { return item.Value },
 	)
 
 	if !maps.Equal(got, source) {
@@ -19,7 +19,7 @@ func TestTypedFromMapPreservesKeyAndValueTypes(t *testing.T) {
 
 func TestTypedFromMapStopsWithConsumer(t *testing.T) {
 	calls := 0
-	fromMap(map[int]int{1: 1, 2: 2}).iterate(func(keyValue[int, int]) bool {
+	fromMap(map[int]int{1: 1, 2: 2}).iterate(func(KeyValue[int, int]) bool {
 		calls++
 		return false
 	})
@@ -41,8 +41,8 @@ func BenchmarkTypedFromMap(b *testing.B) {
 		b.ReportAllocs()
 		for b.Loop() {
 			sum := 0
-			FromMap(source).Iterate(func(value any) bool {
-				item := value.(KeyValue)
+			legacyFromMap(source).Iterate(func(value any) bool {
+				item := value.(legacyKeyValue)
 				sum += item.Key.(int) + item.Value.(int)
 				return true
 			})
@@ -54,7 +54,7 @@ func BenchmarkTypedFromMap(b *testing.B) {
 		b.ReportAllocs()
 		for b.Loop() {
 			sum := 0
-			fromMap(source).iterate(func(item keyValue[int, int]) bool {
+			fromMap(source).iterate(func(item KeyValue[int, int]) bool {
 				sum += item.Key + item.Value
 				return true
 			})

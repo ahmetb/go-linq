@@ -34,12 +34,12 @@ func TestIndexOf(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		index := From(test.input).IndexOf(test.predicate)
+		index := legacyFrom(test.input).IndexOf(test.predicate)
 		if index != test.expected {
 			t.Errorf("From(%v).IndexOf() expected %v received %v", test.input, test.expected, index)
 		}
 
-		index = From(test.input).IndexOfT(test.predicate)
+		index = legacyFrom(test.input).IndexOfT(test.predicate)
 		if index != test.expected {
 			t.Errorf("From(%v).IndexOfT() expected %v received %v", test.input, test.expected, index)
 		}
@@ -48,6 +48,6 @@ func TestIndexOf(t *testing.T) {
 
 func TestIndexOfT_PanicWhenPredicateFnIsInvalid(t *testing.T) {
 	mustPanicWithError(t, "IndexOfT: parameter [predicateFn] has a invalid function signature. Expected: 'func(T)bool', actual: 'func(int)int'", func() {
-		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).IndexOfT(func(item int) int { return item + 2 })
+		legacyFrom([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).IndexOfT(func(item int) int { return item + 2 })
 	})
 }

@@ -43,7 +43,7 @@ func BenchmarkTypedAverageBy(b *testing.B) {
 	b.Run("legacy", func(b *testing.B) {
 		b.ReportAllocs()
 		for b.Loop() {
-			benchmarkAverageByResult = FromSlice(source).Average()
+			benchmarkAverageByResult = legacyFromSlice(source).Average()
 		}
 	})
 

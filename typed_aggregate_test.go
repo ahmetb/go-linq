@@ -27,7 +27,7 @@ func BenchmarkTypedAggregate(b *testing.B) {
 	b.Run("legacy_typed", func(b *testing.B) {
 		b.ReportAllocs()
 		for b.Loop() {
-			benchmarkAggregateResult = FromSlice(source).AggregateT(aggregateSum).(int)
+			benchmarkAggregateResult = legacyFromSlice(source).AggregateT(aggregateSum).(int)
 		}
 	})
 

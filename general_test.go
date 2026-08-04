@@ -20,7 +20,7 @@ func TestChannelToChannel(t *testing.T) {
 	}()
 
 	go func() {
-		FromChannel(inpCh).Where(func(i any) bool {
+		legacyFromChannel(inpCh).Where(func(i any) bool {
 			return i.(int) > 20
 		}).ToChannel(resCh)
 	}()

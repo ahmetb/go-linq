@@ -10,18 +10,18 @@ func ExampleKeyValue() {
 	m := make(map[int]bool)
 	m[10] = true
 
-	fmt.Println(From(m).Results())
+	fmt.Println(legacyFrom(m).Results())
 	// Output:
 	// [{10 true}]
 }
 
 func ExampleKeyValue_second() {
-	input := []KeyValue{
+	input := []legacyKeyValue{
 		{10, true},
 	}
 
 	m := make(map[int]bool)
-	From(input).
+	legacyFrom(input).
 		ToMap(&m)
 
 	fmt.Println(m)
@@ -35,7 +35,7 @@ func ExampleRange() {
 	// Generate a slice of integers from 1 to 10
 	// and then select their squares.
 	var squares []int
-	Range(1, 10).
+	legacyRange(1, 10).
 		SelectT(
 			func(x int) int { return x * x },
 		).
@@ -61,7 +61,7 @@ func ExampleRange() {
 // to generate a slice of a repeated value.
 func ExampleRepeat() {
 	var slice []string
-	Repeat("I like programming.", 5).
+	legacyRepeat("I like programming.", 5).
 		ToSlice(&slice)
 
 	for _, str := range slice {
@@ -77,7 +77,7 @@ func ExampleRepeat() {
 }
 
 func ExampleQuery() {
-	query := From([]int{1, 2, 3, 4, 5}).Where(func(i any) bool {
+	query := legacyFrom([]int{1, 2, 3, 4, 5}).Where(func(i any) bool {
 		return i.(int) <= 3
 	})
 
@@ -95,7 +95,7 @@ func ExamplelegacyQuery_Aggregate() {
 	fruits := []string{"apple", "mango", "orange", "passionfruit", "grape"}
 
 	// Determine which string in the slice is the longest.
-	longestName := From(fruits).
+	longestName := legacyFrom(fruits).
 		Aggregate(
 			func(r any, i any) any {
 				if len(r.(string)) > len(i.(string)) {
@@ -115,7 +115,7 @@ func ExamplelegacyQuery_AggregateWithSeed() {
 	ints := []int{4, 8, 8, 3, 9, 0, 7, 8, 2}
 
 	// Count the even numbers in the array, using a seed value of 0.
-	numEven := From(ints).
+	numEven := legacyFrom(ints).
 		AggregateWithSeed(0,
 			func(total, next any) any {
 				if next.(int)%2 == 0 {
@@ -135,7 +135,7 @@ func ExamplelegacyQuery_AggregateWithSeedBy() {
 	input := []string{"apple", "mango", "orange", "passionfruit", "grape"}
 
 	// Determine whether any string in the array is longer than "banana".
-	longestName := From(input).
+	longestName := legacyFrom(input).
 		AggregateWithSeedBy("banana",
 			func(longest any, next any) any {
 				if len(longest.(string)) > len(next.(string)) {
@@ -161,7 +161,7 @@ func ExampleOrderedQuery_Distinct() {
 	ages := []int{21, 46, 46, 55, 17, 21, 55, 55}
 
 	var distinctAges []int
-	From(ages).
+	legacyFrom(ages).
 		OrderBy(
 			func(item any) any { return item },
 		).
@@ -190,7 +190,7 @@ func ExampleOrderedQuery_DistinctBy() {
 
 	//Order and exclude duplicates.
 	var noduplicates []Product
-	From(products).
+	legacyFrom(products).
 		OrderBy(
 			func(item any) any { return item.(Product).Name },
 		).
@@ -216,7 +216,7 @@ func ExampleOrderedQuery_ThenBy() {
 	// Sort the strings first by their length and then
 	//alphabetically by passing the identity selector function.
 	var query []string
-	From(fruits).
+	legacyFrom(fruits).
 		OrderBy(
 			func(fruit any) any { return len(fruit.(string)) },
 		).
@@ -258,7 +258,7 @@ func ExamplelegacyQuery_All() {
 
 	// Determine whether all pet names
 	// in the array start with 'B'.
-	allStartWithB := From(pets).
+	allStartWithB := legacyFrom(pets).
 		All(
 			func(pet any) bool { return strings.HasPrefix(pet.(Pet).Name, "B") },
 		)
@@ -274,7 +274,7 @@ func ExamplelegacyQuery_All() {
 func ExamplelegacyQuery_Any() {
 
 	numbers := []int{1, 2}
-	hasElements := From(numbers).Any()
+	hasElements := legacyFrom(numbers).Any()
 
 	fmt.Printf("Are there any element in the list? %t", hasElements)
 	// Output:
@@ -298,7 +298,7 @@ func ExamplelegacyQuery_AnyWith() {
 	}
 
 	// Determine whether any pets over age 1 are also unvaccinated.
-	unvaccinated := From(pets).
+	unvaccinated := legacyFrom(pets).
 		AnyWith(
 			func(p any) bool {
 				return p.(Pet).Age > 1 && p.(Pet).Vaccinated == false
@@ -316,7 +316,7 @@ func ExamplelegacyQuery_AnyWith() {
 func ExamplelegacyQuery_Append() {
 	input := []int{1, 2, 3, 4}
 
-	q := From(input).Append(5)
+	q := legacyFrom(input).Append(5)
 
 	last := q.Last()
 
@@ -329,7 +329,7 @@ func ExamplelegacyQuery_Append() {
 // to calculate the average of a slice of values.
 func ExamplelegacyQuery_Average() {
 	grades := []int{78, 92, 100, 37, 81}
-	average := From(grades).Average()
+	average := legacyFrom(grades).Average()
 
 	fmt.Println(average)
 	// Output:
@@ -340,7 +340,7 @@ func ExamplelegacyQuery_Average() {
 // to count the elements in an array.
 func ExamplelegacyQuery_Count() {
 	fruits := []string{"apple", "banana", "mango", "orange", "passionfruit", "grape"}
-	numberOfFruits := From(fruits).Count()
+	numberOfFruits := legacyFrom(fruits).Count()
 
 	fmt.Println(numberOfFruits)
 	// Output:
@@ -352,7 +352,7 @@ func ExamplelegacyQuery_Count() {
 func ExamplelegacyQuery_Contains() {
 	slice := []int{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
 
-	has5 := From(slice).Contains(5)
+	has5 := legacyFrom(slice).Contains(5)
 
 	fmt.Printf("Does the slice contains 5? %t", has5)
 	// Output:
@@ -364,7 +364,7 @@ func ExamplelegacyQuery_Contains() {
 func ExamplelegacyQuery_CountWith() {
 	slice := []int{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
 
-	evenCount := From(slice).
+	evenCount := legacyFrom(slice).
 		CountWith(
 			func(item any) bool { return item.(int)%2 == 0 },
 		)
@@ -416,15 +416,15 @@ func ExamplelegacyQuery_DefaultIfEmpty() {
 	pets := []Pet{barley, boots, whiskers, bluemoon, daisy}
 
 	results := []string{}
-	From(people).
+	legacyFrom(people).
 		GroupJoinT(
-			From(pets),
+			legacyFrom(pets),
 			func(person Person) Person { return person },
 			func(pet Pet) Person { return pet.Owner },
-			func(person Person, pets []Pet) Group { return Group{Key: person, Group: From(pets).Results()} },
+			func(person Person, pets []Pet) Group { return Group{Key: person, Group: legacyFrom(pets).Results()} },
 		).
 		SelectManyByT(
-			func(g Group) legacyQuery { return From(g.Group).DefaultIfEmpty(Pet{}) },
+			func(g Group) legacyQuery { return legacyFrom(g.Group).DefaultIfEmpty(Pet{}) },
 			func(pet Pet, group Group) string {
 				return fmt.Sprintf("%s: %s", group.Key.(Person).FirstName, pet.Name)
 			},
@@ -450,7 +450,7 @@ func ExamplelegacyQuery_Distinct() {
 	ages := []int{21, 46, 46, 55, 17, 21, 55, 55}
 
 	var distinctAges []int
-	From(ages).
+	legacyFrom(ages).
 		Distinct().
 		ToSlice(&distinctAges)
 
@@ -476,7 +476,7 @@ func ExamplelegacyQuery_DistinctBy() {
 
 	//Order and exclude duplicates.
 	var noduplicates []Product
-	From(products).
+	legacyFrom(products).
 		DistinctBy(
 			func(item any) any { return item.(Product).Code },
 		).
@@ -500,8 +500,8 @@ func ExamplelegacyQuery_Except() {
 	numbers2 := []float32{2.2}
 
 	var onlyInFirstSet []float32
-	From(numbers1).
-		Except(From(numbers2)).
+	legacyFrom(numbers1).
+		Except(legacyFrom(numbers2)).
 		ToSlice(&onlyInFirstSet)
 
 	for _, number := range onlyInFirstSet {
@@ -538,8 +538,8 @@ func ExamplelegacyQuery_ExceptBy() {
 
 	//Order and exclude duplicates.
 	var except []Product
-	From(fruits1).
-		ExceptBy(From(fruits2),
+	legacyFrom(fruits1).
+		ExceptBy(legacyFrom(fruits2),
 			func(item any) any { return item.(Product).Code },
 		).
 		ToSlice(&except)
@@ -558,7 +558,7 @@ func ExamplelegacyQuery_ExceptBy() {
 func ExamplelegacyQuery_First() {
 	numbers := []int{9, 34, 65, 92, 87, 435, 3, 54, 83, 23, 87, 435, 67, 12, 19}
 
-	first := From(numbers).First()
+	first := legacyFrom(numbers).First()
 
 	fmt.Println(first)
 	// Output:
@@ -571,7 +571,7 @@ func ExamplelegacyQuery_First() {
 func ExamplelegacyQuery_FirstWith() {
 	numbers := []int{9, 34, 65, 92, 87, 435, 3, 54, 83, 23, 87, 435, 67, 12, 19}
 
-	first := From(numbers).
+	first := legacyFrom(numbers).
 		FirstWith(
 			func(item any) bool { return item.(int) > 80 },
 		)
@@ -589,8 +589,8 @@ func ExamplelegacyQuery_Intersect() {
 	id2 := []int{39, 59, 83, 47, 26, 4, 30}
 
 	var both []int
-	From(id1).
-		Intersect(From(id2)).
+	legacyFrom(id1).
+		Intersect(legacyFrom(id2)).
 		ToSlice(&both)
 
 	for _, id := range both {
@@ -621,8 +621,8 @@ func ExamplelegacyQuery_IntersectBy() {
 	}
 
 	var duplicates []Product
-	From(store1).
-		IntersectBy(From(store2),
+	legacyFrom(store1).
+		IntersectBy(legacyFrom(store2),
 			func(p any) any { return p.(Product).Code },
 		).
 		ToSlice(&duplicates)
@@ -641,7 +641,7 @@ func ExamplelegacyQuery_Last() {
 	numbers := []int{9, 34, 65, 92, 87, 435, 3, 54,
 		83, 23, 87, 67, 12, 19}
 
-	last := From(numbers).Last()
+	last := legacyFrom(numbers).Last()
 
 	fmt.Println(last)
 
@@ -656,7 +656,7 @@ func ExamplelegacyQuery_LastWith() {
 	numbers := []int{9, 34, 65, 92, 87, 435, 3, 54,
 		83, 23, 87, 67, 12, 19}
 
-	last := From(numbers).
+	last := legacyFrom(numbers).
 		LastWith(
 			func(n any) bool { return n.(int) > 80 },
 		)
@@ -673,7 +673,7 @@ func ExamplelegacyQuery_LastWith() {
 func ExamplelegacyQuery_Max() {
 	numbers := []int64{4294967296, 466855135, 81125}
 
-	last := From(numbers).Max()
+	last := legacyFrom(numbers).Max()
 
 	fmt.Println(last)
 
@@ -687,7 +687,7 @@ func ExamplelegacyQuery_Max() {
 func ExamplelegacyQuery_Min() {
 	grades := []int{78, 92, 99, 37, 81}
 
-	min := From(grades).Min()
+	min := legacyFrom(grades).Min()
 
 	fmt.Println(min)
 
@@ -702,7 +702,7 @@ func ExamplelegacyQuery_OrderByDescending() {
 	names := []string{"Ned", "Ben", "Susan"}
 
 	var result []string
-	From(names).
+	legacyFrom(names).
 		OrderByDescending(
 			func(n any) any { return n },
 		).ToSlice(&result)
@@ -720,7 +720,7 @@ func ExampleOrderedQuery_ThenByDescending() {
 	// Sort the strings first ascending by their length and
 	// then descending using a custom case-insensitive comparer.
 	var query []string
-	From(fruits).
+	legacyFrom(fruits).
 		OrderBy(
 			func(fruit any) any { return len(fruit.(string)) },
 		).
@@ -748,8 +748,8 @@ func ExampleOrderedQuery_ThenByDescending() {
 // The following code example demonstrates how to use Concat
 // to concatenate two slices.
 func ExamplelegacyQuery_Concat() {
-	q := From([]int{1, 2, 3}).
-		Concat(From([]int{4, 5, 6}))
+	q := legacyFrom([]int{1, 2, 3}).
+		Concat(legacyFrom([]int{4, 5, 6}))
 
 	fmt.Println(q.Results())
 	// Output:
@@ -759,7 +759,7 @@ func ExamplelegacyQuery_Concat() {
 func ExamplelegacyQuery_GroupBy() {
 	input := []int{1, 2, 3, 4, 5, 6, 7, 8, 9}
 
-	q := From(input).GroupBy(
+	q := legacyFrom(input).GroupBy(
 		func(i any) any { return i.(int) % 2 },
 		func(i any) any { return i.(int) })
 
@@ -781,12 +781,12 @@ func ExamplelegacyQuery_GroupJoin() {
 		"clementine",
 	}
 
-	q := FromString("abc").
-		GroupJoin(From(fruits),
+	q := legacyFromString("abc").
+		GroupJoin(legacyFrom(fruits),
 			func(i any) any { return i },
 			func(i any) any { return []rune(i.(string))[0] },
 			func(outer any, inners []any) any {
-				return KeyValue{string(outer.(rune)), inners}
+				return legacyKeyValue{string(outer.(rune)), inners}
 			},
 		)
 
@@ -822,7 +822,7 @@ func ExamplelegacyQuery_IndexOf() {
 		},
 	}
 
-	index := From(items).IndexOf(func(i any) bool {
+	index := legacyFrom(items).IndexOf(func(i any) bool {
 		item, ok := i.(Item)
 		return ok && item.Name == "Rickster"
 	})
@@ -847,12 +847,12 @@ func ExamplelegacyQuery_Join() {
 		"clementine",
 	}
 
-	q := Range(1, 10).
-		Join(From(fruits),
+	q := legacyRange(1, 10).
+		Join(legacyFrom(fruits),
 			func(i any) any { return i },
 			func(i any) any { return len(i.(string)) },
 			func(outer any, inner any) any {
-				return KeyValue{outer, inner}
+				return legacyKeyValue{outer, inner}
 			},
 		)
 
@@ -864,7 +864,7 @@ func ExamplelegacyQuery_Join() {
 // The following code example demonstrates how to use OrderBy
 // to sort the elements of a slice.
 func ExamplelegacyQuery_OrderBy() {
-	q := Range(1, 10).
+	q := legacyRange(1, 10).
 		OrderBy(
 			func(i any) any { return i.(int) % 2 },
 		).
@@ -882,7 +882,7 @@ func ExamplelegacyQuery_OrderBy() {
 func ExamplelegacyQuery_Prepend() {
 	input := []int{2, 3, 4, 5}
 
-	q := From(input).Prepend(1)
+	q := legacyFrom(input).Prepend(1)
 	first := q.First()
 
 	fmt.Println(first)
@@ -896,7 +896,7 @@ func ExamplelegacyQuery_Reverse() {
 	input := "apple"
 
 	var output []rune
-	From(input).
+	legacyFrom(input).
 		Reverse().
 		ToSlice(&output)
 
@@ -910,7 +910,7 @@ func ExamplelegacyQuery_Reverse() {
 func ExamplelegacyQuery_Select() {
 	squares := []int{}
 
-	Range(1, 10).
+	legacyRange(1, 10).
 		Select(
 			func(x any) any { return x.(int) * x.(int) },
 		).
@@ -924,9 +924,9 @@ func ExamplelegacyQuery_Select() {
 func ExamplelegacyQuery_SelectMany() {
 	input := [][]int{{1, 2, 3}, {4, 5, 6, 7}}
 
-	q := From(input).
+	q := legacyFrom(input).
 		SelectMany(
-			func(i any) legacyQuery { return From(i) },
+			func(i any) legacyQuery { return legacyFrom(i) },
 		)
 
 	fmt.Println(q.Results())
@@ -940,7 +940,7 @@ func ExamplelegacyQuery_SelectIndexed() {
 	fruits := []string{"apple", "banana", "mango", "orange", "passionfruit", "grape"}
 
 	result := []string{}
-	From(fruits).
+	legacyFrom(fruits).
 		SelectIndexed(
 			func(index int, fruit any) any { return fruit.(string)[:index] },
 		).
@@ -981,10 +981,10 @@ func ExamplelegacyQuery_SelectManyByIndexed() {
 	people := []Person{magnus, terry, charlotte}
 	var results []string
 
-	From(people).
+	legacyFrom(people).
 		SelectManyByIndexed(
 			func(index int, person any) legacyQuery {
-				return From(person.(Person).Pets).
+				return legacyFrom(person.(Person).Pets).
 					Select(func(pet any) any {
 						return fmt.Sprintf("%d - %s", index, pet.(Pet).Name)
 					})
@@ -1040,9 +1040,9 @@ func ExamplelegacyQuery_SelectManyIndexed() {
 	logFiles := []LogFile{file1, file2, file3}
 	var results []string
 
-	From(logFiles).
+	legacyFrom(logFiles).
 		SelectManyIndexedT(func(fileIndex int, file LogFile) legacyQuery {
-			return From(file.Lines).
+			return legacyFrom(file.Lines).
 				SelectIndexedT(func(lineIndex int, line string) string {
 					return fmt.Sprintf("File:[%d] - %s => line: %d - %s", fileIndex+1, file.Name, lineIndex+1, line)
 				})
@@ -1090,9 +1090,9 @@ func ExamplelegacyQuery_SelectManyBy() {
 
 	people := []Person{magnus, terry, charlotte}
 	var results []string
-	From(people).
+	legacyFrom(people).
 		SelectManyBy(
-			func(person any) legacyQuery { return From(person.(Person).Pets) },
+			func(person any) legacyQuery { return legacyFrom(person.(Person).Pets) },
 			func(pet, person any) any {
 				return fmt.Sprintf("Owner: %s, Pet: %s", person.(Person).Name, pet.(Pet).Name)
 			},
@@ -1131,7 +1131,7 @@ func ExamplelegacyQuery_SequenceEqual() {
 		{Name: "Daisy", Age: 4},
 	}
 
-	equal := From(pets1).SequenceEqual(From(pets2))
+	equal := legacyFrom(pets1).SequenceEqual(legacyFrom(pets2))
 
 	fmt.Printf("Are the lists equals? %t", equal)
 	// Output:
@@ -1143,7 +1143,7 @@ func ExamplelegacyQuery_SequenceEqual() {
 func ExamplelegacyQuery_Single() {
 	fruits1 := []string{"orange"}
 
-	fruit1 := From(fruits1).Single()
+	fruit1 := legacyFrom(fruits1).Single()
 
 	fmt.Println(fruit1)
 	// Output:
@@ -1155,7 +1155,7 @@ func ExamplelegacyQuery_Single() {
 func ExamplelegacyQuery_SingleWith() {
 	fruits := []string{"apple", "banana", "mango", "orange", "passionfruit", "grape"}
 
-	fruit := From(fruits).
+	fruit := legacyFrom(fruits).
 		SingleWith(
 			func(f any) bool { return len(f.(string)) > 10 },
 		)
@@ -1171,7 +1171,7 @@ func ExamplelegacyQuery_SingleWith() {
 func ExamplelegacyQuery_Skip() {
 	grades := []int{59, 82, 70, 56, 92, 98, 85}
 	var lowerGrades []int
-	From(grades).
+	legacyFrom(grades).
 		OrderByDescending(
 			func(g any) any { return g },
 		).
@@ -1189,7 +1189,7 @@ func ExamplelegacyQuery_Skip() {
 func ExamplelegacyQuery_SkipWhile() {
 	grades := []int{59, 82, 70, 56, 92, 98, 85}
 	var lowerGrades []int
-	From(grades).
+	legacyFrom(grades).
 		OrderByDescending(
 			func(g any) any { return g },
 		).
@@ -1211,7 +1211,7 @@ func ExamplelegacyQuery_SkipWhileIndexed() {
 	amounts := []int{5000, 2500, 9000, 8000, 6500, 4000, 1500, 5500}
 
 	var query []int
-	From(amounts).
+	legacyFrom(amounts).
 		SkipWhileIndexed(
 			func(index int, amount any) bool { return amount.(int) > index*1000 },
 		).
@@ -1229,7 +1229,7 @@ func ExamplelegacyQuery_Sort() {
 	amounts := []int{5000, 2500, 9000, 8000, 6500, 4000, 1500, 5500}
 
 	var query []int
-	From(amounts).
+	legacyFrom(amounts).
 		Sort(
 			func(i any, j any) bool { return i.(int) < j.(int) },
 		).
@@ -1246,7 +1246,7 @@ func ExamplelegacyQuery_Sort() {
 func ExamplelegacyQuery_SumFloats() {
 	numbers := []float64{43.68, 1.25, 583.7, 6.5}
 
-	sum := From(numbers).SumFloats()
+	sum := legacyFrom(numbers).SumFloats()
 
 	fmt.Printf("The sum of the numbers is %f.", sum)
 	// Output:
@@ -1259,7 +1259,7 @@ func ExamplelegacyQuery_SumFloats() {
 func ExamplelegacyQuery_SumInts() {
 	numbers := []int{43, 1, 583, 6}
 
-	sum := From(numbers).SumInts()
+	sum := legacyFrom(numbers).SumInts()
 
 	fmt.Printf("The sum of the numbers is %d.", sum)
 	// Output:
@@ -1272,7 +1272,7 @@ func ExamplelegacyQuery_SumInts() {
 func ExamplelegacyQuery_SumUInts() {
 	numbers := []uint{43, 1, 583, 6}
 
-	sum := From(numbers).SumUInts()
+	sum := legacyFrom(numbers).SumUInts()
 
 	fmt.Printf("The sum of the numbers is %d.", sum)
 	// Output:
@@ -1286,7 +1286,7 @@ func ExamplelegacyQuery_Take() {
 	grades := []int{59, 82, 70, 56, 92, 98, 85}
 
 	var topThreeGrades []int
-	From(grades).
+	legacyFrom(grades).
 		OrderByDescending(
 			func(grade any) any { return grade },
 		).
@@ -1304,7 +1304,7 @@ func ExamplelegacyQuery_TakeWhile() {
 	fruits := []string{"apple", "banana", "mango", "orange", "passionfruit", "grape"}
 
 	var query []string
-	From(fruits).
+	legacyFrom(fruits).
 		TakeWhile(
 			func(fruit any) bool { return fruit.(string) != "orange" },
 		).
@@ -1324,7 +1324,7 @@ func ExamplelegacyQuery_TakeWhileIndexed() {
 		"orange", "blueberry", "grape", "strawberry"}
 
 	var query []string
-	From(fruits).
+	legacyFrom(fruits).
 		TakeWhileIndexed(
 			func(index int, fruit any) bool { return len(fruit.(string)) >= index },
 		).
@@ -1341,7 +1341,7 @@ func ExamplelegacyQuery_ToChannel() {
 	c := make(chan any)
 
 	go func() {
-		Repeat(10, 3).ToChannel(c)
+		legacyRepeat(10, 3).ToChannel(c)
 	}()
 
 	for i := range c {
@@ -1358,7 +1358,7 @@ func ExamplelegacyQuery_ToChannel() {
 func ExamplelegacyQuery_ToChannelT() {
 	c := make(chan string)
 
-	go Repeat("ten", 3).ToChannelT(c)
+	go legacyRepeat("ten", 3).ToChannelT(c)
 
 	for i := range c {
 		fmt.Println(i)
@@ -1384,9 +1384,9 @@ func ExamplelegacyQuery_ToMap() {
 	}
 
 	map1 := map[int]string{}
-	From(products).
+	legacyFrom(products).
 		SelectT(
-			func(item Product) KeyValue { return KeyValue{Key: item.Code, Value: item.Name} },
+			func(item Product) legacyKeyValue { return legacyKeyValue{Key: item.Code, Value: item.Name} },
 		).
 		ToMap(&map1)
 
@@ -1405,7 +1405,7 @@ func ExamplelegacyQuery_ToMapBy() {
 	input := [][]any{{1, true}}
 
 	result := make(map[int]bool)
-	From(input).
+	legacyFrom(input).
 		ToMapBy(&result,
 			func(i any) any {
 				return i.([]any)[0]
@@ -1423,7 +1423,7 @@ func ExamplelegacyQuery_ToMapBy() {
 // The following code example demonstrates how to use ToSlice to populate a slice.
 func ExamplelegacyQuery_ToSlice() {
 	var result []int
-	Range(1, 10).ToSlice(&result)
+	legacyRange(1, 10).ToSlice(&result)
 
 	fmt.Println(result)
 	// Output:
@@ -1433,7 +1433,7 @@ func ExamplelegacyQuery_ToSlice() {
 // The following code example demonstrates how to use Union
 // to obtain the union of two slices of integers.
 func ExamplelegacyQuery_Union() {
-	q := Range(1, 10).Union(Range(6, 10))
+	q := legacyRange(1, 10).Union(legacyRange(6, 10))
 
 	fmt.Println(q.Results())
 	// Output:
@@ -1446,7 +1446,7 @@ func ExamplelegacyQuery_Where() {
 	fruits := []string{"apple", "passionfruit", "banana", "mango",
 		"orange", "blueberry", "grape", "strawberry"}
 	var query []string
-	From(fruits).
+	legacyFrom(fruits).
 		Where(
 			func(f any) bool { return len(f.(string)) > 6 },
 		).
@@ -1463,7 +1463,7 @@ func ExamplelegacyQuery_WhereIndexed() {
 	numbers := []int{0, 30, 20, 15, 90, 85, 40, 75}
 
 	var query []int
-	From(numbers).
+	legacyFrom(numbers).
 		WhereIndexed(
 			func(index int, number any) bool { return number.(int) <= index*10 },
 		).
@@ -1480,8 +1480,8 @@ func ExamplelegacyQuery_Zip() {
 	number := []int{1, 2, 3, 4, 5}
 	words := []string{"one", "two", "three"}
 
-	q := From(number).
-		Zip(From(words),
+	q := legacyFrom(number).
+		Zip(legacyFrom(words),
 			func(a any, b any) any { return []any{a, b} },
 		)
 
@@ -1502,7 +1502,7 @@ func ExampleOrderedQuery_ThenByDescendingT() {
 	}
 
 	var orderedDates []time.Time
-	From(dates).
+	legacyFrom(dates).
 		OrderByT(
 			func(date time.Time) int {
 				return date.Year()
@@ -1536,7 +1536,7 @@ func ExampleOrderedQuery_ThenByT() {
 	}
 
 	var orderedDates []time.Time
-	From(dates).
+	legacyFrom(dates).
 		OrderByT(
 			func(date time.Time) int { return date.Year() },
 		).
@@ -1566,7 +1566,7 @@ func ExamplelegacyQuery_AggregateT() {
 
 	// Prepend each word to the beginning of the
 	// new sentence to reverse the word order.
-	reversed := From(words).AggregateT(
+	reversed := legacyFrom(words).AggregateT(
 		func(workingSentence string, next string) string { return next + " " + workingSentence },
 	)
 
@@ -1581,7 +1581,7 @@ func ExamplelegacyQuery_AggregateWithSeedT() {
 	fruits := []string{"apple", "mango", "orange", "passionfruit", "grape"}
 
 	// Determine whether any string in the array is longer than "banana".
-	longestName := From(fruits).
+	longestName := legacyFrom(fruits).
 		AggregateWithSeedT("banana",
 			func(longest, next string) string {
 				if len(next) > len(longest) {
@@ -1602,7 +1602,7 @@ func ExamplelegacyQuery_AggregateWithSeedByT() {
 	input := []string{"apple", "mango", "orange", "passionfruit", "grape"}
 
 	// Determine whether any string in the array is longer than "banana".
-	longestName := From(input).AggregateWithSeedByT("banana",
+	longestName := legacyFrom(input).AggregateWithSeedByT("banana",
 		func(longest string, next string) string {
 			if len(longest) > len(next) {
 				return longest
@@ -1639,10 +1639,10 @@ func ExamplelegacyQuery_AllT() {
 	}
 
 	var approvedStudents []Student
-	From(students).
+	legacyFrom(students).
 		WhereT(
 			func(student Student) bool {
-				return From(student.Marks).
+				return legacyFrom(student.Marks).
 					AllT(
 						func(mark int) bool { return mark > 70 },
 					)
@@ -1676,10 +1676,10 @@ func ExamplelegacyQuery_AnyWithT() {
 	}
 
 	var studentsWithAnyMarkLt70 []Student
-	From(students).
+	legacyFrom(students).
 		WhereT(
 			func(student Student) bool {
-				return From(student.Marks).
+				return legacyFrom(student.Marks).
 					AnyWithT(
 						func(mark int) bool { return mark < 70 },
 					)
@@ -1712,7 +1712,7 @@ func ExamplelegacyQuery_CountWithT() {
 		{Name: "Whiskers", Vaccinated: false},
 	}
 
-	numberUnvaccinated := From(pets).
+	numberUnvaccinated := legacyFrom(pets).
 		CountWithT(
 			func(p Pet) bool { return p.Vaccinated == false },
 		)
@@ -1740,7 +1740,7 @@ func ExamplelegacyQuery_DistinctByT() {
 
 	//Exclude duplicates.
 	var noduplicates []Product
-	From(products).
+	legacyFrom(products).
 		DistinctByT(
 			func(item Product) int { return item.Code },
 		).
@@ -1775,8 +1775,8 @@ func ExamplelegacyQuery_ExceptByT() {
 
 	//Order and exclude duplicates.
 	var except []Product
-	From(fruits1).
-		ExceptByT(From(fruits2),
+	legacyFrom(fruits1).
+		ExceptByT(legacyFrom(fruits2),
 			func(item Product) int { return item.Code },
 		).
 		ToSlice(&except)
@@ -1795,7 +1795,7 @@ func ExamplelegacyQuery_ExceptByT() {
 func ExamplelegacyQuery_FirstWithT() {
 	numbers := []int{9, 34, 65, 92, 87, 435, 3, 54, 83, 23, 87, 435, 67, 12, 19}
 
-	first := From(numbers).
+	first := legacyFrom(numbers).
 		FirstWithT(
 			func(item int) bool { return item > 80 },
 		)
@@ -1811,7 +1811,7 @@ func ExamplelegacyQuery_FirstWithT() {
 func ExamplelegacyQuery_ForEach() {
 	fruits := []string{"orange", "apple", "lemon", "apple"}
 
-	From(fruits).ForEach(func(fruit any) {
+	legacyFrom(fruits).ForEach(func(fruit any) {
 		fmt.Println(fruit)
 	})
 	// Output:
@@ -1826,7 +1826,7 @@ func ExamplelegacyQuery_ForEach() {
 func ExamplelegacyQuery_ForEachIndexed() {
 	fruits := []string{"orange", "apple", "lemon", "apple"}
 
-	From(fruits).ForEachIndexed(func(i int, fruit any) {
+	legacyFrom(fruits).ForEachIndexed(func(i int, fruit any) {
 		fmt.Printf("%d.%s\n", i, fruit)
 	})
 	// Output:
@@ -1841,7 +1841,7 @@ func ExamplelegacyQuery_ForEachIndexed() {
 func ExamplelegacyQuery_ForEachT() {
 	fruits := []string{"orange", "apple", "lemon", "apple"}
 
-	From(fruits).ForEachT(func(fruit string) {
+	legacyFrom(fruits).ForEachT(func(fruit string) {
 		fmt.Println(fruit)
 	})
 	// Output:
@@ -1856,7 +1856,7 @@ func ExamplelegacyQuery_ForEachT() {
 func ExamplelegacyQuery_ForEachIndexedT() {
 	fruits := []string{"orange", "apple", "lemon", "apple"}
 
-	From(fruits).ForEachIndexedT(func(i int, fruit string) {
+	legacyFrom(fruits).ForEachIndexedT(func(i int, fruit string) {
 		fmt.Printf("%d.%s\n", i, fruit)
 	})
 	// Output:
@@ -1885,7 +1885,7 @@ func ExamplelegacyQuery_GroupByT() {
 	// Group the pets using Age as the key value
 	// and selecting only the pet's Name for each value.
 	var query []Group
-	From(pets).GroupByT(
+	legacyFrom(pets).GroupByT(
 		func(p Pet) int { return p.Age },
 		func(p Pet) string { return p.Name },
 	).OrderByT(
@@ -1938,19 +1938,19 @@ func ExamplelegacyQuery_GroupJoinT() {
 	// that contains a person's name as the key and a slice of strings
 	// of names of the pets they own as a value.
 
-	q := []KeyValue{}
-	From(people).
-		GroupJoinT(From(pets),
+	q := []legacyKeyValue{}
+	legacyFrom(people).
+		GroupJoinT(legacyFrom(pets),
 			func(p Person) Person { return p },
 			func(p Pet) Person { return p.Owner },
-			func(person Person, pets []Pet) KeyValue {
+			func(person Person, pets []Pet) legacyKeyValue {
 				var petNames []string
-				From(pets).
+				legacyFrom(pets).
 					SelectT(
 						func(pet Pet) string { return pet.Name },
 					).
 					ToSlice(&petNames)
-				return KeyValue{person.Name, petNames}
+				return legacyKeyValue{person.Name, petNames}
 			},
 		).ToSlice(&q)
 
@@ -1992,8 +1992,8 @@ func ExamplelegacyQuery_IntersectByT() {
 	}
 
 	var duplicates []Product
-	From(store1).
-		IntersectByT(From(store2),
+	legacyFrom(store1).
+		IntersectByT(legacyFrom(store2),
 			func(p Product) int { return p.Code },
 		).
 		ToSlice(&duplicates)
@@ -2035,8 +2035,8 @@ func ExamplelegacyQuery_JoinT() {
 	// Pet's name and the name of the Person that owns the Pet.
 
 	query := []string{}
-	From(people).
-		JoinT(From(pets),
+	legacyFrom(people).
+		JoinT(legacyFrom(pets),
 			func(person Person) Person { return person },
 			func(pet Pet) Person { return pet.Owner },
 			func(person Person, pet Pet) string { return fmt.Sprintf("%s - %s", person.Name, pet.Name) },
@@ -2058,7 +2058,7 @@ func ExamplelegacyQuery_LastWithT() {
 	numbers := []int{9, 34, 65, 92, 87, 435, 3, 54,
 		83, 23, 87, 67, 12, 19}
 
-	last := From(numbers).
+	last := legacyFrom(numbers).
 		LastWithT(
 			func(n int) bool { return n > 80 },
 		)
@@ -2087,14 +2087,14 @@ func ExamplelegacyQuery_OrderByDescendingT() {
 	}
 
 	//Order and get the top 3 players
-	var top3Players []KeyValue
-	From(players).
+	var top3Players []legacyKeyValue
+	legacyFrom(players).
 		OrderByDescendingT(
 			func(p Player) int64 { return p.Points },
 		).
 		Take(3).
 		SelectIndexedT(
-			func(i int, p Player) KeyValue { return KeyValue{Key: i + 1, Value: p} },
+			func(i int, p Player) legacyKeyValue { return legacyKeyValue{Key: i + 1, Value: p} },
 		).
 		ToSlice(&top3Players)
 
@@ -2129,7 +2129,7 @@ func ExamplelegacyQuery_OrderByT() {
 	}
 
 	var orderedPets []Pet
-	From(pets).
+	legacyFrom(pets).
 		OrderByT(
 			func(pet Pet) int { return pet.Age },
 		).
@@ -2150,7 +2150,7 @@ func ExamplelegacyQuery_OrderByT() {
 func ExamplelegacyQuery_SelectT() {
 	squares := []int{}
 
-	Range(1, 10).
+	legacyRange(1, 10).
 		SelectT(
 			func(x int) int { return x * x },
 		).
@@ -2167,11 +2167,11 @@ func ExamplelegacyQuery_SelectT() {
 func ExamplelegacyQuery_SelectIndexedT() {
 	numbers := []int{5, 4, 1, 3, 9, 8, 6, 7, 2, 0}
 
-	var numsInPlace []KeyValue
+	var numsInPlace []legacyKeyValue
 
-	From(numbers).
+	legacyFrom(numbers).
 		SelectIndexedT(
-			func(index, num int) KeyValue { return KeyValue{Key: num, Value: (num == index)} },
+			func(index, num int) legacyKeyValue { return legacyKeyValue{Key: num, Value: (num == index)} },
 		).
 		ToSlice(&numsInPlace)
 
@@ -2223,9 +2223,9 @@ func ExamplelegacyQuery_SelectManyByT() {
 
 	people := []Person{magnus, terry, charlotte}
 	var results []string
-	From(people).
+	legacyFrom(people).
 		SelectManyByT(
-			func(person Person) legacyQuery { return From(person.Pets) },
+			func(person Person) legacyQuery { return legacyFrom(person.Pets) },
 			func(pet Pet, person Person) any {
 				return fmt.Sprintf("Owner: %s, Pet: %s", person.Name, pet.Name)
 			},
@@ -2257,10 +2257,10 @@ func ExamplelegacyQuery_SelectManyT() {
 	}
 
 	var results []string
-	From(sentences).
+	legacyFrom(sentences).
 		//Split the sentences in words
 		SelectManyT(func(sentence string) legacyQuery {
-			return From(strings.Split(sentence, " "))
+			return legacyFrom(strings.Split(sentence, " "))
 		}).
 		//Grouping by word
 		GroupByT(
@@ -2329,9 +2329,9 @@ func ExamplelegacyQuery_SelectManyIndexedT() {
 	logFiles := []LogFile{file1, file2, file3}
 	var results []string
 
-	From(logFiles).
+	legacyFrom(logFiles).
 		SelectManyIndexedT(func(fileIndex int, file LogFile) legacyQuery {
-			return From(file.Lines).
+			return legacyFrom(file.Lines).
 				SelectIndexedT(func(lineIndex int, line string) string {
 					return fmt.Sprintf("File:[%d] - %s => line: %d - %s", fileIndex+1, file.Name, lineIndex+1, line)
 				})
@@ -2380,10 +2380,10 @@ func ExamplelegacyQuery_SelectManyByIndexedT() {
 	people := []Person{magnus, terry, charlotte}
 	var results []string
 
-	From(people).
+	legacyFrom(people).
 		SelectManyByIndexedT(
 			func(index int, person Person) legacyQuery {
-				return From(person.Pets).
+				return legacyFrom(person.Pets).
 					SelectT(func(pet Pet) string {
 						return fmt.Sprintf("%d - %s", index, pet.Name)
 					})
@@ -2410,7 +2410,7 @@ func ExamplelegacyQuery_SelectManyByIndexedT() {
 func ExamplelegacyQuery_SingleWithT() {
 	fruits := []string{"apple", "banana", "mango", "orange", "passionfruit", "grape"}
 
-	fruit := From(fruits).
+	fruit := legacyFrom(fruits).
 		SingleWithT(
 			func(f string) bool { return len(f) > 10 },
 		)
@@ -2425,7 +2425,7 @@ func ExamplelegacyQuery_SingleWithT() {
 func ExamplelegacyQuery_SkipWhileT() {
 	grades := []int{59, 82, 70, 56, 92, 98, 85}
 	var lowerGrades []int
-	From(grades).
+	legacyFrom(grades).
 		OrderByDescendingT(
 			func(g int) int { return g },
 		).
@@ -2447,7 +2447,7 @@ func ExamplelegacyQuery_SkipWhileIndexedT() {
 	amounts := []int{5000, 2500, 9000, 8000, 6500, 4000, 1500, 5500}
 
 	var query []int
-	From(amounts).
+	legacyFrom(amounts).
 		SkipWhileIndexedT(
 			func(index int, amount int) bool { return amount > index*1000 },
 		).
@@ -2475,7 +2475,7 @@ func ExamplelegacyQuery_SortT() {
 	}
 
 	orderedPets := []Pet{}
-	From(pets).
+	legacyFrom(pets).
 		SortT(
 			func(pet1 Pet, pet2 Pet) bool { return pet1.Age < pet2.Age },
 		).
@@ -2498,7 +2498,7 @@ func ExamplelegacyQuery_TakeWhileT() {
 	fruits := []string{"apple", "banana", "mango", "orange", "passionfruit", "grape"}
 
 	var query []string
-	From(fruits).
+	legacyFrom(fruits).
 		TakeWhileT(
 			func(fruit string) bool { return fruit != "orange" },
 		).
@@ -2518,7 +2518,7 @@ func ExamplelegacyQuery_TakeWhileIndexedT() {
 		"orange", "blueberry", "grape", "strawberry"}
 
 	var query []string
-	From(fruits).
+	legacyFrom(fruits).
 		TakeWhileIndexedT(
 			func(index int, fruit string) bool { return len(fruit) >= index },
 		).
@@ -2545,7 +2545,7 @@ func ExamplelegacyQuery_ToMapByT() {
 	}
 
 	map1 := map[int]string{}
-	From(products).
+	legacyFrom(products).
 		ToMapByT(&map1,
 			func(item Product) int { return item.Code },
 			func(item Product) string { return item.Name },
@@ -2566,7 +2566,7 @@ func ExamplelegacyQuery_WhereT() {
 	fruits := []string{"apple", "passionfruit", "banana", "mango",
 		"orange", "blueberry", "grape", "strawberry"}
 	var query []string
-	From(fruits).
+	legacyFrom(fruits).
 		WhereT(
 			func(f string) bool { return len(f) > 6 },
 		).
@@ -2583,7 +2583,7 @@ func ExamplelegacyQuery_WhereIndexedT() {
 	numbers := []int{0, 30, 20, 15, 90, 85, 40, 75}
 
 	var query []int
-	From(numbers).
+	legacyFrom(numbers).
 		WhereIndexedT(
 			func(index int, number int) bool { return number <= index*10 },
 		).
@@ -2600,8 +2600,8 @@ func ExamplelegacyQuery_ZipT() {
 	number := []int{1, 2, 3, 4, 5}
 	words := []string{"one", "two", "three"}
 
-	q := From(number).
-		ZipT(From(words),
+	q := legacyFrom(number).
+		ZipT(legacyFrom(words),
 			func(a int, b string) []any { return []any{a, b} },
 		)
 
@@ -2619,7 +2619,7 @@ func ExampleFromChannel() {
 	ch <- "three"
 	close(ch)
 
-	q := FromChannel(ch)
+	q := legacyFromChannel(ch)
 
 	fmt.Println(q.Results())
 	// Output:
@@ -2642,7 +2642,7 @@ func (q MyQuery) GreaterThan(threshold int) legacyQuery {
 }
 
 func ExampleMyQuery_GreaterThan() {
-	result := MyQuery(Range(1, 10)).GreaterThan(5).Results()
+	result := MyQuery(legacyRange(1, 10)).GreaterThan(5).Results()
 	fmt.Println(result)
 	// Output:
 	// [6 7 8 9 10]

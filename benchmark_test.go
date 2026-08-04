@@ -18,7 +18,7 @@ func BenchmarkTypedCore(b *testing.B) {
 		b.ReportAllocs()
 		for b.Loop() {
 			var result []int
-			FromSlice(source).ToSlice(&result)
+			legacyFromSlice(source).ToSlice(&result)
 			benchmarkIntSlice = result
 		}
 	})
@@ -33,7 +33,7 @@ func BenchmarkTypedCore(b *testing.B) {
 
 func BenchmarkSelectWhereFirst(b *testing.B) {
 	for n := 0; n < b.N; n++ {
-		Range(1, size).Select(func(i any) any {
+		legacyRange(1, size).Select(func(i any) any {
 			return -i.(int)
 		}).Where(func(i any) bool {
 			return i.(int) > -1000
@@ -43,7 +43,7 @@ func BenchmarkSelectWhereFirst(b *testing.B) {
 
 func BenchmarkSelectWhereFirst_generics(b *testing.B) {
 	for n := 0; n < b.N; n++ {
-		Range(1, size).SelectT(func(i int) int {
+		legacyRange(1, size).SelectT(func(i int) int {
 			return -i
 		}).WhereT(func(i int) bool {
 			return i > -1000
@@ -53,7 +53,7 @@ func BenchmarkSelectWhereFirst_generics(b *testing.B) {
 
 func BenchmarkSum(b *testing.B) {
 	for n := 0; n < b.N; n++ {
-		Range(1, size).Where(func(i any) bool {
+		legacyRange(1, size).Where(func(i any) bool {
 			return i.(int)%2 == 0
 		}).SumInts()
 	}
@@ -61,7 +61,7 @@ func BenchmarkSum(b *testing.B) {
 
 func BenchmarkSum_generics(b *testing.B) {
 	for n := 0; n < b.N; n++ {
-		Range(1, size).WhereT(func(i int) bool {
+		legacyRange(1, size).WhereT(func(i int) bool {
 			return i%2 == 0
 		}).SumInts()
 	}
@@ -69,7 +69,7 @@ func BenchmarkSum_generics(b *testing.B) {
 
 func BenchmarkZipSkipTake(b *testing.B) {
 	for n := 0; n < b.N; n++ {
-		Range(1, size).Zip(Range(1, size).Select(func(i any) any {
+		legacyRange(1, size).Zip(legacyRange(1, size).Select(func(i any) any {
 			return i.(int) * 2
 		}), func(i, j any) any {
 			return i.(int) + j.(int)
@@ -79,7 +79,7 @@ func BenchmarkZipSkipTake(b *testing.B) {
 
 func BenchmarkZipSkipTake_generics(b *testing.B) {
 	for n := 0; n < b.N; n++ {
-		Range(1, size).ZipT(Range(1, size).SelectT(func(i int) int {
+		legacyRange(1, size).ZipT(legacyRange(1, size).SelectT(func(i int) int {
 			return i * 2
 		}), func(i, j int) int {
 			return i + j

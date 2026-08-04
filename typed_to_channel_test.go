@@ -53,7 +53,7 @@ func BenchmarkTypedToChannel(b *testing.B) {
 		b.ReportAllocs()
 		for b.Loop() {
 			result := make(chan int, len(source))
-			FromSlice(source).ToChannelT(result)
+			legacyFromSlice(source).ToChannelT(result)
 			sum := 0
 			for value := range result {
 				sum += value

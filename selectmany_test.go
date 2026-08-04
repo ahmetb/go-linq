@@ -12,15 +12,15 @@ func TestSelectMany(t *testing.T) {
 		output   []any
 	}{
 		{[][]int{{1, 2, 3}, {4, 5, 6, 7}}, func(i any) legacyQuery {
-			return From(i)
+			return legacyFrom(i)
 		}, []any{1, 2, 3, 4, 5, 6, 7}},
 		{[]string{"str", "ing"}, func(i any) legacyQuery {
-			return FromString(i.(string))
+			return legacyFromString(i.(string))
 		}, []any{'s', 't', 'r', 'i', 'n', 'g'}},
 	}
 
 	for _, test := range tests {
-		if q := From(test.input).SelectMany(test.selector); !testQueryIteration(q, test.output) {
+		if q := legacyFrom(test.input).SelectMany(test.selector); !testQueryIteration(q, test.output) {
 			t.Errorf("From(%v).SelectMany()=%v expected %v", test.input, toSlice(q), test.output)
 		}
 	}
@@ -28,7 +28,7 @@ func TestSelectMany(t *testing.T) {
 
 func TestSelectManyT_PanicWhenSelectorFnIsInvalid(t *testing.T) {
 	mustPanicWithError(t, "SelectManyT: parameter [selectorFn] has a invalid function signature. Expected: 'func(T)linq.legacyQuery', actual: 'func(int)int'", func() {
-		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).SelectManyT(func(item int) int { return item + 2 })
+		legacyFrom([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).SelectManyT(func(item int) int { return item + 2 })
 	})
 }
 
@@ -40,17 +40,17 @@ func TestSelectManyIndexed(t *testing.T) {
 	}{
 		{[][]int{{1, 2, 3}, {4, 5, 6, 7}}, func(i int, x any) legacyQuery {
 			if i > 0 {
-				return From(x.([]int)[1:])
+				return legacyFrom(x.([]int)[1:])
 			}
-			return From(x)
+			return legacyFrom(x)
 		}, []any{1, 2, 3, 5, 6, 7}},
 		{[]string{"str", "ing"}, func(i int, x any) legacyQuery {
-			return FromString(x.(string) + strconv.Itoa(i))
+			return legacyFromString(x.(string) + strconv.Itoa(i))
 		}, []any{'s', 't', 'r', '0', 'i', 'n', 'g', '1'}},
 	}
 
 	for _, test := range tests {
-		if q := From(test.input).SelectManyIndexed(test.selector); !testQueryIteration(q, test.output) {
+		if q := legacyFrom(test.input).SelectManyIndexed(test.selector); !testQueryIteration(q, test.output) {
 			t.Errorf("From(%v).SelectManyIndexed()=%v expected %v", test.input, toSlice(q), test.output)
 		}
 	}
@@ -58,7 +58,7 @@ func TestSelectManyIndexed(t *testing.T) {
 
 func TestSelectManyIndexedT_PanicWhenSelectorFnIsInvalid(t *testing.T) {
 	mustPanicWithError(t, "SelectManyIndexedT: parameter [selectorFn] has a invalid function signature. Expected: 'func(int,T)linq.legacyQuery', actual: 'func(int)int'", func() {
-		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).SelectManyIndexedT(func(item int) int { return item + 2 })
+		legacyFrom([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).SelectManyIndexedT(func(item int) int { return item + 2 })
 	})
 }
 
@@ -70,19 +70,19 @@ func TestSelectManyBy(t *testing.T) {
 		output         []any
 	}{
 		{[][]int{{1, 2, 3}, {4, 5, 6, 7}}, func(i any) legacyQuery {
-			return From(i)
+			return legacyFrom(i)
 		}, func(x any, y any) any {
 			return x.(int) + 1
 		}, []any{2, 3, 4, 5, 6, 7, 8}},
 		{[]string{"str", "ing"}, func(i any) legacyQuery {
-			return FromString(i.(string))
+			return legacyFromString(i.(string))
 		}, func(x any, y any) any {
 			return string(x.(rune)) + "_"
 		}, []any{"s_", "t_", "r_", "i_", "n_", "g_"}},
 	}
 
 	for _, test := range tests {
-		if q := From(test.input).SelectManyBy(test.selector, test.resultSelector); !testQueryIteration(q, test.output) {
+		if q := legacyFrom(test.input).SelectManyBy(test.selector, test.resultSelector); !testQueryIteration(q, test.output) {
 			t.Errorf("From(%v).SelectManyBy()=%v expected %v", test.input, toSlice(q), test.output)
 		}
 	}
@@ -90,14 +90,14 @@ func TestSelectManyBy(t *testing.T) {
 
 func TestSelectManyByT_PanicWhenSelectorFnIsInvalid(t *testing.T) {
 	mustPanicWithError(t, "SelectManyByT: parameter [selectorFn] has a invalid function signature. Expected: 'func(T)linq.legacyQuery', actual: 'func(int)interface {}'", func() {
-		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).SelectManyByT(func(item int) any { return item + 2 }, 2)
+		legacyFrom([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).SelectManyByT(func(item int) any { return item + 2 }, 2)
 	})
 }
 
 func TestSelectManyByT_PanicWhenResultSelectorFnIsInvalid(t *testing.T) {
 	mustPanicWithError(t, "SelectManyByT: parameter [resultSelectorFn] has a invalid function signature. Expected: 'func(T,T)T', actual: 'func()'", func() {
-		From([][]int{{1, 1, 1, 2}, {1, 2, 3, 4, 2}}).SelectManyByT(
-			func(item any) legacyQuery { return From(item) },
+		legacyFrom([][]int{{1, 1, 1, 2}, {1, 2, 3, 4, 2}}).SelectManyByT(
+			func(item any) legacyQuery { return legacyFrom(item) },
 			func() {},
 		)
 	})
@@ -112,24 +112,24 @@ func TestSelectManyIndexedBy(t *testing.T) {
 	}{
 		{[][]int{{1, 2, 3}, {4, 5, 6, 7}}, func(i int, x any) legacyQuery {
 			if i == 0 {
-				return From([]int{10, 20, 30})
+				return legacyFrom([]int{10, 20, 30})
 			}
-			return From(x)
+			return legacyFrom(x)
 		}, func(x any, y any) any {
 			return x.(int) + 1
 		}, []any{11, 21, 31, 5, 6, 7, 8}},
 		{[]string{"st", "ng"}, func(i int, x any) legacyQuery {
 			if i == 0 {
-				return FromString(x.(string) + "r")
+				return legacyFromString(x.(string) + "r")
 			}
-			return FromString("i" + x.(string))
+			return legacyFromString("i" + x.(string))
 		}, func(x any, y any) any {
 			return string(x.(rune)) + "_"
 		}, []any{"s_", "t_", "r_", "i_", "n_", "g_"}},
 	}
 
 	for _, test := range tests {
-		if q := From(test.input).SelectManyByIndexed(test.selector, test.resultSelector); !testQueryIteration(q, test.output) {
+		if q := legacyFrom(test.input).SelectManyByIndexed(test.selector, test.resultSelector); !testQueryIteration(q, test.output) {
 			t.Errorf("From(%v).SelectManyIndexedBy()=%v expected %v", test.input, toSlice(q), test.output)
 		}
 	}
@@ -137,7 +137,7 @@ func TestSelectManyIndexedBy(t *testing.T) {
 
 func TestSelectManyIndexedByT_PanicWhenSelectorFnIsInvalid(t *testing.T) {
 	mustPanicWithError(t, "SelectManyByIndexedT: parameter [selectorFn] has a invalid function signature. Expected: 'func(int,T)linq.legacyQuery', actual: 'func(int)interface {}'", func() {
-		From([][]int{{1, 1, 1, 2}, {1, 2, 3, 4, 2}}).SelectManyByIndexedT(
+		legacyFrom([][]int{{1, 1, 1, 2}, {1, 2, 3, 4, 2}}).SelectManyByIndexedT(
 			func(item int) any { return item + 2 },
 			2,
 		)
@@ -146,8 +146,8 @@ func TestSelectManyIndexedByT_PanicWhenSelectorFnIsInvalid(t *testing.T) {
 
 func TestSelectManyIndexedByT_PanicWhenResultSelectorFnIsInvalid(t *testing.T) {
 	mustPanicWithError(t, "SelectManyByIndexedT: parameter [resultSelectorFn] has a invalid function signature. Expected: 'func(T,T)T', actual: 'func()'", func() {
-		From([][]int{{1, 1, 1, 2}, {1, 2, 3, 4, 2}}).SelectManyByIndexedT(
-			func(index int, item any) legacyQuery { return From(item) },
+		legacyFrom([][]int{{1, 1, 1, 2}, {1, 2, 3, 4, 2}}).SelectManyByIndexedT(
+			func(index int, item any) legacyQuery { return legacyFrom(item) },
 			func() {},
 		)
 	})

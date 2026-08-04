@@ -10,7 +10,7 @@ func TestUnion(t *testing.T) {
 	input2 := []int{2, 4, 5, 1}
 	want := []any{1, 2, 3, 4, 5}
 
-	if q := From(input1).Union(From(input2)); !testQueryIteration(q, want) {
+	if q := legacyFrom(input1).Union(legacyFrom(input2)); !testQueryIteration(q, want) {
 		t.Errorf("From(%v).Union(%v)=%v expected %v", input1, input2, toSlice(q), want)
 	}
 }
@@ -38,7 +38,7 @@ func TestUnion_Abort(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			q := From(input1).Union(From(input2))
+			q := legacyFrom(input1).Union(legacyFrom(input2))
 
 			var results []any
 			i := 0

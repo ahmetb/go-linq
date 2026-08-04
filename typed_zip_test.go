@@ -47,7 +47,7 @@ func BenchmarkTypedZip(b *testing.B) {
 		b.ReportAllocs()
 		for b.Loop() {
 			sum := 0
-			FromSlice(left).ZipT(FromSlice(right), zipSum).Iterate(func(value any) bool {
+			legacyFromSlice(left).ZipT(legacyFromSlice(right), zipSum).Iterate(func(value any) bool {
 				sum += value.(int)
 				return true
 			})

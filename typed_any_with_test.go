@@ -42,7 +42,7 @@ func BenchmarkTypedAnyWith(b *testing.B) {
 	b.Run("legacy_typed", func(b *testing.B) {
 		b.ReportAllocs()
 		for b.Loop() {
-			benchmarkAnyWithResult = FromSlice(source).AnyWithT(anyWithBenchmarkPredicate)
+			benchmarkAnyWithResult = legacyFromSlice(source).AnyWithT(anyWithBenchmarkPredicate)
 		}
 	})
 

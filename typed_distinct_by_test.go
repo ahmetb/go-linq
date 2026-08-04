@@ -44,7 +44,7 @@ func BenchmarkTypedDistinctBy(b *testing.B) {
 		b.ReportAllocs()
 		for b.Loop() {
 			sum := 0
-			FromSlice(source).DistinctByT(distinctBenchmarkKey).Iterate(func(value any) bool {
+			legacyFromSlice(source).DistinctByT(distinctBenchmarkKey).Iterate(func(value any) bool {
 				sum += value.(int)
 				return true
 			})

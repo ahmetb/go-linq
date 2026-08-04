@@ -44,7 +44,7 @@ func BenchmarkTypedFirstWith(b *testing.B) {
 	b.Run("legacy_typed", func(b *testing.B) {
 		b.ReportAllocs()
 		for b.Loop() {
-			benchmarkFirstWithResult = FromSlice(source).FirstWithT(firstWithBenchmarkPredicate).(int)
+			benchmarkFirstWithResult = legacyFromSlice(source).FirstWithT(firstWithBenchmarkPredicate).(int)
 		}
 	})
 

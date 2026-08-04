@@ -77,8 +77,8 @@ func BenchmarkTypedJoin(b *testing.B) {
 		b.ReportAllocs()
 		for b.Loop() {
 			sum := 0
-			FromSlice(outer).JoinT(
-				FromSlice(inner), joinBenchmarkKey, joinBenchmarkKey, joinBenchmarkResult,
+			legacyFromSlice(outer).JoinT(
+				legacyFromSlice(inner), joinBenchmarkKey, joinBenchmarkKey, joinBenchmarkResult,
 			).Iterate(func(value any) bool {
 				sum += value.(int)
 				return true

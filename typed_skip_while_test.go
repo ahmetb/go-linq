@@ -58,7 +58,7 @@ func BenchmarkTypedSkipWhile(b *testing.B) {
 		b.ReportAllocs()
 		for b.Loop() {
 			sum := 0
-			FromSlice(source).SkipWhileT(skipWhileBenchmarkPredicate).Iterate(func(value any) bool {
+			legacyFromSlice(source).SkipWhileT(skipWhileBenchmarkPredicate).Iterate(func(value any) bool {
 				sum += value.(int)
 				return true
 			})

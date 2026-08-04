@@ -68,7 +68,7 @@ func BenchmarkTypedSelectManyBy(b *testing.B) {
 		b.ReportAllocs()
 		for b.Loop() {
 			sum := 0
-			FromSlice(source).SelectManyByT(selectManyLegacy, selectManyResult).Iterate(func(value any) bool {
+			legacyFromSlice(source).SelectManyByT(selectManyLegacy, selectManyResult).Iterate(func(value any) bool {
 				sum += value.(int)
 				return true
 			})

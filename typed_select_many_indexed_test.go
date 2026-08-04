@@ -32,7 +32,7 @@ func TestTypedSelectManyIndexedStopsBothIterators(t *testing.T) {
 	}
 }
 
-func selectManyIndexedLegacy(_ int, values []int) legacyQuery { return FromSlice(values) }
+func selectManyIndexedLegacy(_ int, values []int) legacyQuery { return legacyFromSlice(values) }
 
 func selectManyIndexedTyped(_ int, values []int) Query[int] { return fromSlice(values) }
 
@@ -51,7 +51,7 @@ func BenchmarkTypedSelectManyIndexed(b *testing.B) {
 		b.ReportAllocs()
 		for b.Loop() {
 			sum := 0
-			FromSlice(source).SelectManyIndexedT(selectManyIndexedLegacy).Iterate(func(value any) bool {
+			legacyFromSlice(source).SelectManyIndexedT(selectManyIndexedLegacy).Iterate(func(value any) bool {
 				sum += value.(int)
 				return true
 			})

@@ -51,7 +51,7 @@ func BenchmarkTypedOrderBy(b *testing.B) {
 		b.ReportAllocs()
 		for b.Loop() {
 			sum := 0
-			FromSlice(source).OrderByT(orderIdentity).Iterate(func(value any) bool {
+			legacyFromSlice(source).OrderByT(orderIdentity).Iterate(func(value any) bool {
 				sum += value.(int)
 				return true
 			})

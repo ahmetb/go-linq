@@ -49,7 +49,7 @@ func BenchmarkTypedThenBy(b *testing.B) {
 		b.ReportAllocs()
 		for b.Loop() {
 			sum := 0
-			FromSlice(source).OrderByT(orderWidget.Rank).ThenByT(orderWidget.Name).Iterate(func(value any) bool {
+			legacyFromSlice(source).OrderByT(orderWidget.Rank).ThenByT(orderWidget.Name).Iterate(func(value any) bool {
 				sum += value.(orderWidget).rank
 				return true
 			})

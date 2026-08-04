@@ -41,7 +41,7 @@ func BenchmarkTypedAny(b *testing.B) {
 	b.Run("legacy", func(b *testing.B) {
 		b.ReportAllocs()
 		for b.Loop() {
-			benchmarkAnyResult = FromSlice(source).Any()
+			benchmarkAnyResult = legacyFromSlice(source).Any()
 		}
 	})
 

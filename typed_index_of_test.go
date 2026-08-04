@@ -44,7 +44,7 @@ func BenchmarkTypedIndexOf(b *testing.B) {
 	b.Run("legacy_typed", func(b *testing.B) {
 		b.ReportAllocs()
 		for b.Loop() {
-			benchmarkIndexOfResult = FromSlice(source).IndexOfT(indexOfBenchmarkPredicate)
+			benchmarkIndexOfResult = legacyFromSlice(source).IndexOfT(indexOfBenchmarkPredicate)
 		}
 	})
 

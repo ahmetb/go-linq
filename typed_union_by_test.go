@@ -45,7 +45,7 @@ func BenchmarkTypedUnionBy(b *testing.B) {
 		b.ReportAllocs()
 		for b.Loop() {
 			sum := 0
-			FromSlice(left).Union(FromSlice(right)).Iterate(func(value any) bool {
+			legacyFromSlice(left).Union(legacyFromSlice(right)).Iterate(func(value any) bool {
 				sum += value.(int)
 				return true
 			})

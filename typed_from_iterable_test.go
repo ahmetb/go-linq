@@ -55,7 +55,7 @@ func BenchmarkTypedFromIterable(b *testing.B) {
 		b.ReportAllocs()
 		for b.Loop() {
 			sum := 0
-			FromIterable(legacyNumberIterable(source)).Iterate(func(value any) bool {
+			legacyFromIterable(legacyNumberIterable(source)).Iterate(func(value any) bool {
 				sum += value.(int)
 				return true
 			})

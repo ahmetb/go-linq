@@ -14,7 +14,7 @@ func TestSkip(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		if q := From(test.input).Skip(3); !testQueryIteration(q, test.output) {
+		if q := legacyFrom(test.input).Skip(3); !testQueryIteration(q, test.output) {
 			t.Errorf("From(%v).Skip(3)=%v expected %v", test.input, toSlice(q), test.output)
 		}
 	}
@@ -41,7 +41,7 @@ func TestSkipWhile(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		if q := From(test.input).SkipWhile(test.predicate); !testQueryIteration(q, test.output) {
+		if q := legacyFrom(test.input).SkipWhile(test.predicate); !testQueryIteration(q, test.output) {
 			t.Errorf("From(%v).SkipWhile()=%v expected %v", test.input, toSlice(q), test.output)
 		}
 	}
@@ -49,7 +49,7 @@ func TestSkipWhile(t *testing.T) {
 
 func TestSkipWhileT_PanicWhenPredicateFnIsInvalid(t *testing.T) {
 	mustPanicWithError(t, "SkipWhileT: parameter [predicateFn] has a invalid function signature. Expected: 'func(T)bool', actual: 'func(int,int)bool'", func() {
-		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).SkipWhileT(func(item int, x int) bool { return item == 1 })
+		legacyFrom([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).SkipWhileT(func(item int, x int) bool { return item == 1 })
 	})
 }
 
@@ -74,7 +74,7 @@ func TestSkipWhileIndexed(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		if q := From(test.input).SkipWhileIndexed(test.predicate); !testQueryIteration(q, test.output) {
+		if q := legacyFrom(test.input).SkipWhileIndexed(test.predicate); !testQueryIteration(q, test.output) {
 			t.Errorf("From(%v).SkipWhileIndexed()=%v expected %v", test.input, toSlice(q), test.output)
 		}
 	}
@@ -82,6 +82,6 @@ func TestSkipWhileIndexed(t *testing.T) {
 
 func TestSkipWhileIndexedT_PanicWhenPredicateFnIsInvalid(t *testing.T) {
 	mustPanicWithError(t, "SkipWhileIndexedT: parameter [predicateFn] has a invalid function signature. Expected: 'func(int,T)bool', actual: 'func(int,int,int)bool'", func() {
-		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).SkipWhileIndexedT(func(item int, x int, y int) bool { return item == 1 })
+		legacyFrom([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).SkipWhileIndexedT(func(item int, x int, y int) bool { return item == 1 })
 	})
 }

@@ -37,7 +37,7 @@ func BenchmarkTypedRepeat(b *testing.B) {
 		b.ReportAllocs()
 		for b.Loop() {
 			sum := 0
-			Repeat(1, 1024).Iterate(func(value any) bool {
+			legacyRepeat(1, 1024).Iterate(func(value any) bool {
 				sum += value.(int)
 				return true
 			})

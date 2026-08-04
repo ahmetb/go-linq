@@ -1,14 +1,14 @@
 package linq
 
-type keyValue[K comparable, V any] struct {
+type KeyValue[K comparable, V any] struct {
 	Key   K
 	Value V
 }
 
-func fromMap[M ~map[K]V, K comparable, V any](source M) Query[keyValue[K, V]] {
-	return Query[keyValue[K, V]]{iterate: func(yield func(keyValue[K, V]) bool) {
+func fromMap[M ~map[K]V, K comparable, V any](source M) Query[KeyValue[K, V]] {
+	return Query[KeyValue[K, V]]{iterate: func(yield func(KeyValue[K, V]) bool) {
 		for key, value := range source {
-			if !yield(keyValue[K, V]{Key: key, Value: value}) {
+			if !yield(KeyValue[K, V]{Key: key, Value: value}) {
 				return
 			}
 		}

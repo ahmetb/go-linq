@@ -48,7 +48,7 @@ func BenchmarkTypedExceptBy(b *testing.B) {
 		b.ReportAllocs()
 		for b.Loop() {
 			sum := 0
-			FromSlice(source).ExceptByT(FromSlice(other), exceptBenchmarkKey).Iterate(func(value any) bool {
+			legacyFromSlice(source).ExceptByT(legacyFromSlice(other), exceptBenchmarkKey).Iterate(func(value any) bool {
 				sum += value.(int)
 				return true
 			})

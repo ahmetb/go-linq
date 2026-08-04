@@ -34,7 +34,7 @@ func BenchmarkTypedAggregateWithSeedBy(b *testing.B) {
 	b.Run("legacy_typed", func(b *testing.B) {
 		b.ReportAllocs()
 		for b.Loop() {
-			benchmarkAggregateWithSeedByResult = FromSlice(source).
+			benchmarkAggregateWithSeedByResult = legacyFromSlice(source).
 				AggregateWithSeedByT(0, aggregateSum, aggregateIdentity).(int)
 		}
 	})

@@ -37,7 +37,7 @@ func BenchmarkTypedFromString(b *testing.B) {
 		b.ReportAllocs()
 		for b.Loop() {
 			var sum rune
-			FromString(source).Iterate(func(value any) bool {
+			legacyFromString(source).Iterate(func(value any) bool {
 				sum += value.(rune)
 				return true
 			})

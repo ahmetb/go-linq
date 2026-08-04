@@ -93,7 +93,7 @@ func (q legacyQuery) GroupJoinT(inner legacyQuery, outerKeySelectorFn any,
 	resultSelectorFunc := func(outer any, inners []any) any {
 		innerSliceType := reflect.MakeSlice(resultSelectorGenericFunc.Cache.TypesIn[1], 0, 0)
 		innersSlicePointer := reflect.New(innerSliceType.Type())
-		From(inners).ToSlice(innersSlicePointer.Interface())
+		legacyFrom(inners).ToSlice(innersSlicePointer.Interface())
 		innersTyped := reflect.Indirect(innersSlicePointer).Interface()
 		return resultSelectorGenericFunc.Call(outer, innersTyped)
 	}

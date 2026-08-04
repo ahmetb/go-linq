@@ -55,7 +55,7 @@ func BenchmarkTypedFromChannelWithContext(b *testing.B) {
 			}
 			close(source)
 			sum := 0
-			FromChannelWithContext(ctx, source).Iterate(func(value any) bool {
+			legacyFromChannelWithContext(ctx, source).Iterate(func(value any) bool {
 				sum += value.(int)
 				return true
 			})

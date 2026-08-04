@@ -61,8 +61,8 @@ func BenchmarkTypedGroupJoin(b *testing.B) {
 		b.ReportAllocs()
 		for b.Loop() {
 			sum := 0
-			FromSlice(outer).GroupJoinT(
-				FromSlice(inner), joinBenchmarkKey, joinBenchmarkKey, groupJoinBenchmarkResult,
+			legacyFromSlice(outer).GroupJoinT(
+				legacyFromSlice(inner), joinBenchmarkKey, joinBenchmarkKey, groupJoinBenchmarkResult,
 			).Iterate(func(value any) bool {
 				sum += value.(int)
 				return true

@@ -15,7 +15,7 @@ func TestDefaultIfEmpty(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		q := From(test.input).DefaultIfEmpty(defaultValue)
+		q := legacyFrom(test.input).DefaultIfEmpty(defaultValue)
 
 		if !testQueryIteration(q, test.want) {
 			t.Errorf("From(%v).DefaultIfEmpty(%v)=%v expected %v", test.input, defaultValue, toSlice(q), test.want)

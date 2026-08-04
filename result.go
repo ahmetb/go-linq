@@ -560,10 +560,10 @@ func (q legacyQuery) ToMap(result any) {
 	q.ToMapBy(
 		result,
 		func(i any) any {
-			return i.(KeyValue).Key
+			return i.(legacyKeyValue).Key
 		},
 		func(i any) any {
-			return i.(KeyValue).Value
+			return i.(legacyKeyValue).Value
 		})
 }
 

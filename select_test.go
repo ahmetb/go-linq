@@ -20,7 +20,7 @@ func TestSelect(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		if q := From(test.input).Select(test.selector); !testQueryIteration(q, test.output) {
+		if q := legacyFrom(test.input).Select(test.selector); !testQueryIteration(q, test.output) {
 			t.Errorf("From(%v).Select()=%v expected %v", test.input, toSlice(q), test.output)
 		}
 	}
@@ -28,7 +28,7 @@ func TestSelect(t *testing.T) {
 
 func TestSelectT_PanicWhenSelectorFnIsInvalid(t *testing.T) {
 	mustPanicWithError(t, "SelectT: parameter [selectorFn] has a invalid function signature. Expected: 'func(T)T', actual: 'func(int,int)int'", func() {
-		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).SelectT(func(item, idx int) int { return item + 2 })
+		legacyFrom([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).SelectT(func(item, idx int) int { return item + 2 })
 	})
 }
 
@@ -47,7 +47,7 @@ func TestSelectIndexed(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		if q := From(test.input).SelectIndexed(test.selector); !testQueryIteration(q, test.output) {
+		if q := legacyFrom(test.input).SelectIndexed(test.selector); !testQueryIteration(q, test.output) {
 			t.Errorf("From(%v).SelectIndexed()=%v expected %v", test.input, toSlice(q), test.output)
 		}
 	}
@@ -55,6 +55,6 @@ func TestSelectIndexed(t *testing.T) {
 
 func TestSelectIndexedT_PanicWhenSelectorFnIsInvalid(t *testing.T) {
 	mustPanicWithError(t, "SelectIndexedT: parameter [selectorFn] has a invalid function signature. Expected: 'func(int,T)T', actual: 'func(string,int)int'", func() {
-		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).SelectIndexedT(func(index string, item int) int { return item + 2 })
+		legacyFrom([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).SelectIndexedT(func(index string, item int) int { return item + 2 })
 	})
 }

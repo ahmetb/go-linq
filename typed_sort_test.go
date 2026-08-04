@@ -52,7 +52,7 @@ func BenchmarkTypedSort(b *testing.B) {
 		b.ReportAllocs()
 		for b.Loop() {
 			sum := 0
-			FromSlice(source).SortT(sortBenchmarkLess).Iterate(func(value any) bool {
+			legacyFromSlice(source).SortT(sortBenchmarkLess).Iterate(func(value any) bool {
 				sum += value.(int)
 				return true
 			})

@@ -59,7 +59,7 @@ func BenchmarkTypedGroupBy(b *testing.B) {
 		b.ReportAllocs()
 		for b.Loop() {
 			size := 0
-			FromSlice(source).GroupByT(groupByBenchmarkKey, groupByBenchmarkElement).Iterate(func(value any) bool {
+			legacyFromSlice(source).GroupByT(groupByBenchmarkKey, groupByBenchmarkElement).Iterate(func(value any) bool {
 				size += len(value.(Group).Group)
 				return true
 			})

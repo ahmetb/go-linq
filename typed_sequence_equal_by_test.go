@@ -49,7 +49,7 @@ func BenchmarkTypedSequenceEqualBy(b *testing.B) {
 	b.Run("legacy", func(b *testing.B) {
 		b.ReportAllocs()
 		for b.Loop() {
-			benchmarkSequenceEqualByResult = FromSlice(left).SequenceEqual(FromSlice(right))
+			benchmarkSequenceEqualByResult = legacyFromSlice(left).SequenceEqual(legacyFromSlice(right))
 		}
 	})
 

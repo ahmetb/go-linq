@@ -41,7 +41,7 @@ func BenchmarkTypedCount(b *testing.B) {
 	b.Run("legacy", func(b *testing.B) {
 		b.ReportAllocs()
 		for b.Loop() {
-			benchmarkCountResult = FromSlice(source).Count()
+			benchmarkCountResult = legacyFromSlice(source).Count()
 		}
 	})
 

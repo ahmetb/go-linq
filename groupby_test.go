@@ -10,7 +10,7 @@ func TestGroupBy(t *testing.T) {
 	wantEven := []any{2, 4, 6, 8}
 	wantOdd := []any{1, 3, 5, 7, 9}
 
-	q := From(input).GroupBy(
+	q := legacyFrom(input).GroupBy(
 		func(i any) any { return i.(int) % 2 },
 		func(i any) any { return i.(int) },
 	)
@@ -40,7 +40,7 @@ func TestGroupBy(t *testing.T) {
 func TestGroupBy_Abort(t *testing.T) {
 	input := []int{1, 2, 3, 4, 5, 6, 7, 8, 9}
 
-	q := From(input).GroupBy(
+	q := legacyFrom(input).GroupBy(
 		func(i any) any { return i.(int) % 2 },
 		func(i any) any { return i.(int) },
 	)
@@ -51,7 +51,7 @@ func TestGroupBy_Abort(t *testing.T) {
 func TestGroupByT_PanicWhenKeySelectorFnIsInvalid(t *testing.T) {
 	mustPanicWithError(t, "GroupByT: parameter [keySelectorFn] has a invalid function signature. Expected: 'func(T)T', actual: 'func(int,int)bool'", func() {
 		var r []int
-		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).GroupByT(
+		legacyFrom([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).GroupByT(
 			func(i, j int) bool { return true },
 			func(i int) int { return i },
 		).ToSlice(&r)
@@ -61,7 +61,7 @@ func TestGroupByT_PanicWhenKeySelectorFnIsInvalid(t *testing.T) {
 func TestGroupByT_PanicWhenElementSelectorFnIsInvalid(t *testing.T) {
 	mustPanicWithError(t, "GroupByT: parameter [elementSelectorFn] has a invalid function signature. Expected: 'func(T)T', actual: 'func(int,int)int'", func() {
 		var r []int
-		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).GroupByT(
+		legacyFrom([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).GroupByT(
 			func(i int) bool { return true },
 			func(i, j int) int { return i },
 		).ToSlice(&r)

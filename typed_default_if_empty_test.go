@@ -43,7 +43,7 @@ func BenchmarkTypedDefaultIfEmpty(b *testing.B) {
 		b.ReportAllocs()
 		for b.Loop() {
 			sum := 0
-			FromSlice(source).DefaultIfEmpty(-1).Iterate(func(value any) bool {
+			legacyFromSlice(source).DefaultIfEmpty(-1).Iterate(func(value any) bool {
 				sum += value.(int)
 				return true
 			})

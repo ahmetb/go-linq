@@ -42,7 +42,7 @@ func BenchmarkTypedFirst(b *testing.B) {
 	b.Run("legacy", func(b *testing.B) {
 		b.ReportAllocs()
 		for b.Loop() {
-			benchmarkFirstResult = FromSlice(source).First().(int)
+			benchmarkFirstResult = legacyFromSlice(source).First().(int)
 		}
 	})
 

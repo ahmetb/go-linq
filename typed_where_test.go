@@ -67,7 +67,7 @@ func BenchmarkTypedWhere(b *testing.B) {
 		b.ReportAllocs()
 		for b.Loop() {
 			sum := 0
-			FromSlice(source).Where(whereEvenAny).Iterate(func(value any) bool {
+			legacyFromSlice(source).Where(whereEvenAny).Iterate(func(value any) bool {
 				sum += value.(int)
 				return true
 			})
@@ -79,7 +79,7 @@ func BenchmarkTypedWhere(b *testing.B) {
 		b.ReportAllocs()
 		for b.Loop() {
 			sum := 0
-			FromSlice(source).WhereT(whereEven).Iterate(func(value any) bool {
+			legacyFromSlice(source).WhereT(whereEven).Iterate(func(value any) bool {
 				sum += value.(int)
 				return true
 			})

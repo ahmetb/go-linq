@@ -46,7 +46,7 @@ func BenchmarkTypedToMapBy(b *testing.B) {
 		b.ReportAllocs()
 		for b.Loop() {
 			result := make(map[int]int)
-			FromSlice(source).ToMapByT(&result, toMapBenchmarkKey, toMapBenchmarkValue)
+			legacyFromSlice(source).ToMapByT(&result, toMapBenchmarkKey, toMapBenchmarkValue)
 			benchmarkToMapByResult = result
 		}
 	})

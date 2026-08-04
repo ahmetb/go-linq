@@ -13,7 +13,7 @@ func TestDistinct(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		if q := From(test.input).Distinct(); !testQueryIteration(q, test.output) {
+		if q := legacyFrom(test.input).Distinct(); !testQueryIteration(q, test.output) {
 			t.Errorf("From(%v).Distinct()=%v expected %v", test.input, toSlice(q), test.output)
 		}
 	}
@@ -30,7 +30,7 @@ func TestDistinctForOrderedQuery(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		if q := From(test.input).OrderBy(func(i any) any {
+		if q := legacyFrom(test.input).OrderBy(func(i any) any {
 			return i
 		}).Distinct(); !testQueryIteration(q.legacyQuery, test.output) {
 			t.Errorf("From(%v).Distinct()=%v expected %v", test.input, toSlice(q.legacyQuery), test.output)
@@ -47,7 +47,7 @@ func TestDistinctBy(t *testing.T) {
 	users := []user{{1, "Foo"}, {2, "Bar"}, {3, "Foo"}}
 	want := []any{user{1, "Foo"}, user{2, "Bar"}}
 
-	if q := From(users).DistinctBy(func(u any) any {
+	if q := legacyFrom(users).DistinctBy(func(u any) any {
 		return u.(user).name
 	}); !testQueryIteration(q, want) {
 		t.Errorf("From(%v).DistinctBy()=%v expected %v", users, toSlice(q), want)
@@ -56,6 +56,6 @@ func TestDistinctBy(t *testing.T) {
 
 func TestDistinctByT_PanicWhenSelectorFnIsInvalid(t *testing.T) {
 	mustPanicWithError(t, "DistinctByT: parameter [selectorFn] has a invalid function signature. Expected: 'func(T)T', actual: 'func(string,string)bool'", func() {
-		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).DistinctByT(func(indice, item string) bool { return item == "2" })
+		legacyFrom([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).DistinctByT(func(indice, item string) bool { return item == "2" })
 	})
 }

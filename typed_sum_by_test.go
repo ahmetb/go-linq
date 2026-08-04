@@ -41,7 +41,7 @@ func BenchmarkTypedSumBy(b *testing.B) {
 	b.Run("legacy", func(b *testing.B) {
 		b.ReportAllocs()
 		for b.Loop() {
-			benchmarkSumByResult = FromSlice(source).SumInts()
+			benchmarkSumByResult = legacyFromSlice(source).SumInts()
 		}
 	})
 

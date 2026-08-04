@@ -37,7 +37,7 @@ func BenchmarkTypedRange(b *testing.B) {
 		b.ReportAllocs()
 		for b.Loop() {
 			sum := 0
-			Range(0, 1024).Iterate(func(value any) bool {
+			legacyRange(0, 1024).Iterate(func(value any) bool {
 				sum += value.(int)
 				return true
 			})

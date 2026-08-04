@@ -39,7 +39,7 @@ func BenchmarkTypedMaxBy(b *testing.B) {
 	b.Run("legacy", func(b *testing.B) {
 		b.ReportAllocs()
 		for b.Loop() {
-			benchmarkMaxByResult = FromSlice(source).Max().(int)
+			benchmarkMaxByResult = legacyFromSlice(source).Max().(int)
 		}
 	})
 

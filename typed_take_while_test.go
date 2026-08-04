@@ -58,7 +58,7 @@ func BenchmarkTypedTakeWhile(b *testing.B) {
 		b.ReportAllocs()
 		for b.Loop() {
 			sum := 0
-			FromSlice(source).TakeWhileT(takeWhileBenchmarkPredicate).Iterate(func(value any) bool {
+			legacyFromSlice(source).TakeWhileT(takeWhileBenchmarkPredicate).Iterate(func(value any) bool {
 				sum += value.(int)
 				return true
 			})

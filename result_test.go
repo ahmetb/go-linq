@@ -10,10 +10,10 @@ import (
 func TestAll(t *testing.T) {
 	input := []int{2, 4, 6, 8}
 
-	r1 := From(input).All(func(i any) bool {
+	r1 := legacyFrom(input).All(func(i any) bool {
 		return i.(int)%2 == 0
 	})
-	r2 := From(input).All(func(i any) bool {
+	r2 := legacyFrom(input).All(func(i any) bool {
 		return i.(int)%2 != 0
 	})
 
@@ -28,7 +28,7 @@ func TestAll(t *testing.T) {
 
 func TestAllT_PanicWhenPredicateFnIsInvalid(t *testing.T) {
 	mustPanicWithError(t, "AllT: parameter [predicateFn] has a invalid function signature. Expected: 'func(T)bool', actual: 'func(int)int'", func() {
-		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).AllT(func(item int) int { return item + 2 })
+		legacyFrom([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).AllT(func(item int) int { return item + 2 })
 	})
 }
 
@@ -44,7 +44,7 @@ func TestAny(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		if r := From(test.input).Any(); r != test.want {
+		if r := legacyFrom(test.input).Any(); r != test.want {
 			t.Errorf("From(%v).Any()=%v expected %v", test.input, r, test.want)
 		}
 	}
@@ -61,7 +61,7 @@ func TestAnyWith(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		if r := From(test.input).AnyWith(func(i any) bool {
+		if r := legacyFrom(test.input).AnyWith(func(i any) bool {
 			return i.(int) == 4
 		}); r != test.want {
 			t.Errorf("From(%v).Any()=%v expected %v", test.input, r, test.want)
@@ -71,7 +71,7 @@ func TestAnyWith(t *testing.T) {
 
 func TestAnyWithT_PanicWhenPredicateFnIsInvalid(t *testing.T) {
 	mustPanicWithError(t, "AnyWithT: parameter [predicateFn] has a invalid function signature. Expected: 'func(T)bool', actual: 'func(int)int'", func() {
-		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).AnyWithT(func(item int) int { return item + 2 })
+		legacyFrom([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).AnyWithT(func(item int) int { return item + 2 })
 	})
 }
 
@@ -86,14 +86,14 @@ func TestAverage(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		if r := From(test.input).Average(); r != test.want {
+		if r := legacyFrom(test.input).Average(); r != test.want {
 			t.Errorf("From(%v).Average()=%v expected %v", test.input, r, test.want)
 		}
 	}
 }
 
 func TestAverageForNaN(t *testing.T) {
-	if r := From([]int{}).Average(); !math.IsNaN(r) {
+	if r := legacyFrom([]int{}).Average(); !math.IsNaN(r) {
 		t.Errorf("From([]int{}).Average()=%v expected %v", r, math.NaN())
 	}
 }
@@ -110,7 +110,7 @@ func TestContains(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		if r := From(test.input).Contains(test.value); r != test.want {
+		if r := legacyFrom(test.input).Contains(test.value); r != test.want {
 			t.Errorf("From(%v).Contains(%v)=%v expected %v", test.input, test.value, r, test.want)
 		}
 	}
@@ -127,7 +127,7 @@ func TestCount(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		if r := From(test.input).Count(); r != test.want {
+		if r := legacyFrom(test.input).Count(); r != test.want {
 			t.Errorf("From(%v).Count()=%v expected %v", test.input, r, test.want)
 		}
 	}
@@ -143,7 +143,7 @@ func TestCountWith(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		if r := From(test.input).CountWith(func(i any) bool {
+		if r := legacyFrom(test.input).CountWith(func(i any) bool {
 			return i.(int) <= 2
 		}); r != test.want {
 			t.Errorf("From(%v).CountWith()=%v expected %v", test.input, r, test.want)
@@ -153,7 +153,7 @@ func TestCountWith(t *testing.T) {
 
 func TestCountWithT_PanicWhenPredicateFnIsInvalid(t *testing.T) {
 	mustPanicWithError(t, "CountWithT: parameter [predicateFn] has a invalid function signature. Expected: 'func(T)bool', actual: 'func(int)int'", func() {
-		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).CountWithT(func(item int) int { return item + 2 })
+		legacyFrom([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).CountWithT(func(item int) int { return item + 2 })
 	})
 }
 
@@ -167,7 +167,7 @@ func TestFirst(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		if r := From(test.input).First(); r != test.want {
+		if r := legacyFrom(test.input).First(); r != test.want {
 			t.Errorf("From(%v).First()=%v expected %v", test.input, r, test.want)
 		}
 	}
@@ -183,7 +183,7 @@ func TestFirstWith(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		if r := From(test.input).FirstWith(func(i any) bool {
+		if r := legacyFrom(test.input).FirstWith(func(i any) bool {
 			return i.(int) > 2
 		}); r != test.want {
 			t.Errorf("From(%v).FirstWith()=%v expected %v", test.input, r, test.want)
@@ -193,7 +193,7 @@ func TestFirstWith(t *testing.T) {
 
 func TestFirstWithT_PanicWhenPredicateFnIsInvalid(t *testing.T) {
 	mustPanicWithError(t, "FirstWithT: parameter [predicateFn] has a invalid function signature. Expected: 'func(T)bool', actual: 'func(int)int'", func() {
-		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).FirstWithT(func(item int) int { return item + 2 })
+		legacyFrom([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).FirstWithT(func(item int) int { return item + 2 })
 	})
 }
 
@@ -208,7 +208,7 @@ func TestForEach(t *testing.T) {
 
 	for _, test := range tests {
 		output := []int{}
-		From(test.input).ForEach(func(item any) {
+		legacyFrom(test.input).ForEach(func(item any) {
 			output = append(output, item.(int)*2)
 		})
 
@@ -220,7 +220,7 @@ func TestForEach(t *testing.T) {
 
 func TestForEachT_PanicWhenActionFnIsInvalid(t *testing.T) {
 	mustPanicWithError(t, "ForEachT: parameter [actionFn] has a invalid function signature. Expected: 'func(T)', actual: 'func(int,int)'", func() {
-		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).ForEachT(func(item, idx int) {})
+		legacyFrom([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).ForEachT(func(item, idx int) {})
 	})
 }
 
@@ -235,7 +235,7 @@ func TestForEachIndexed(t *testing.T) {
 
 	for _, test := range tests {
 		output := []int{}
-		From(test.input).ForEachIndexed(func(index int, item any) {
+		legacyFrom(test.input).ForEachIndexed(func(index int, item any) {
 			output = append(output, item.(int)+index)
 		})
 
@@ -247,7 +247,7 @@ func TestForEachIndexed(t *testing.T) {
 
 func TestForEachIndexedT_PanicWhenActionFnIsInvalid(t *testing.T) {
 	mustPanicWithError(t, "ForEachIndexedT: parameter [actionFn] has a invalid function signature. Expected: 'func(int,T)', actual: 'func(int)'", func() {
-		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).ForEachIndexedT(func(item int) {})
+		legacyFrom([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).ForEachIndexedT(func(item int) {})
 	})
 }
 
@@ -261,7 +261,7 @@ func TestLast(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		if r := From(test.input).Last(); r != test.want {
+		if r := legacyFrom(test.input).Last(); r != test.want {
 			t.Errorf("From(%v).Last()=%v expected %v", test.input, r, test.want)
 		}
 	}
@@ -277,7 +277,7 @@ func TestLastWith(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		if r := From(test.input).LastWith(func(i any) bool {
+		if r := legacyFrom(test.input).LastWith(func(i any) bool {
 			return i.(int) > 2
 		}); r != test.want {
 			t.Errorf("From(%v).LastWith()=%v expected %v", test.input, r, test.want)
@@ -287,7 +287,7 @@ func TestLastWith(t *testing.T) {
 
 func TestLastWithT_PanicWhenPredicateFnIsInvalid(t *testing.T) {
 	mustPanicWithError(t, "LastWithT: parameter [predicateFn] has a invalid function signature. Expected: 'func(T)bool', actual: 'func(int)int'", func() {
-		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).LastWithT(func(item int) int { return item + 2 })
+		legacyFrom([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).LastWithT(func(item int) int { return item + 2 })
 	})
 }
 
@@ -302,7 +302,7 @@ func TestMax(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		if r := From(test.input).Max(); r != test.want {
+		if r := legacyFrom(test.input).Max(); r != test.want {
 			t.Errorf("From(%v).Max()=%v expected %v", test.input, r, test.want)
 		}
 	}
@@ -319,7 +319,7 @@ func TestMin(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		if r := From(test.input).Min(); r != test.want {
+		if r := legacyFrom(test.input).Min(); r != test.want {
 			t.Errorf("From(%v).Min()=%v expected %v", test.input, r, test.want)
 		}
 	}
@@ -329,7 +329,7 @@ func TestResults(t *testing.T) {
 	input := []int{1, 2, 3}
 	want := []any{1, 2, 3}
 
-	if r := From(input).Results(); !reflect.DeepEqual(r, want) {
+	if r := legacyFrom(input).Results(); !reflect.DeepEqual(r, want) {
 		t.Errorf("From(%v).Raw()=%v expected %v", input, r, want)
 	}
 }
@@ -346,7 +346,7 @@ func TestSequenceEqual(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		if r := From(test.input).SequenceEqual(From(test.input2)); r != test.want {
+		if r := legacyFrom(test.input).SequenceEqual(legacyFrom(test.input2)); r != test.want {
 			t.Errorf("From(%v).SequenceEqual(%v)=%v expected %v", test.input, test.input2, r, test.want)
 		}
 	}
@@ -363,7 +363,7 @@ func TestSingle(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		if r := From(test.input).Single(); r != test.want {
+		if r := legacyFrom(test.input).Single(); r != test.want {
 			t.Errorf("From(%v).Single()=%v expected %v", test.input, r, test.want)
 		}
 	}
@@ -381,7 +381,7 @@ func TestSingleWith(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		if r := From(test.input).SingleWith(func(i any) bool {
+		if r := legacyFrom(test.input).SingleWith(func(i any) bool {
 			return i.(int) > 2
 		}); r != test.want {
 			t.Errorf("From(%v).SingleWith()=%v expected %v", test.input, r, test.want)
@@ -391,7 +391,7 @@ func TestSingleWith(t *testing.T) {
 
 func TestSingleWithT_PanicWhenPredicateFnIsInvalid(t *testing.T) {
 	mustPanicWithError(t, "SingleWithT: parameter [predicateFn] has a invalid function signature. Expected: 'func(T)bool', actual: 'func(int)int'", func() {
-		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).SingleWithT(func(item int) int { return item + 2 })
+		legacyFrom([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).SingleWithT(func(item int) int { return item + 2 })
 	})
 }
 
@@ -406,7 +406,7 @@ func TestSumInts(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		if r := From(test.input).SumInts(); r != test.want {
+		if r := legacyFrom(test.input).SumInts(); r != test.want {
 			t.Errorf("From(%v).SumInts()=%v expected %v", test.input, r, test.want)
 		}
 	}
@@ -423,7 +423,7 @@ func TestSumUInts(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		if r := From(test.input).SumUInts(); r != test.want {
+		if r := legacyFrom(test.input).SumUInts(); r != test.want {
 			t.Errorf("From(%v).SumInts()=%v expected %v", test.input, r, test.want)
 		}
 	}
@@ -440,7 +440,7 @@ func TestSumFloats(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		if r := From(test.input).SumFloats(); r != test.want {
+		if r := legacyFrom(test.input).SumFloats(); r != test.want {
 			t.Errorf("From(%v).SumFloats()=%v expected %v", test.input, r, test.want)
 		}
 	}
@@ -451,7 +451,7 @@ func TestToChannel(t *testing.T) {
 	input := []int{1, 2, 3, 4, 5}
 
 	go func() {
-		From(input).ToChannel(c)
+		legacyFrom(input).ToChannel(c)
 	}()
 
 	result := []int{}
@@ -468,7 +468,7 @@ func TestToChannelT(t *testing.T) {
 	c := make(chan string)
 	input := []string{"1", "2", "3", "4", "5"}
 
-	go From(input).ToChannelT(c)
+	go legacyFrom(input).ToChannelT(c)
 
 	result := []string{}
 	for value := range c {
@@ -487,7 +487,7 @@ func TestToMap(t *testing.T) {
 	input[3] = true
 
 	result := make(map[int]bool)
-	From(input).ToMap(&result)
+	legacyFrom(input).ToMap(&result)
 
 	if !reflect.DeepEqual(result, input) {
 		t.Errorf("From(%v).ToMap()=%v expected %v", input, result, input)
@@ -501,12 +501,12 @@ func TestToMapBy(t *testing.T) {
 	input[3] = true
 
 	result := make(map[int]bool)
-	From(input).ToMapBy(&result,
+	legacyFrom(input).ToMapBy(&result,
 		func(i any) any {
-			return i.(KeyValue).Key
+			return i.(legacyKeyValue).Key
 		},
 		func(i any) any {
-			return i.(KeyValue).Value
+			return i.(legacyKeyValue).Value
 		})
 
 	if !reflect.DeepEqual(result, input) {
@@ -517,7 +517,7 @@ func TestToMapBy(t *testing.T) {
 func TestToMapByT_PanicWhenKeySelectorFnIsInvalid(t *testing.T) {
 	mustPanicWithError(t, "ToMapByT: parameter [keySelectorFn] has a invalid function signature. Expected: 'func(T)T', actual: 'func(int,int)int'", func() {
 		result := make(map[int]bool)
-		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).ToMapByT(
+		legacyFrom([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).ToMapByT(
 			&result,
 			func(item, j int) int { return item + 2 },
 			func(item int) int { return item + 2 },
@@ -528,7 +528,7 @@ func TestToMapByT_PanicWhenKeySelectorFnIsInvalid(t *testing.T) {
 func TestToMapByT_PanicWhenValueSelectorFnIsInvalid(t *testing.T) {
 	mustPanicWithError(t, "ToMapByT: parameter [valueSelectorFn] has a invalid function signature. Expected: 'func(T)T', actual: 'func(int,int)int'", func() {
 		result := make(map[int]bool)
-		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).ToMapByT(
+		legacyFrom([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).ToMapByT(
 			&result,
 			func(item int) int { return item + 2 },
 			func(item, j int) int { return item + 2 },
@@ -598,7 +598,7 @@ func TestToSlice(t *testing.T) {
 
 	for c, test := range tests {
 		initialOutputValue := test.output
-		From(test.input).ToSlice(&test.output)
+		legacyFrom(test.input).ToSlice(&test.output)
 		modifiedOutputValue := test.output
 
 		// test slice values
@@ -623,14 +623,14 @@ func TestToSlice(t *testing.T) {
 
 func TestToSlice_PanicWhenNil(t *testing.T) {
 	mustPanicWithError(t, "ToSlice: v must be a pointer to a slice", func() {
-		From([]int{1, 2, 3}).ToSlice(nil)
+		legacyFrom([]int{1, 2, 3}).ToSlice(nil)
 	})
 }
 
 func TestToSlice_PanicWhenNotSlice(t *testing.T) {
 	mustPanicWithError(t, "ToSlice: v must point to a slice", func() {
 		i := 123
-		From([]int{1, 2, 3}).ToSlice(&i)
+		legacyFrom([]int{1, 2, 3}).ToSlice(&i)
 	})
 }
 
@@ -638,7 +638,7 @@ func TestToSlice_AutomaticConversion(t *testing.T) {
 	input := []int{1, 2, 3}
 	want := []float64{1, 2, 3}
 	output := make([]float64, 0, 3)
-	From(input).ToSlice(&output)
+	legacyFrom(input).ToSlice(&output)
 	if !reflect.DeepEqual(output, want) {
 		t.Errorf("From(%v).ToSlice()=%v expected %v", input, output, want)
 	}
@@ -646,6 +646,6 @@ func TestToSlice_AutomaticConversion(t *testing.T) {
 
 func TestToSlice_PanicWhenConversionIsNotPossible(t *testing.T) {
 	mustPanicWithError(t, "ToSlice: item type is not assignable/convertible to slice element type", func() {
-		From([]string{"1", "2", "3"}).ToSlice(&[]int{})
+		legacyFrom([]string{"1", "2", "3"}).ToSlice(&[]int{})
 	})
 }

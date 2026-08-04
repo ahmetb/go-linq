@@ -39,7 +39,7 @@ func BenchmarkTypedMinBy(b *testing.B) {
 	b.Run("legacy", func(b *testing.B) {
 		b.ReportAllocs()
 		for b.Loop() {
-			benchmarkMinByResult = FromSlice(source).Min().(int)
+			benchmarkMinByResult = legacyFromSlice(source).Min().(int)
 		}
 	})
 

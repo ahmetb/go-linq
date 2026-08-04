@@ -48,7 +48,7 @@ func BenchmarkTypedTakeWhileIndexed(b *testing.B) {
 		b.ReportAllocs()
 		for b.Loop() {
 			sum := 0
-			FromSlice(source).TakeWhileIndexedT(takeWhileIndexedBenchmarkPredicate).Iterate(func(value any) bool {
+			legacyFromSlice(source).TakeWhileIndexedT(takeWhileIndexedBenchmarkPredicate).Iterate(func(value any) bool {
 				sum += value.(int)
 				return true
 			})

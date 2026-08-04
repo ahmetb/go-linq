@@ -28,7 +28,7 @@ func BenchmarkTypedOrderByDescending(b *testing.B) {
 		b.ReportAllocs()
 		for b.Loop() {
 			sum := 0
-			FromSlice(source).OrderByDescendingT(orderIdentity).Iterate(func(value any) bool {
+			legacyFromSlice(source).OrderByDescendingT(orderIdentity).Iterate(func(value any) bool {
 				sum += value.(int)
 				return true
 			})

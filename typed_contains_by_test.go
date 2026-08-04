@@ -43,7 +43,7 @@ func BenchmarkTypedContainsBy(b *testing.B) {
 	b.Run("legacy", func(b *testing.B) {
 		b.ReportAllocs()
 		for b.Loop() {
-			benchmarkContainsByResult = FromSlice(source).Contains(1023)
+			benchmarkContainsByResult = legacyFromSlice(source).Contains(1023)
 		}
 	})
 
