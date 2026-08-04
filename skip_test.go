@@ -3,85 +3,87 @@ package linq
 import "testing"
 
 func TestSkip(t *testing.T) {
+	arr := [9]int{1, 1, 1, 2, 1, 2, 3, 4, 2}
+
 	tests := []struct {
-		input  any
-		output []any
+		input  Query[int]
+		output []int
 	}{
-		{[]int{1, 2}, []any{}},
-		{[]int{1, 2, 2, 3, 1}, []any{3, 1}},
-		{[9]int{1, 1, 1, 2, 1, 2, 3, 4, 2}, []any{2, 1, 2, 3, 4, 2}},
-		{"sstr", []any{'r'}},
+		{FromSlice([]int{1, 2}), []int{}},
+		{FromSlice([]int{1, 2, 2, 3, 1}), []int{3, 1}},
+		{FromSlice(arr[:]), []int{2, 1, 2, 3, 4, 2}},
 	}
 
 	for _, test := range tests {
-		if q := From(test.input).Skip(3); !testQueryIteration(q, test.output) {
-			t.Errorf("From(%v).Skip(3)=%v expected %v", test.input, toSlice(q), test.output)
+		if q := test.input.Skip(3); !testQueryIteration(q, test.output) {
+			t.Errorf("Skip(3)=%v expected %v", toSlice(q), test.output)
 		}
+	}
+
+	want := []rune{'r'}
+	if q := FromString("sstr").Skip(3); !testQueryIteration(q, want) {
+		t.Errorf("FromString(sstr).Skip(3)=%v expected %v", toSlice(q), want)
 	}
 }
 
 func TestSkipWhile(t *testing.T) {
 	tests := []struct {
-		input     any
-		predicate func(any) bool
-		output    []any
+		input     Query[int]
+		predicate func(int) bool
+		output    []int
 	}{
-		{[]int{1, 2}, func(i any) bool {
-			return i.(int) < 3
-		}, []any{}},
-		{[]int{4, 1, 2}, func(i any) bool {
-			return i.(int) < 3
-		}, []any{4, 1, 2}},
-		{[9]int{1, 1, 1, 2, 1, 2, 3, 4, 2}, func(i any) bool {
-			return i.(int) < 3
-		}, []any{3, 4, 2}},
-		{"sstr", func(i any) bool {
-			return i.(rune) == 's'
-		}, []any{'t', 'r'}},
+		{FromSlice([]int{1, 2}), func(i int) bool {
+			return i < 3
+		}, []int{}},
+		{FromSlice([]int{4, 1, 2}), func(i int) bool {
+			return i < 3
+		}, []int{4, 1, 2}},
+		{FromSlice([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}), func(i int) bool {
+			return i < 3
+		}, []int{3, 4, 2}},
 	}
 
 	for _, test := range tests {
-		if q := From(test.input).SkipWhile(test.predicate); !testQueryIteration(q, test.output) {
-			t.Errorf("From(%v).SkipWhile()=%v expected %v", test.input, toSlice(q), test.output)
+		if q := test.input.SkipWhile(test.predicate); !testQueryIteration(q, test.output) {
+			t.Errorf("SkipWhile()=%v expected %v", toSlice(q), test.output)
 		}
 	}
-}
 
-func TestSkipWhileT_PanicWhenPredicateFnIsInvalid(t *testing.T) {
-	mustPanicWithError(t, "SkipWhileT: parameter [predicateFn] has a invalid function signature. Expected: 'func(T)bool', actual: 'func(int,int)bool'", func() {
-		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).SkipWhileT(func(item int, x int) bool { return item == 1 })
-	})
+	want := []rune{'t', 'r'}
+	if q := FromString("sstr").SkipWhile(func(r rune) bool {
+		return r == 's'
+	}); !testQueryIteration(q, want) {
+		t.Errorf("FromString(sstr).SkipWhile()=%v expected %v", toSlice(q), want)
+	}
 }
 
 func TestSkipWhileIndexed(t *testing.T) {
 	tests := []struct {
-		input     any
-		predicate func(int, any) bool
-		output    []any
+		input     Query[int]
+		predicate func(int, int) bool
+		output    []int
 	}{
-		{[]int{1, 2}, func(i int, x any) bool {
-			return x.(int) < 3
-		}, []any{}},
-		{[]int{4, 1, 2}, func(i int, x any) bool {
-			return x.(int) < 3
-		}, []any{4, 1, 2}},
-		{[9]int{1, 1, 1, 2, 1, 2, 3, 4, 2}, func(i int, x any) bool {
-			return x.(int) < 2 || i < 5
-		}, []any{2, 3, 4, 2}},
-		{"sstr", func(i int, x any) bool {
-			return x.(rune) == 's' && i < 1
-		}, []any{'s', 't', 'r'}},
+		{FromSlice([]int{1, 2}), func(i int, x int) bool {
+			return x < 3
+		}, []int{}},
+		{FromSlice([]int{4, 1, 2}), func(i int, x int) bool {
+			return x < 3
+		}, []int{4, 1, 2}},
+		{FromSlice([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}), func(i int, x int) bool {
+			return x < 2 || i < 5
+		}, []int{2, 3, 4, 2}},
 	}
 
 	for _, test := range tests {
-		if q := From(test.input).SkipWhileIndexed(test.predicate); !testQueryIteration(q, test.output) {
-			t.Errorf("From(%v).SkipWhileIndexed()=%v expected %v", test.input, toSlice(q), test.output)
+		if q := test.input.SkipWhileIndexed(test.predicate); !testQueryIteration(q, test.output) {
+			t.Errorf("SkipWhileIndexed()=%v expected %v", toSlice(q), test.output)
 		}
 	}
-}
 
-func TestSkipWhileIndexedT_PanicWhenPredicateFnIsInvalid(t *testing.T) {
-	mustPanicWithError(t, "SkipWhileIndexedT: parameter [predicateFn] has a invalid function signature. Expected: 'func(int,T)bool', actual: 'func(int,int,int)bool'", func() {
-		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).SkipWhileIndexedT(func(item int, x int, y int) bool { return item == 1 })
-	})
+	want := []rune{'s', 't', 'r'}
+	if q := FromString("sstr").SkipWhileIndexed(func(i int, r rune) bool {
+		return r == 's' && i < 1
+	}); !testQueryIteration(q, want) {
+		t.Errorf("FromString(sstr).SkipWhileIndexed()=%v expected %v", toSlice(q), want)
+	}
 }

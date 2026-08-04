@@ -5,49 +5,23 @@ import (
 )
 
 func TestIndexOf(t *testing.T) {
-	tests := []struct {
-		input     any
-		predicate func(any) bool
-		expected  int
-	}{
-		{
-			input: [9]int{1, 2, 3, 4, 5, 6, 7, 8, 9},
-			predicate: func(i any) bool {
-				return i.(int) == 3
-			},
-			expected: 2,
-		},
-		{
-			input: "sstr",
-			predicate: func(i any) bool {
-				return i.(rune) == 'r'
-			},
-			expected: 3,
-		},
-		{
-			input: "gadsgsadgsda",
-			predicate: func(i any) bool {
-				return i.(rune) == 'z'
-			},
-			expected: -1,
-		},
+	arr := [9]int{1, 2, 3, 4, 5, 6, 7, 8, 9}
+
+	if index := FromSlice(arr[:]).IndexOf(func(i int) bool {
+		return i == 3
+	}); index != 2 {
+		t.Errorf("IndexOf() expected 2 received %v", index)
 	}
 
-	for _, test := range tests {
-		index := From(test.input).IndexOf(test.predicate)
-		if index != test.expected {
-			t.Errorf("From(%v).IndexOf() expected %v received %v", test.input, test.expected, index)
-		}
-
-		index = From(test.input).IndexOfT(test.predicate)
-		if index != test.expected {
-			t.Errorf("From(%v).IndexOfT() expected %v received %v", test.input, test.expected, index)
-		}
+	if index := FromString("sstr").IndexOf(func(r rune) bool {
+		return r == 'r'
+	}); index != 3 {
+		t.Errorf("IndexOf() expected 3 received %v", index)
 	}
-}
 
-func TestIndexOfT_PanicWhenPredicateFnIsInvalid(t *testing.T) {
-	mustPanicWithError(t, "IndexOfT: parameter [predicateFn] has a invalid function signature. Expected: 'func(T)bool', actual: 'func(int)int'", func() {
-		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).IndexOfT(func(item int) int { return item + 2 })
-	})
+	if index := FromString("gadsgsadgsda").IndexOf(func(r rune) bool {
+		return r == 'z'
+	}); index != -1 {
+		t.Errorf("IndexOf() expected -1 received %v", index)
+	}
 }

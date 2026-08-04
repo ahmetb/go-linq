@@ -12,52 +12,22 @@ import "iter"
 // combines elements until it reaches the end of one of the collections. For
 // example, if one collection has three elements and the other one has four, the
 // result collection has only three elements.
-func (q Query) Zip(q2 Query,
-	resultSelector func(any, any) any) Query {
+func (q Query[T]) Zip[TSecond, TResult any](q2 Query[TSecond],
+	resultSelector func(T, TSecond) TResult) Query[TResult] {
 
-	return Query{
-		Iterate: func(yield func(any) bool) {
-			next1, stop1 := iter.Pull(q.Iterate)
-			defer stop1()
-
+	return Query[TResult]{
+		Iterate: func(yield func(TResult) bool) {
 			next2, stop2 := iter.Pull(q2.Iterate)
 			defer stop2()
 
-			for {
-				item1, ok1 := next1()
+			q.Iterate(func(item T) bool {
 				item2, ok2 := next2()
-
-				if !ok1 || !ok2 {
-					return
+				if !ok2 {
+					return false
 				}
 
-				result := resultSelector(item1, item2)
-				if !yield(result) {
-					return
-				}
-			}
+				return yield(resultSelector(item, item2))
+			})
 		},
 	}
-}
-
-// ZipT is the typed version of Zip.
-//
-//   - resultSelectorFn is of type "func(TFirst,TSecond)TResult"
-//
-// NOTE: Zip has better performance than ZipT.
-func (q Query) ZipT(q2 Query,
-	resultSelectorFn any) Query {
-	resultSelectorGenericFunc, err := newGenericFunc(
-		"ZipT", "resultSelectorFn", resultSelectorFn,
-		simpleParamValidator(newElemTypeSlice(new(genericType), new(genericType)), newElemTypeSlice(new(genericType))),
-	)
-	if err != nil {
-		panic(err)
-	}
-
-	resultSelectorFunc := func(item1 any, item2 any) any {
-		return resultSelectorGenericFunc.Call(item1, item2)
-	}
-
-	return q.Zip(q2, resultSelectorFunc)
 }

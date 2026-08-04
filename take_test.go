@@ -3,78 +3,80 @@ package linq
 import "testing"
 
 func TestTake(t *testing.T) {
+	arr := [9]int{1, 1, 1, 2, 1, 2, 3, 4, 2}
+
 	tests := []struct {
-		input  any
-		output []any
+		input  Query[int]
+		output []int
 	}{
-		{[]int{1, 2, 2, 3, 1}, []any{1, 2, 2}},
-		{[9]int{1, 1, 1, 2, 1, 2, 3, 4, 2}, []any{1, 1, 1}},
-		{"sstr", []any{'s', 's', 't'}},
+		{FromSlice([]int{1, 2, 2, 3, 1}), []int{1, 2, 2}},
+		{FromSlice(arr[:]), []int{1, 1, 1}},
 	}
 
 	for _, test := range tests {
-		if q := From(test.input).Take(3); !testQueryIteration(q, test.output) {
-			t.Errorf("From(%v).Take(3)=%v expected %v", test.input, toSlice(q), test.output)
+		if q := test.input.Take(3); !testQueryIteration(q, test.output) {
+			t.Errorf("Take(3)=%v expected %v", toSlice(q), test.output)
 		}
+	}
+
+	want := []rune{'s', 's', 't'}
+	if q := FromString("sstr").Take(3); !testQueryIteration(q, want) {
+		t.Errorf("FromString(sstr).Take(3)=%v expected %v", toSlice(q), want)
 	}
 }
 
 func TestTakeWhile(t *testing.T) {
 	tests := []struct {
-		input     any
-		predicate func(any) bool
-		output    []any
+		input     Query[int]
+		predicate func(int) bool
+		output    []int
 	}{
-		{[]int{1, 1, 1, 2, 1, 2}, func(i any) bool {
-			return i.(int) < 3
-		}, []any{1, 1, 1, 2, 1, 2}},
-		{[9]int{1, 1, 1, 2, 1, 2, 3, 4, 2}, func(i any) bool {
-			return i.(int) < 3
-		}, []any{1, 1, 1, 2, 1, 2}},
-		{"sstr", func(i any) bool {
-			return i.(rune) == 's'
-		}, []any{'s', 's'}},
+		{FromSlice([]int{1, 1, 1, 2, 1, 2}), func(i int) bool {
+			return i < 3
+		}, []int{1, 1, 1, 2, 1, 2}},
+		{FromSlice([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}), func(i int) bool {
+			return i < 3
+		}, []int{1, 1, 1, 2, 1, 2}},
 	}
 
 	for _, test := range tests {
-		if q := From(test.input).TakeWhile(test.predicate); !testQueryIteration(q, test.output) {
-			t.Errorf("From(%v).TakeWhile()=%v expected %v", test.input, toSlice(q), test.output)
+		if q := test.input.TakeWhile(test.predicate); !testQueryIteration(q, test.output) {
+			t.Errorf("TakeWhile()=%v expected %v", toSlice(q), test.output)
 		}
 	}
-}
 
-func TestTakeWhileT_PanicWhenPredicateFnIsInvalid(t *testing.T) {
-	mustPanicWithError(t, "TakeWhileT: parameter [predicateFn] has a invalid function signature. Expected: 'func(T)bool', actual: 'func(int)int'", func() {
-		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).TakeWhileT(func(item int) int { return item + 2 })
-	})
+	want := []rune{'s', 's'}
+	if q := FromString("sstr").TakeWhile(func(r rune) bool {
+		return r == 's'
+	}); !testQueryIteration(q, want) {
+		t.Errorf("FromString(sstr).TakeWhile()=%v expected %v", toSlice(q), want)
+	}
 }
 
 func TestTakeWhileIndexed(t *testing.T) {
 	tests := []struct {
-		input     any
-		predicate func(int, any) bool
-		output    []any
+		input     Query[int]
+		predicate func(int, int) bool
+		output    []int
 	}{
-		{[]int{1, 1, 1, 2}, func(i int, x any) bool {
-			return x.(int) < 2 || i < 5
-		}, []any{1, 1, 1, 2}},
-		{[9]int{1, 1, 1, 2, 1, 2, 3, 4, 2}, func(i int, x any) bool {
-			return x.(int) < 2 || i < 5
-		}, []any{1, 1, 1, 2, 1}},
-		{"sstr", func(i int, x any) bool {
-			return x.(rune) == 's' && i < 1
-		}, []any{'s'}},
+		{FromSlice([]int{1, 1, 1, 2}), func(i int, x int) bool {
+			return x < 2 || i < 5
+		}, []int{1, 1, 1, 2}},
+		{FromSlice([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}), func(i int, x int) bool {
+			return x < 2 || i < 5
+		}, []int{1, 1, 1, 2, 1}},
 	}
 
 	for _, test := range tests {
-		if q := From(test.input).TakeWhileIndexed(test.predicate); !testQueryIteration(q, test.output) {
-			t.Errorf("From(%v).TakeWhileIndexed()=%v expected %v", test.input, toSlice(q), test.output)
+		if q := test.input.TakeWhileIndexed(test.predicate); !testQueryIteration(q, test.output) {
+			t.Errorf("TakeWhileIndexed()=%v expected %v", toSlice(q), test.output)
 		}
 	}
-}
 
-func TestTakeWhileIndexedT_PanicWhenPredicateFnIsInvalid(t *testing.T) {
-	mustPanicWithError(t, "TakeWhileIndexedT: parameter [predicateFn] has a invalid function signature. Expected: 'func(int,T)bool', actual: 'func(int)int'", func() {
-		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).TakeWhileIndexedT(func(item int) int { return item + 2 })
-	})
+	want := []rune{'s'}
+	if q := FromString("sstr").TakeWhileIndexed(func(i int, r rune) bool {
+		return r == 's' && i < 1
+	}); !testQueryIteration(q, want) {
+		t.Errorf("FromString(sstr).TakeWhileIndexed()=%v expected %v", toSlice(q), want)
+	}
 }

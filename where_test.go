@@ -3,58 +3,63 @@ package linq
 import "testing"
 
 func TestWhere(t *testing.T) {
+	arr := [9]int{1, 1, 1, 2, 1, 2, 3, 4, 2}
+
 	tests := []struct {
-		input     any
-		predicate func(any) bool
-		output    []any
+		input     Query[int]
+		predicate func(int) bool
+		output    []int
 	}{
-		{[9]int{1, 1, 1, 2, 1, 2, 3, 4, 2}, func(i any) bool {
-			return i.(int) >= 3
-		}, []any{3, 4}},
-		{"sstr", func(i any) bool {
-			return i.(rune) != 's'
-		}, []any{'t', 'r'}},
+		{FromSlice(arr[:]), func(i int) bool {
+			return i >= 3
+		}, []int{3, 4}},
+		{FromSlice([]int{1, 2, 3, 4}), func(i int) bool {
+			return i%2 == 0
+		}, []int{2, 4}},
 	}
 
 	for _, test := range tests {
-		if q := From(test.input).Where(test.predicate); !testQueryIteration(q, test.output) {
-			t.Errorf("From(%v).Where()=%v expected %v", test.input, toSlice(q), test.output)
+		if q := test.input.Where(test.predicate); !testQueryIteration(q, test.output) {
+			t.Errorf("Where()=%v expected %v", toSlice(q), test.output)
 		}
 	}
 }
 
-func TestWhereT_PanicWhenPredicateFnIsInvalid(t *testing.T) {
-	mustPanicWithError(t, "WhereT: parameter [predicateFn] has a invalid function signature. Expected: 'func(T)bool', actual: 'func(int)int'", func() {
-		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).WhereT(func(item int) int { return item + 2 })
-	})
+func TestWhere_String(t *testing.T) {
+	want := []rune{'t', 'r'}
+	if q := FromString("sstr").Where(func(r rune) bool {
+		return r != 's'
+	}); !testQueryIteration(q, want) {
+		t.Errorf("FromString(sstr).Where()=%v expected %v", toSlice(q), want)
+	}
 }
 
 func TestWhereIndexed(t *testing.T) {
+	arr := [9]int{1, 1, 1, 2, 1, 2, 3, 4, 2}
+
 	tests := []struct {
-		input     any
-		predicate func(int, any) bool
-		output    []any
+		input     Query[rune]
+		predicate func(int, rune) bool
+		output    []rune
 	}{
-		{[9]int{1, 1, 1, 2, 1, 2, 3, 4, 2}, func(i int, x any) bool {
-			return x.(int) < 4 && i > 4
-		}, []any{2, 3, 2}},
-		{"sstr", func(i int, x any) bool {
-			return x.(rune) != 's' || i == 1
-		}, []any{'s', 't', 'r'}},
-		{"abcde", func(i int, _ any) bool {
+		{FromString("sstr"), func(i int, x rune) bool {
+			return x != 's' || i == 1
+		}, []rune{'s', 't', 'r'}},
+		{FromString("abcde"), func(i int, _ rune) bool {
 			return i < 2
-		}, []any{'a', 'b'}},
+		}, []rune{'a', 'b'}},
 	}
 
 	for _, test := range tests {
-		if q := From(test.input).WhereIndexed(test.predicate); !testQueryIteration(q, test.output) {
-			t.Errorf("From(%v).WhereIndexed()=%v expected %v", test.input, toSlice(q), test.output)
+		if q := test.input.WhereIndexed(test.predicate); !testQueryIteration(q, test.output) {
+			t.Errorf("WhereIndexed()=%v expected %v", toSlice(q), test.output)
 		}
 	}
-}
 
-func TestWhereIndexedT_PanicWhenPredicateFnIsInvalid(t *testing.T) {
-	mustPanicWithError(t, "WhereIndexedT: parameter [predicateFn] has a invalid function signature. Expected: 'func(int,T)bool', actual: 'func(string)'", func() {
-		From([]int{1, 1, 1, 2, 1, 2, 3, 4, 2}).WhereIndexedT(func(item string) {})
-	})
+	want := []int{2, 3, 2}
+	if q := FromSlice(arr[:]).WhereIndexed(func(i int, x int) bool {
+		return x < 4 && i > 4
+	}); !testQueryIteration(q, want) {
+		t.Errorf("WhereIndexed()=%v expected %v", toSlice(q), want)
+	}
 }

@@ -2,13 +2,13 @@ package linq
 
 // DefaultIfEmpty returns the elements of the specified sequence
 // if the sequence is empty.
-func (q Query) DefaultIfEmpty(defaultValue any) Query {
-	return Query{
-		Iterate: func(yield func(any) bool) {
+func (q Query[T]) DefaultIfEmpty(defaultValue T) Query[T] {
+	return Query[T]{
+		Iterate: func(yield func(T) bool) {
 			var yieldedAnyThing bool
 			var stopped bool
 
-			q.Iterate(func(item any) bool {
+			q.Iterate(func(item T) bool {
 				yieldedAnyThing = true
 
 				if !yield(item) {
