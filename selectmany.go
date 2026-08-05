@@ -5,18 +5,17 @@ package linq
 func (q Query[T]) SelectMany[TResult any](selector func(T) Query[TResult]) Query[TResult] {
 	return Query[TResult]{
 		Iterate: func(yield func(TResult) bool) {
+			keepGoing := true
+			inner := func(innerItem TResult) bool {
+				if !yield(innerItem) {
+					keepGoing = false
+					return false
+				}
+				return true
+			}
+
 			q.Iterate(func(outerItem T) bool {
-				keepGoing := true
-
-				innerQuery := selector(outerItem)
-				innerQuery.Iterate(func(innerItem TResult) bool {
-					if !yield(innerItem) {
-						keepGoing = false
-						return false
-					}
-					return true
-				})
-
+				selector(outerItem).Iterate(inner)
 				return keepGoing
 			})
 		},
@@ -35,20 +34,20 @@ func (q Query[T]) SelectMany[TResult any](selector func(T) Query[TResult]) Query
 func (q Query[T]) SelectManyIndexed[TResult any](selector func(index int, outer T) Query[TResult]) Query[TResult] {
 	return Query[TResult]{
 		Iterate: func(yield func(TResult) bool) {
+			keepGoing := true
+			inner := func(innerItem TResult) bool {
+				if !yield(innerItem) {
+					keepGoing = false
+					return false
+				}
+				return true
+			}
+
 			index := 0
 			q.Iterate(func(outerItem T) bool {
-				keepGoing := true
-
 				innerQuery := selector(index, outerItem)
 				index++
-				innerQuery.Iterate(func(innerItem TResult) bool {
-					if !yield(innerItem) {
-						keepGoing = false
-						return false
-					}
-					return true
-				})
-
+				innerQuery.Iterate(inner)
 				return keepGoing
 			})
 		},
@@ -64,20 +63,19 @@ func (q Query[T]) SelectManyBy[TCollection, TResult any](
 ) Query[TResult] {
 	return Query[TResult]{
 		Iterate: func(yield func(TResult) bool) {
+			keepGoing := true
+			var outer T
+			inner := func(innerItem TCollection) bool {
+				if !yield(resultSelector(innerItem, outer)) {
+					keepGoing = false
+					return false
+				}
+				return true
+			}
+
 			q.Iterate(func(outerItem T) bool {
-				keepGoing := true
-				innerQuery := selector(outerItem)
-
-				innerQuery.Iterate(func(innerItem TCollection) bool {
-					result := resultSelector(innerItem, outerItem)
-
-					if !yield(result) {
-						keepGoing = false
-						return false
-					}
-					return true
-				})
-
+				outer = outerItem
+				selector(outerItem).Iterate(inner)
 				return keepGoing
 			})
 		},
@@ -94,22 +92,22 @@ func (q Query[T]) SelectManyByIndexed[TCollection, TResult any](
 ) Query[TResult] {
 	return Query[TResult]{
 		Iterate: func(yield func(TResult) bool) {
+			keepGoing := true
+			var outer T
+			inner := func(innerItem TCollection) bool {
+				if !yield(resultSelector(innerItem, outer)) {
+					keepGoing = false
+					return false
+				}
+				return true
+			}
+
 			index := 0
 			q.Iterate(func(outerItem T) bool {
 				innerQuery := selector(index, outerItem)
 				index++
-
-				keepGoing := true
-				innerQuery.Iterate(func(innerItem TCollection) bool {
-					result := resultSelector(innerItem, outerItem)
-
-					if !yield(result) {
-						keepGoing = false
-						return false
-					}
-					return true
-				})
-
+				outer = outerItem
+				innerQuery.Iterate(inner)
 				return keepGoing
 			})
 		},
