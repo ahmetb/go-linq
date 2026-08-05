@@ -15,14 +15,15 @@ func (q Query[T]) Aggregate(f func(accumulator, item T) T) (T, bool) {
 	var result T
 	first := true
 
-	for current := range q.Iterate {
+	q.Iterate(func(current T) bool {
 		if first {
 			result = current
 			first = false
-			continue
+		} else {
+			result = f(result, current)
 		}
-		result = f(result, current)
-	}
+		return true
+	})
 
 	return result, !first
 }
@@ -45,9 +46,10 @@ func (q Query[T]) AggregateWithSeed[TAccumulate any](seed TAccumulate,
 	f func(accumulator TAccumulate, item T) TAccumulate) TAccumulate {
 	result := seed
 
-	for current := range q.Iterate {
+	q.Iterate(func(current T) bool {
 		result = f(result, current)
-	}
+		return true
+	})
 
 	return result
 }
@@ -74,9 +76,10 @@ func (q Query[T]) AggregateWithSeedBy[TAccumulate, TResult any](seed TAccumulate
 
 	result := seed
 
-	for current := range q.Iterate {
+	q.Iterate(func(current T) bool {
 		result = f(result, current)
-	}
+		return true
+	})
 
 	return resultSelector(result)
 }

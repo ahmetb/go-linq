@@ -41,9 +41,7 @@ func (q Query[T]) Concat(q2 Query[T]) Query[T] {
 			})
 
 			if !stopped {
-				q2.Iterate(func(item T) bool {
-					return yield(item)
-				})
+				q2.Iterate(yield)
 			}
 		},
 	}

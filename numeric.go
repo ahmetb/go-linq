@@ -17,9 +17,10 @@ type Number interface {
 // contains no elements.
 func Sum[TNumber Number](q Query[TNumber]) TNumber {
 	var sum TNumber
-	for item := range q.Iterate {
+	q.Iterate(func(item TNumber) bool {
 		sum += item
-	}
+		return true
+	})
 	return sum
 }
 
@@ -31,9 +32,10 @@ func Sum[TNumber Number](q Query[TNumber]) TNumber {
 // selector function.
 func (q Query[T]) SumBy[TNumber Number](selector func(T) TNumber) TNumber {
 	var sum TNumber
-	for item := range q.Iterate {
+	q.Iterate(func(item T) bool {
 		sum += selector(item)
-	}
+		return true
+	})
 	return sum
 }
 
@@ -42,10 +44,11 @@ func (q Query[T]) SumBy[TNumber Number](selector func(T) TNumber) TNumber {
 func Average[TNumber Number](q Query[TNumber]) float64 {
 	var sum float64
 	n := 0
-	for item := range q.Iterate {
+	q.Iterate(func(item TNumber) bool {
 		sum += float64(item)
 		n++
-	}
+		return true
+	})
 
 	if n == 0 {
 		return math.NaN()
@@ -62,10 +65,11 @@ func Average[TNumber Number](q Query[TNumber]) float64 {
 func (q Query[T]) AverageBy[TNumber Number](selector func(T) TNumber) float64 {
 	var sum float64
 	n := 0
-	for item := range q.Iterate {
+	q.Iterate(func(item T) bool {
 		sum += float64(selector(item))
 		n++
-	}
+		return true
+	})
 
 	if n == 0 {
 		return math.NaN()
@@ -78,12 +82,13 @@ func (q Query[T]) AverageBy[TNumber Number](selector func(T) TNumber) float64 {
 func Max[T cmp.Ordered](q Query[T]) (T, bool) {
 	var r T
 	found := false
-	for item := range q.Iterate {
+	q.Iterate(func(item T) bool {
 		if !found || cmp.Compare(item, r) > 0 {
 			r = item
 			found = true
 		}
-	}
+		return true
+	})
 	return r, found
 }
 
@@ -92,12 +97,13 @@ func Max[T cmp.Ordered](q Query[T]) (T, bool) {
 func Min[T cmp.Ordered](q Query[T]) (T, bool) {
 	var r T
 	found := false
-	for item := range q.Iterate {
+	q.Iterate(func(item T) bool {
 		if !found || cmp.Compare(item, r) < 0 {
 			r = item
 			found = true
 		}
-	}
+		return true
+	})
 	return r, found
 }
 
@@ -111,13 +117,14 @@ func (q Query[T]) MaxBy[TKey cmp.Ordered](selector func(T) TKey) (T, bool) {
 	var r T
 	var rKey TKey
 	found := false
-	for item := range q.Iterate {
+	q.Iterate(func(item T) bool {
 		key := selector(item)
 		if !found || cmp.Compare(key, rKey) > 0 {
 			r, rKey = item, key
 			found = true
 		}
-	}
+		return true
+	})
 	return r, found
 }
 
@@ -131,12 +138,13 @@ func (q Query[T]) MinBy[TKey cmp.Ordered](selector func(T) TKey) (T, bool) {
 	var r T
 	var rKey TKey
 	found := false
-	for item := range q.Iterate {
+	q.Iterate(func(item T) bool {
 		key := selector(item)
 		if !found || cmp.Compare(key, rKey) < 0 {
 			r, rKey = item, key
 			found = true
 		}
-	}
+		return true
+	})
 	return r, found
 }

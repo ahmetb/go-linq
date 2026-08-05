@@ -4,13 +4,15 @@ package linq
 // and returns the zero-based index of the first occurrence within the collection. This method
 // returns -1 if an item that matches the conditions is not found.
 func (q Query[T]) IndexOf(predicate func(T) bool) int {
+	result := -1
 	index := 0
-	for item := range q.Iterate {
+	q.Iterate(func(item T) bool {
 		if predicate(item) {
-			return index
+			result = index
+			return false
 		}
 		index++
-	}
-
-	return -1
+		return true
+	})
+	return result
 }

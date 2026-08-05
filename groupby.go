@@ -25,7 +25,7 @@ func (q Query[T]) GroupBy[TKey comparable, TElement any](keySelector func(T) TKe
 			var keys []TKey
 			var buckets [][]TElement
 
-			for item := range q.Iterate {
+			q.Iterate(func(item T) bool {
 				key := keySelector(item)
 				i, ok := index[key]
 				if !ok {
@@ -35,7 +35,8 @@ func (q Query[T]) GroupBy[TKey comparable, TElement any](keySelector func(T) TKe
 					buckets = append(buckets, nil)
 				}
 				buckets[i] = append(buckets[i], elementSelector(item))
-			}
+				return true
+			})
 
 			for i, key := range keys {
 				group := Group[TKey, TElement]{

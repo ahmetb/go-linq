@@ -6,33 +6,38 @@ import (
 
 // All determines whether all elements of a collection satisfy a condition.
 func (q Query[T]) All(predicate func(T) bool) bool {
-	for item := range q.Iterate {
+	all := true
+	q.Iterate(func(item T) bool {
 		if !predicate(item) {
+			all = false
 			return false
 		}
-	}
-
-	return true
+		return true
+	})
+	return all
 }
 
 // Any determines whether any element of a collection exists.
 func (q Query[T]) Any() bool {
-	for range q.Iterate {
-		return true
-	}
-
-	return false
+	any := false
+	q.Iterate(func(T) bool {
+		any = true
+		return false
+	})
+	return any
 }
 
 // AnyWith determines whether any element of a collection satisfies a condition.
 func (q Query[T]) AnyWith(predicate func(T) bool) bool {
-	for item := range q.Iterate {
+	found := false
+	q.Iterate(func(item T) bool {
 		if predicate(item) {
-			return true
+			found = true
+			return false
 		}
-	}
-
-	return false
+		return true
+	})
+	return found
 }
 
 // Contains determines whether a collection contains a specified element.
@@ -44,20 +49,24 @@ func (q Query[T]) AnyWith(predicate func(T) bool) bool {
 // the fast path for such types.
 func (q Query[T]) Contains(value T) bool {
 	equal := equalFor[T]()
-	for item := range q.Iterate {
+	found := false
+	q.Iterate(func(item T) bool {
 		if equal(item, value) {
-			return true
+			found = true
+			return false
 		}
-	}
-	return false
+		return true
+	})
+	return found
 }
 
 // Count returns the number of elements in a collection.
 func (q Query[T]) Count() int {
 	count := 0
-	for range q.Iterate {
+	q.Iterate(func(T) bool {
 		count++
-	}
+		return true
+	})
 	return count
 }
 
@@ -65,44 +74,51 @@ func (q Query[T]) Count() int {
 // collection satisfy a condition.
 func (q Query[T]) CountWith(predicate func(T) bool) int {
 	count := 0
-	for item := range q.Iterate {
+	q.Iterate(func(item T) bool {
 		if predicate(item) {
 			count++
 		}
-	}
+		return true
+	})
 	return count
 }
 
 // First returns the first element of a collection and a boolean reporting
 // whether the collection was non-empty.
 func (q Query[T]) First() (T, bool) {
-	for item := range q.Iterate {
-		return item, true
-	}
-
-	var zero T
-	return zero, false
+	var r T
+	found := false
+	q.Iterate(func(item T) bool {
+		r = item
+		found = true
+		return false
+	})
+	return r, found
 }
 
 // FirstWith returns the first element of a collection that satisfies a
 // specified condition and a boolean reporting whether such an element was
 // found.
 func (q Query[T]) FirstWith(predicate func(T) bool) (T, bool) {
-	for item := range q.Iterate {
+	var r T
+	found := false
+	q.Iterate(func(item T) bool {
 		if predicate(item) {
-			return item, true
+			r = item
+			found = true
+			return false
 		}
-	}
-
-	var zero T
-	return zero, false
+		return true
+	})
+	return r, found
 }
 
 // ForEach performs the specified action on each element of a collection.
 func (q Query[T]) ForEach(action func(T)) {
-	for item := range q.Iterate {
+	q.Iterate(func(item T) bool {
 		action(item)
-	}
+		return true
+	})
 }
 
 // ForEachIndexed performs the specified action on each element of a collection.
@@ -115,10 +131,11 @@ func (q Query[T]) ForEach(action func(T)) {
 // element to process.
 func (q Query[T]) ForEachIndexed(action func(int, T)) {
 	index := 0
-	for item := range q.Iterate {
+	q.Iterate(func(item T) bool {
 		action(index, item)
 		index++
-	}
+		return true
+	})
 }
 
 // Last returns the last element of a collection and a boolean reporting
@@ -126,11 +143,11 @@ func (q Query[T]) ForEachIndexed(action func(int, T)) {
 func (q Query[T]) Last() (T, bool) {
 	var r T
 	found := false
-	for item := range q.Iterate {
+	q.Iterate(func(item T) bool {
 		r = item
 		found = true
-	}
-
+		return true
+	})
 	return r, found
 }
 
@@ -139,13 +156,13 @@ func (q Query[T]) Last() (T, bool) {
 func (q Query[T]) LastWith(predicate func(T) bool) (T, bool) {
 	var r T
 	found := false
-	for item := range q.Iterate {
+	q.Iterate(func(item T) bool {
 		if predicate(item) {
 			r = item
 			found = true
 		}
-	}
-
+		return true
+	})
 	return r, found
 }
 
@@ -244,9 +261,10 @@ func (q Query[T]) SingleWith(predicate func(T) bool) (T, bool) {
 func (q Query[T]) ToChannel(result chan<- T) {
 	defer close(result)
 
-	for item := range q.Iterate {
+	q.Iterate(func(item T) bool {
 		result <- item
-	}
+		return true
+	})
 }
 
 // ToMap iterates over a collection of KeyValue elements and returns a map
@@ -254,9 +272,10 @@ func (q Query[T]) ToChannel(result chan<- T) {
 // use the ToMapBy method.
 func ToMap[TKey comparable, TValue any](q Query[KeyValue[TKey, TValue]]) map[TKey]TValue {
 	result := make(map[TKey]TValue)
-	for item := range q.Iterate {
+	q.Iterate(func(item KeyValue[TKey, TValue]) bool {
 		result[item.Key] = item.Value
-	}
+		return true
+	})
 	return result
 }
 
@@ -270,9 +289,10 @@ func (q Query[T]) ToMapBy[TKey comparable, TValue any](
 	keySelector func(T) TKey,
 	valueSelector func(T) TValue) map[TKey]TValue {
 	result := make(map[TKey]TValue)
-	for item := range q.Iterate {
+	q.Iterate(func(item T) bool {
 		result[keySelector(item)] = valueSelector(item)
-	}
+		return true
+	})
 	return result
 }
 

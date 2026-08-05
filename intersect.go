@@ -14,18 +14,18 @@ func (q Query[T]) Intersect(q2 Query[T]) Query[T] {
 	return Query[T]{
 		Iterate: func(yield func(T) bool) {
 			set := newSeenSet[T]()
-			for item := range q2.Iterate {
+			q2.Iterate(func(item T) bool {
 				set.add(item)
-			}
+				return true
+			})
 
-			for item := range q.Iterate {
+			q.Iterate(func(item T) bool {
 				if set.has(item) {
 					set.del(item)
-					if !yield(item) {
-						return
-					}
+					return yield(item)
 				}
-			}
+				return true
+			})
 		},
 	}
 }
@@ -42,19 +42,19 @@ func (q Query[T]) IntersectBy[TKey comparable](q2 Query[T], selector func(T) TKe
 	return Query[T]{
 		Iterate: func(yield func(T) bool) {
 			set := make(map[TKey]struct{})
-			for item := range q2.Iterate {
+			q2.Iterate(func(item T) bool {
 				set[selector(item)] = struct{}{}
-			}
+				return true
+			})
 
-			for item := range q.Iterate {
+			q.Iterate(func(item T) bool {
 				key := selector(item)
 				if _, exists := set[key]; exists {
 					delete(set, key)
-					if !yield(item) {
-						return
-					}
+					return yield(item)
 				}
-			}
+				return true
+			})
 		},
 	}
 }

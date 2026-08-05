@@ -12,9 +12,10 @@ func (q Query[T]) Except(q2 Query[T]) Query[T] {
 	return Query[T]{
 		Iterate: func(yield func(T) bool) {
 			set := newSeenSet[T]()
-			for item := range q2.Iterate {
+			q2.Iterate(func(item T) bool {
 				set.add(item)
-			}
+				return true
+			})
 
 			q.Iterate(func(item T) bool {
 				if !set.has(item) {
@@ -36,9 +37,10 @@ func (q Query[T]) ExceptBy[TKey comparable](q2 Query[T], selector func(T) TKey) 
 	return Query[T]{
 		Iterate: func(yield func(T) bool) {
 			set := make(map[TKey]struct{})
-			for item := range q2.Iterate {
+			q2.Iterate(func(item T) bool {
 				set[selector(item)] = struct{}{}
-			}
+				return true
+			})
 
 			q.Iterate(func(item T) bool {
 				if _, seen := set[selector(item)]; !seen {
