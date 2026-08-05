@@ -31,17 +31,22 @@ func descending[T any, TKey cmp.Ordered](selector func(T) TKey) func(a, b T) int
 // sorts it with the given comparison functions, applied in order until one of
 // them reports a difference.
 func (q Query[T]) sortedIterate(compares []func(a, b T) int) iter.Seq[T] {
-	return func(yield func(T) bool) {
-		items := q.collect()
-
-		slices.SortFunc(items, func(a, b T) int {
+	compare := compares[0]
+	if len(compares) > 1 {
+		compare = func(a, b T) int {
 			for _, compare := range compares {
 				if c := compare(a, b); c != 0 {
 					return c
 				}
 			}
 			return 0
-		})
+		}
+	}
+
+	return func(yield func(T) bool) {
+		items := q.collect()
+
+		slices.SortFunc(items, compare)
 
 		for _, item := range items {
 			if !yield(item) {
