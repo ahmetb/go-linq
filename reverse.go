@@ -8,10 +8,7 @@ package linq
 func (q Query[T]) Reverse() Query[T] {
 	return Query[T]{
 		Iterate: func(yield func(T) bool) {
-			var items []T
-			for item := range q.Iterate {
-				items = append(items, item)
-			}
+			items := q.collect()
 
 			for i := len(items) - 1; i >= 0; i-- {
 				if !yield(items[i]) {
@@ -19,5 +16,6 @@ func (q Query[T]) Reverse() Query[T] {
 				}
 			}
 		},
+		size: q.size,
 	}
 }

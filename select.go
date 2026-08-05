@@ -22,6 +22,7 @@ func (q Query[T]) Select[TResult any](selector func(T) TResult) Query[TResult] {
 				return yield(selector(item))
 			})
 		},
+		size: q.size,
 	}
 }
 
@@ -45,5 +46,6 @@ func (q Query[T]) SelectIndexed[TResult any](selector func(int, T) TResult) Quer
 				return yield(newItem)
 			})
 		},
+		size: q.size,
 	}
 }

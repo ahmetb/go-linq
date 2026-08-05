@@ -32,7 +32,7 @@ func descending[T any, TKey cmp.Ordered](selector func(T) TKey) func(a, b T) int
 // them reports a difference.
 func (q Query[T]) sortedIterate(compares []func(a, b T) int) iter.Seq[T] {
 	return func(yield func(T) bool) {
-		items := slices.Collect(q.Iterate)
+		items := q.collect()
 
 		slices.SortFunc(items, func(a, b T) int {
 			for _, compare := range compares {
@@ -64,6 +64,7 @@ func (q Query[T]) OrderBy[TKey cmp.Ordered](selector func(T) TKey) OrderedQuery[
 		original: q,
 		Query: Query[T]{
 			Iterate: q.sortedIterate(compares),
+			size:    q.size,
 		},
 	}
 }
@@ -80,6 +81,7 @@ func (q Query[T]) OrderByDescending[TKey cmp.Ordered](selector func(T) TKey) Ord
 		original: q,
 		Query: Query[T]{
 			Iterate: q.sortedIterate(compares),
+			size:    q.size,
 		},
 	}
 }
@@ -94,6 +96,7 @@ func (oq OrderedQuery[T]) ThenBy[TKey cmp.Ordered](selector func(T) TKey) Ordere
 		original: oq.original,
 		Query: Query[T]{
 			Iterate: oq.original.sortedIterate(compares),
+			size:    oq.original.size,
 		},
 	}
 }
@@ -108,6 +111,7 @@ func (oq OrderedQuery[T]) ThenByDescending[TKey cmp.Ordered](selector func(T) TK
 		original: oq.original,
 		Query: Query[T]{
 			Iterate: oq.original.sortedIterate(compares),
+			size:    oq.original.size,
 		},
 	}
 }
@@ -133,7 +137,7 @@ func (s sorter[T]) Less(i, j int) bool { return s.less(s.items[i], s.items[j]) }
 func (q Query[T]) Sort(less func(i, j T) bool) Query[T] {
 	return Query[T]{
 		Iterate: func(yield func(T) bool) {
-			items := slices.Collect(q.Iterate)
+			items := q.collect()
 
 			sort.Sort(sorter[T]{items: items, less: less})
 
@@ -143,5 +147,6 @@ func (q Query[T]) Sort(less func(i, j T) bool) Query[T] {
 				}
 			}
 		},
+		size: q.size,
 	}
 }

@@ -2,7 +2,6 @@ package linq
 
 import (
 	"iter"
-	"slices"
 )
 
 // All determines whether all elements of a collection satisfy a condition.
@@ -153,7 +152,7 @@ func (q Query[T]) LastWith(predicate func(T) bool) (T, bool) {
 // Results collects all items from a query into a slice. It is equivalent to
 // ToSlice and is kept for familiarity with earlier go-linq versions.
 func (q Query[T]) Results() []T {
-	return slices.Collect(q.Iterate)
+	return q.collect()
 }
 
 // SequenceEqual determines whether two collections are equal.
@@ -278,6 +277,9 @@ func (q Query[T]) ToMapBy[TKey comparable, TValue any](
 }
 
 // ToSlice iterates over a collection and returns the results as a slice.
+// When the query's element count is known up front (e.g. a slice source
+// transformed only by length-preserving operators), the result slice is
+// allocated once at the right size.
 func (q Query[T]) ToSlice() []T {
-	return slices.Collect(q.Iterate)
+	return q.collect()
 }

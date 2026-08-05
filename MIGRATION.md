@@ -94,6 +94,9 @@ func (q MyQuery) GreaterThan(...)  func (q MyQuery) GreaterThan(...)
 * **Method values need instantiation:** `f := q.Select` does not compile for
   generic methods; write `f := q.Select[string]`. Ordinary chained calls are
   unaffected (inference works at call sites).
+* **Construct `Query` with a named field:** write
+  `Query[T]{Iterate: seq}`, not `Query[T]{seq}` — the struct carries
+  additional unexported bookkeeping fields.
 * **`OrderedQuery[T].Distinct()`** still deduplicates adjacent elements by
   boxed equality, matching v4.
 * **`GroupBy` output order** is now deterministic (first appearance of each

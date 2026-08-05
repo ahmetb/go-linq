@@ -3,6 +3,7 @@ package linq
 import (
 	"context"
 	"iter"
+	"slices"
 )
 
 // Query is the type returned from query functions. It represents a lazy,
@@ -10,6 +11,33 @@ import (
 // as shown in the example.
 type Query[T any] struct {
 	Iterate iter.Seq[T]
+
+	// size hints the exact number of elements the query yields, when that is
+	// cheaply known; zero means unknown. Sources with a known length set it,
+	// and only operators that emit exactly one element per source element may
+	// propagate it. Operators that change cardinality need to do nothing:
+	// they construct a fresh Query without the field, and the hint safely
+	// zeroes out.
+	//
+	// The hint is consumed only as the capacity of preallocated result
+	// slices, so it can never change what a query produces. A missing hint
+	// forfeits the preallocation; a stale one (e.g., a source map mutated
+	// after the query was built) merely mis-sizes it.
+	size int
+}
+
+// collect gathers all elements into a slice, preallocating when the query
+// carries a size hint.
+func (q Query[T]) collect() []T {
+	if q.size > 0 {
+		out := make([]T, 0, q.size)
+		q.Iterate(func(item T) bool {
+			out = append(out, item)
+			return true
+		})
+		return out
+	}
+	return slices.Collect(q.Iterate)
 }
 
 // KeyValue is a type used to iterate over a map. This type is also used by
@@ -35,6 +63,7 @@ func FromSlice[S ~[]T, T any](source S) Query[T] {
 				}
 			}
 		},
+		size: len(source),
 	}
 }
 
@@ -52,6 +81,7 @@ func FromMap[M ~map[TKey]TValue, TKey comparable, TValue any](source M) Query[Ke
 				}
 			}
 		},
+		size: len(source),
 	}
 }
 
@@ -130,6 +160,7 @@ func Range(start, count int) Query[int] {
 				}
 			}
 		},
+		size: max(count, 0),
 	}
 }
 
@@ -143,5 +174,6 @@ func Repeat[T any](value T, count int) Query[T] {
 				}
 			}
 		},
+		size: max(count, 0),
 	}
 }
