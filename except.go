@@ -3,19 +3,21 @@ package linq
 // Except produces the set difference of two sequences. The set difference is
 // the members of the first sequence that don't appear in the second sequence.
 //
-// Elements are tracked in a set keyed by their boxed (interface) values, so
-// this method panics if T is not a comparable type at runtime. ExceptBy with
-// an identity selector avoids the boxing and performs better.
+// Elements of basic comparable kinds (integers, floats, complex numbers,
+// strings, booleans) are tracked in a strongly-typed set with no boxing. All
+// other element types are tracked by their boxed (interface) values, so for
+// them this method panics if T is not a comparable type at runtime; ExceptBy
+// with a comparable key selector is the fast path for such types.
 func (q Query[T]) Except(q2 Query[T]) Query[T] {
 	return Query[T]{
 		Iterate: func(yield func(T) bool) {
-			set := make(map[any]struct{})
+			set := newSeenSet[T]()
 			for item := range q2.Iterate {
-				set[item] = struct{}{}
+				set.add(item)
 			}
 
 			q.Iterate(func(item T) bool {
-				if _, seen := set[item]; !seen {
+				if !set.has(item) {
 					return yield(item)
 				}
 				return true

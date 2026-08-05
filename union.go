@@ -6,18 +6,19 @@ package linq
 // behavior to the Concat method, which returns all the elements in the input
 // collection, including duplicates.
 //
-// Elements are tracked in a set keyed by their boxed (interface) values, so
-// this method panics if T is not a comparable type at runtime. UnionBy with
-// an identity selector avoids the boxing and performs better.
+// Elements of basic comparable kinds (integers, floats, complex numbers,
+// strings, booleans) are tracked in a strongly-typed set with no boxing. All
+// other element types are tracked by their boxed (interface) values, so for
+// them this method panics if T is not a comparable type at runtime; UnionBy
+// with a comparable key selector is the fast path for such types.
 func (q Query[T]) Union(q2 Query[T]) Query[T] {
 	return Query[T]{
 		Iterate: func(yield func(T) bool) {
-			set := make(map[any]struct{})
+			set := newSeenSet[T]()
 			stopped := false
 
 			q.Iterate(func(item T) bool {
-				if _, seen := set[item]; !seen {
-					set[item] = struct{}{}
+				if set.add(item) {
 					if !yield(item) {
 						stopped = true
 						return false
@@ -31,8 +32,7 @@ func (q Query[T]) Union(q2 Query[T]) Query[T] {
 			}
 
 			q2.Iterate(func(item T) bool {
-				if _, seen := set[item]; !seen {
-					set[item] = struct{}{}
+				if set.add(item) {
 					if !yield(item) {
 						return false
 					}

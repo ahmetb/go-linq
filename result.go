@@ -38,12 +38,15 @@ func (q Query[T]) AnyWith(predicate func(T) bool) bool {
 
 // Contains determines whether a collection contains a specified element.
 //
-// Elements are compared as boxed (interface) values, so this method panics if
-// T is not a comparable type at runtime. AnyWith with an equality predicate
-// avoids the boxing and performs better.
+// Elements of basic comparable kinds (integers, floats, complex numbers,
+// strings, booleans) are compared directly. All other element types are
+// compared as boxed (interface) values, so for them this method panics if T
+// is not a comparable type at runtime; AnyWith with an equality predicate is
+// the fast path for such types.
 func (q Query[T]) Contains(value T) bool {
+	equal := equalFor[T]()
 	for item := range q.Iterate {
-		if any(item) == any(value) {
+		if equal(item, value) {
 			return true
 		}
 	}
@@ -155,16 +158,19 @@ func (q Query[T]) Results() []T {
 
 // SequenceEqual determines whether two collections are equal.
 //
-// Elements are compared as boxed (interface) values, so this method panics if
-// T is not a comparable type at runtime.
+// Elements of basic comparable kinds (integers, floats, complex numbers,
+// strings, booleans) are compared directly. All other element types are
+// compared as boxed (interface) values, so for them this method panics if T
+// is not a comparable type at runtime.
 func (q Query[T]) SequenceEqual(q2 Query[T]) bool {
 	next2, stop2 := iter.Pull(q2.Iterate)
 	defer stop2()
 
+	eq := equalFor[T]()
 	equal := true
 	q.Iterate(func(item T) bool {
 		item2, ok2 := next2()
-		if !ok2 || any(item) != any(item2) {
+		if !ok2 || !eq(item, item2) {
 			equal = false
 			return false
 		}

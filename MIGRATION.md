@@ -52,7 +52,7 @@ than the `…T` API was.
 | `Zip(q2, result)` | `Zip(q2 Query[TSecond], func(T, TSecond) TResult) Query[TResult]` |
 | `OrderBy(func(any) any)` | `OrderBy(func(T) TKey)` with `TKey cmp.Ordered` — same for `OrderByDescending`, `ThenBy`, `ThenByDescending`. Each level may use a different key type. `bool` keys are no longer supported: map them to `int` |
 | `Sort(less func(i, j any) bool)` | `Sort(less func(i, j T) bool)` |
-| `Distinct()`, `Union(q2)`, `Except(q2)`, `Intersect(q2)`, `Contains(v)`, `SequenceEqual(q2)` | unchanged shape; elements are still compared as boxed values at runtime (as in v4). For zero-boxing fast paths use the `By` variants with a `comparable` key |
+| `Distinct()`, `Union(q2)`, `Except(q2)`, `Intersect(q2)`, `Contains(v)`, `SequenceEqual(q2)` | unchanged shape; elements of basic comparable kinds (integers, floats, complex, strings, booleans) are tracked and compared through strongly-typed sets with no boxing. Other element types fall back to boxed comparison at runtime (as in v4) — for those, the `By` variants with a `comparable` key remain the typed fast path |
 | `DistinctBy(func(any) any)` | `DistinctBy(func(T) TKey)` with `TKey comparable` — same for `ExceptBy`, `IntersectBy`, and **new** `UnionBy` |
 | `Aggregate(f)` | `Aggregate(func(acc, item T) T) (T, bool)` — `ok` replaces the nil result on empty input |
 | `AggregateWithSeed(seed, f)` | `AggregateWithSeed(seed TAccumulate, func(TAccumulate, T) TAccumulate) TAccumulate` — the accumulator type may differ from `T` |

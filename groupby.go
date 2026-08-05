@@ -10,8 +10,9 @@ type Group[TKey comparable, TElement any] struct {
 // key selector function and projects the elements for each group by using a
 // specified function.
 //
-// GroupBy is a generic method: the key type TKey and the element type TElement are
-// inferred from the supplied functions. The key type TKey must be comparable.
+// GroupBy is a generic method: the key type TKey and the element type TElement
+// are inferred from the supplied functions. The key type TKey must be
+// comparable.
 //
 // Groups are yielded in the order of the first appearance of their key in the
 // source collection, and elements within each group preserve the order they
@@ -20,21 +21,26 @@ func (q Query[T]) GroupBy[TKey comparable, TElement any](keySelector func(T) TKe
 	elementSelector func(T) TElement) Query[Group[TKey, TElement]] {
 	return Query[Group[TKey, TElement]]{
 		Iterate: func(yield func(Group[TKey, TElement]) bool) {
-			groups := make(map[TKey][]TElement)
+			index := make(map[TKey]int)
 			var keys []TKey
+			var buckets [][]TElement
 
 			for item := range q.Iterate {
 				key := keySelector(item)
-				if _, ok := groups[key]; !ok {
+				i, ok := index[key]
+				if !ok {
+					i = len(buckets)
+					index[key] = i
 					keys = append(keys, key)
+					buckets = append(buckets, nil)
 				}
-				groups[key] = append(groups[key], elementSelector(item))
+				buckets[i] = append(buckets[i], elementSelector(item))
 			}
 
-			for _, key := range keys {
+			for i, key := range keys {
 				group := Group[TKey, TElement]{
 					Key:   key,
-					Group: groups[key],
+					Group: buckets[i],
 				}
 				if !yield(group) {
 					return

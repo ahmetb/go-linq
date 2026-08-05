@@ -4,6 +4,7 @@ import (
 	"cmp"
 	"iter"
 	"slices"
+	"sort"
 )
 
 // OrderedQuery is the type returned from OrderBy, OrderByDescending ThenBy and
@@ -111,26 +112,30 @@ func (oq OrderedQuery[T]) ThenByDescending[TKey cmp.Ordered](selector func(T) TK
 	}
 }
 
+// sorter adapts a less function to sort.Interface so that sorting calls the
+// user's comparator exactly once per comparison.
+type sorter[T any] struct {
+	items []T
+	less  func(i, j T) bool
+}
+
+func (s sorter[T]) Len() int           { return len(s.items) }
+func (s sorter[T]) Swap(i, j int)      { s.items[i], s.items[j] = s.items[j], s.items[i] }
+func (s sorter[T]) Less(i, j int) bool { return s.less(s.items[i], s.items[j]) }
+
 // Sort returns a new query by sorting elements with provided less function in
 // ascending order. The comparer function should return true if the parameter i
 // is less than j.
 //
 // Unlike OrderBy, Sort does not require the sort key to be an ordered type,
-// so it can be used with arbitrary comparison logic.
+// so it can be used with arbitrary comparison logic. The less function is
+// invoked once per element comparison.
 func (q Query[T]) Sort(less func(i, j T) bool) Query[T] {
 	return Query[T]{
 		Iterate: func(yield func(T) bool) {
 			items := slices.Collect(q.Iterate)
 
-			slices.SortFunc(items, func(a, b T) int {
-				if less(a, b) {
-					return -1
-				}
-				if less(b, a) {
-					return 1
-				}
-				return 0
-			})
+			sort.Sort(sorter[T]{items: items, less: less})
 
 			for _, item := range items {
 				if !yield(item) {

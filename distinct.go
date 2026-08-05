@@ -3,18 +3,18 @@ package linq
 // Distinct method returns distinct elements from a collection. The result is an
 // unordered collection that contains no duplicate values.
 //
-// Elements are tracked in a set keyed by their boxed (interface) values, so
-// this method panics if T is not a comparable type at runtime. For element
-// types whose boxing allocates (strings, structs, large numbers), DistinctBy
-// with an identity selector avoids the boxing and performs better.
+// Elements of basic comparable kinds (integers, floats, complex numbers,
+// strings, booleans) are tracked in a strongly-typed set with no boxing. All
+// other element types are tracked by their boxed (interface) values, so for
+// them this method panics if T is not a comparable type at runtime; DistinctBy
+// with a comparable key selector is the fast path for such types.
 func (q Query[T]) Distinct() Query[T] {
 	return Query[T]{
 		Iterate: func(yield func(T) bool) {
-			set := make(map[any]struct{})
+			set := newSeenSet[T]()
 
 			q.Iterate(func(item T) bool {
-				if _, seen := set[item]; !seen {
-					set[item] = struct{}{}
+				if set.add(item) {
 					return yield(item)
 				}
 
@@ -32,11 +32,12 @@ func (q Query[T]) Distinct() Query[T] {
 func (oq OrderedQuery[T]) Distinct() OrderedQuery[T] {
 	distinct := Query[T]{
 		Iterate: func(yield func(T) bool) {
+			equal := equalFor[T]()
 			var previous T
 			isFirst := true
 
 			oq.Iterate(func(item T) bool {
-				if isFirst || any(item) != any(previous) {
+				if isFirst || !equal(item, previous) {
 					previous = item
 					isFirst = false
 					return yield(item)
