@@ -50,104 +50,77 @@ func boxedSet[T any]() seenSet[T] {
 	}
 }
 
-// newSeenSet returns a set of T backed by a strongly-typed map when T is a
-// basic comparable kind, so that no per-element boxing occurs. For all other
-// element types it falls back to a map keyed by boxed values, which panics at
-// runtime if T is not comparable (matching v4 behavior).
+// setOps bundles the element-type-dependent operations of the set operators:
+// constructing a seenSet and comparing two elements for equality.
+type setOps[T any] struct {
+	newSet func() seenSet[T]
+	equal  func(T, T) bool
+}
+
+func typedOps[T comparable]() any {
+	return setOps[T]{
+		newSet: typedSet[T],
+		equal:  func(a, b T) bool { return a == b },
+	}
+}
+
+// opsFor returns operations backed by strongly-typed maps and direct ==
+// comparison when T is a basic comparable kind, so that no per-element boxing
+// occurs. For all other element types it falls back to operating on boxed
+// (interface) values, which panics at runtime if T is not comparable
+// (matching v4 behavior).
 //
-// The type assertions below are exact: a named type whose underlying type is
-// a basic kind (e.g. "type ID int") takes the fallback path, preserving its
-// own equality semantics through boxing.
-func newSeenSet[T any]() seenSet[T] {
-	var s any
+// The type-switch cases are exact: a named type whose underlying type is a
+// basic kind (e.g. "type ID int") takes the fallback path, preserving its own
+// equality semantics through boxing.
+func opsFor[T any]() setOps[T] {
+	var o any
 	switch any(*new(T)).(type) {
 	case int:
-		s = typedSet[int]()
+		o = typedOps[int]()
 	case int8:
-		s = typedSet[int8]()
+		o = typedOps[int8]()
 	case int16:
-		s = typedSet[int16]()
+		o = typedOps[int16]()
 	case int32:
-		s = typedSet[int32]()
+		o = typedOps[int32]()
 	case int64:
-		s = typedSet[int64]()
+		o = typedOps[int64]()
 	case uint:
-		s = typedSet[uint]()
+		o = typedOps[uint]()
 	case uint8:
-		s = typedSet[uint8]()
+		o = typedOps[uint8]()
 	case uint16:
-		s = typedSet[uint16]()
+		o = typedOps[uint16]()
 	case uint32:
-		s = typedSet[uint32]()
+		o = typedOps[uint32]()
 	case uint64:
-		s = typedSet[uint64]()
+		o = typedOps[uint64]()
 	case uintptr:
-		s = typedSet[uintptr]()
+		o = typedOps[uintptr]()
 	case float32:
-		s = typedSet[float32]()
+		o = typedOps[float32]()
 	case float64:
-		s = typedSet[float64]()
+		o = typedOps[float64]()
 	case complex64:
-		s = typedSet[complex64]()
+		o = typedOps[complex64]()
 	case complex128:
-		s = typedSet[complex128]()
+		o = typedOps[complex128]()
 	case string:
-		s = typedSet[string]()
+		o = typedOps[string]()
 	case bool:
-		s = typedSet[bool]()
+		o = typedOps[bool]()
 	default:
-		return boxedSet[T]()
+		return setOps[T]{
+			newSet: boxedSet[T],
+			equal:  func(a, b T) bool { return any(a) == any(b) },
+		}
 	}
-	return s.(seenSet[T])
+	// Never fails: in each case above T is that exact concrete type, so
+	// setOps[T] is the same instantiated type as the stored value.
+	return o.(setOps[T])
 }
 
-func typedEqual[T comparable]() any {
-	return func(a, b T) bool { return a == b }
-}
+func newSeenSet[T any]() seenSet[T] { return opsFor[T]().newSet() }
 
-// equalFor returns an equality function for T: a direct == comparison when T
-// is a basic comparable kind, and comparison of boxed values otherwise. The
-// boxed comparison panics at runtime if T is not comparable (matching v4
-// behavior).
-func equalFor[T any]() func(T, T) bool {
-	var f any
-	switch any(*new(T)).(type) {
-	case int:
-		f = typedEqual[int]()
-	case int8:
-		f = typedEqual[int8]()
-	case int16:
-		f = typedEqual[int16]()
-	case int32:
-		f = typedEqual[int32]()
-	case int64:
-		f = typedEqual[int64]()
-	case uint:
-		f = typedEqual[uint]()
-	case uint8:
-		f = typedEqual[uint8]()
-	case uint16:
-		f = typedEqual[uint16]()
-	case uint32:
-		f = typedEqual[uint32]()
-	case uint64:
-		f = typedEqual[uint64]()
-	case uintptr:
-		f = typedEqual[uintptr]()
-	case float32:
-		f = typedEqual[float32]()
-	case float64:
-		f = typedEqual[float64]()
-	case complex64:
-		f = typedEqual[complex64]()
-	case complex128:
-		f = typedEqual[complex128]()
-	case string:
-		f = typedEqual[string]()
-	case bool:
-		f = typedEqual[bool]()
-	default:
-		return func(a, b T) bool { return any(a) == any(b) }
-	}
-	return f.(func(T, T) bool)
-}
+func equalFor[T any]() func(T, T) bool { return opsFor[T]().equal }
