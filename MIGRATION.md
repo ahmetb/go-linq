@@ -18,7 +18,7 @@ already typed and usually work as-is on the base method name.
 | `OrderedQuery` | `OrderedQuery[T]` |
 | `KeyValue` (`Key`, `Value` are `any`) | `KeyValue[TKey comparable, TValue any]` |
 | `Group` (`Key any`, `Group []any`) | `Group[TKey comparable, TElement any]` |
-| `Iterable` (`Iterate() iter.Seq[any]`) | `Iterable[T]` (`Iterate() iter.Seq[T]`) |
+| `Iterable` (`Iterate() iter.Seq[any]`) | *removed* — pass your collection's iterator to `FromSeq(c.Iterate())` |
 | `Comparable` (`CompareTo`) | *removed* — `OrderBy`/`ThenBy` keys must satisfy `cmp.Ordered`; use `Sort(less)` for custom comparison logic |
 
 ## Constructors
@@ -30,7 +30,7 @@ already typed and usually work as-is on the base method name.
 | `FromMap(m)` | unchanged, returns `Query[KeyValue[TKey, TValue]]` |
 | `FromChannel(ch)`, `FromChannelWithContext(ctx, ch)` | unchanged, return `Query[T]` |
 | `FromString(s)` | unchanged, returns `Query[rune]` |
-| `FromIterable(i)` | takes `Iterable[T]`, returns `Query[T]` |
+| `FromIterable(i)` | *removed* — use `FromSeq(i.Iterate())` |
 | — | **new:** `FromSeq(seq iter.Seq[T])` adapts any range-over-func iterator |
 | `Range(start, count)` | unchanged, returns `Query[int]` |
 | `Repeat(v, count)` | unchanged, returns `Query[T]` |
@@ -69,7 +69,7 @@ than the `…T` API was.
 | `SumInts() int64`, `SumUInts() uint64`, `SumFloats() float64` | package function `Sum(q)` (result has the element type); or chainable `SumBy(func(T) TNumber)` |
 | `Average() float64` | package function `Average(q)`; or chainable `AverageBy(func(T) TNumber)`. Still returns `NaN` on empty input |
 | `ToSlice(&s)` | `ToSlice() []T` — no pointer argument, no capacity-reuse semantics |
-| `Results() []any` | `Results() []T` (alias of `ToSlice`) |
+| `Results() []any` | *removed* — use `ToSlice() []T` |
 | `ToMap(&m)`, `ToMapBy(&m, keySel, valSel)` | package function `ToMap(q Query[KeyValue[TKey, TValue]]) map[TKey]TValue`; method `ToMapBy(func(T) TKey, func(T) TValue) map[TKey]TValue` |
 | `ToChannel(chan any)` | `ToChannel(chan<- T)` |
 | `ToChannelT(any)` | *removed* — `ToChannel` is typed now |

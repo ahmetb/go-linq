@@ -174,9 +174,8 @@ resulting query is inferred from the argument:
 - `FromChannel` — creates a query from a channel.
 - `FromChannelWithContext` — creates a query from a channel with `Context` support.
 - `FromString` — creates a `Query[rune]` from a string.
-- `FromIterable` — creates a query from a custom collection implementing the
-  `Iterable[T]` interface.
-- `FromSeq` — creates a query from any standard `iter.Seq[T]` iterator.
+- `FromSeq` — creates a query from any standard `iter.Seq[T]` iterator,
+  including custom collections that expose an iterator method.
 - `Range`, `Repeat` — generate sequences.
 
 The runtime-reflection based `From(any)` constructor from v4 has been removed:

@@ -166,12 +166,6 @@ func (q Query[T]) LastWith(predicate func(T) bool) (T, bool) {
 	return r, found
 }
 
-// Results collects all items from a query into a slice. It is equivalent to
-// ToSlice and is kept for familiarity with earlier go-linq versions.
-func (q Query[T]) Results() []T {
-	return q.collect()
-}
-
 // SequenceEqual determines whether two collections are equal.
 //
 // Elements of basic comparable kinds (integers, floats, complex numbers,

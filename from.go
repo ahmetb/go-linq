@@ -52,12 +52,6 @@ type KeyValue[TKey comparable, TValue any] struct {
 	Value TValue
 }
 
-// Iterable is an interface that has to be implemented by a custom collection
-// to work with linq.
-type Iterable[T any] interface {
-	Iterate() iter.Seq[T]
-}
-
 // FromSlice initializes a linq query with a passed slice.
 func FromSlice[S ~[]T, T any](source S) Query[T] {
 	return Query[T]{
@@ -138,16 +132,9 @@ func FromString[S ~string](source S) Query[rune] {
 	}
 }
 
-// FromIterable initializes a linq query with a custom collection passed. This
-// collection has to implement Iterable.
-func FromIterable[T any](source Iterable[T]) Query[T] {
-	return Query[T]{
-		Iterate: source.Iterate(),
-	}
-}
-
 // FromSeq initializes a linq query from an iter.Seq. This allows any
-// range-over-func iterator to be used as a query source.
+// range-over-func iterator to be used as a query source, including custom
+// collections that expose an iterator method.
 func FromSeq[T any](source iter.Seq[T]) Query[T] {
 	return Query[T]{
 		Iterate: source,

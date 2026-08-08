@@ -2,7 +2,6 @@ package linq
 
 import (
 	"fmt"
-	"iter"
 	"reflect"
 	"slices"
 	"testing"
@@ -12,21 +11,6 @@ type foo struct {
 	f1 int
 	f2 bool
 	f3 string
-}
-
-// intCollection is a custom collection implementing Iterable[int].
-type intCollection struct {
-	items []int
-}
-
-func (c intCollection) Iterate() iter.Seq[int] {
-	return func(yield func(int) bool) {
-		for _, item := range c.items {
-			if !yield(item) {
-				return
-			}
-		}
-	}
 }
 
 func toSlice[T any](q Query[T]) (result []T) {

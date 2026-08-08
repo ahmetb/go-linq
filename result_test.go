@@ -199,15 +199,6 @@ func TestLastWith(t *testing.T) {
 	}
 }
 
-func TestResults(t *testing.T) {
-	input := []int{1, 2, 3}
-	want := []int{1, 2, 3}
-
-	if r := FromSlice(input).Results(); !reflect.DeepEqual(r, want) {
-		t.Errorf("FromSlice(%v).Results()=%v expected %v", input, r, want)
-	}
-}
-
 func TestSequenceEqual(t *testing.T) {
 	tests := []struct {
 		input  []int

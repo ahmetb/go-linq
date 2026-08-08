@@ -90,15 +90,6 @@ func TestFromString(t *testing.T) {
 	}
 }
 
-func TestFromIterable(t *testing.T) {
-	s := intCollection{items: []int{1, -2, 3}}
-	w := []int{1, -2, 3}
-
-	if q := FromIterable(s); !testQueryIteration(q, w) {
-		t.Errorf("FromIterable(%v)!=%v", s, w)
-	}
-}
-
 func TestFromSeq(t *testing.T) {
 	seq := func(yield func(int) bool) {
 		for i := 1; i <= 3; i++ {
