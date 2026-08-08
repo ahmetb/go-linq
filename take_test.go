@@ -1,6 +1,9 @@
 package linq
 
-import "testing"
+import (
+	"slices"
+	"testing"
+)
 
 func TestTake(t *testing.T) {
 	arr := [9]int{1, 1, 1, 2, 1, 2, 3, 4, 2}
@@ -22,6 +25,39 @@ func TestTake(t *testing.T) {
 	want := []rune{'s', 's', 't'}
 	if q := FromString("sstr").Take(3); !testQueryIteration(q, want) {
 		t.Errorf("FromString(sstr).Take(3)=%v expected %v", toSlice(q), want)
+	}
+}
+
+// TestTakePullsExactlyCount verifies Take stops pulling from the source once
+// it has yielded count elements, rather than pulling one extra element just to
+// discard it. The Where predicate counts how many elements the source produced.
+func TestTakePullsExactlyCount(t *testing.T) {
+	tests := []struct {
+		count  int
+		output []int
+		pulled int
+	}{
+		{0, nil, 0},
+		{1, []int{1}, 1},
+		{3, []int{1, 2, 3}, 3},
+		{4, []int{1, 2, 3, 4}, 4},
+		{9, []int{1, 2, 3, 4}, 4},
+	}
+
+	for _, test := range tests {
+		pulled := 0
+		q := FromSlice([]int{1, 2, 3, 4}).Where(func(int) bool {
+			pulled++
+			return true
+		}).Take(test.count)
+
+		if out := toSlice(q); !slices.Equal(out, test.output) {
+			t.Errorf("Take(%d)=%v expected %v", test.count, out, test.output)
+		}
+		if pulled != test.pulled {
+			t.Errorf("Take(%d) pulled %d elements from the source, expected %d",
+				test.count, pulled, test.pulled)
+		}
 	}
 }
 

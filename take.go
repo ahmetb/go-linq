@@ -1,17 +1,22 @@
 package linq
 
 // Take returns a specified number of contiguous elements from the start of a
-// collection.
+// collection. It stops pulling from the source as soon as count elements have
+// been yielded.
 func (q Query[T]) Take(count int) Query[T] {
+	if count <= 0 {
+		return Query[T]{Iterate: func(func(T) bool) {}}
+	}
+
 	return Query[T]{
 		Iterate: func(yield func(T) bool) {
 			n := count
 			q.Iterate(func(item T) bool {
-				if n > 0 {
-					n--
-					return yield(item)
+				if !yield(item) {
+					return false
 				}
-				return false
+				n--
+				return n > 0
 			})
 		},
 	}
