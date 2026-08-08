@@ -56,9 +56,7 @@ func (q Query[T]) Prepend(item T) Query[T] {
 				return
 			}
 
-			q.Iterate(func(item T) bool {
-				return yield(item)
-			})
+			q.Iterate(yield)
 		},
 	}
 }
