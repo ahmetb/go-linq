@@ -55,6 +55,26 @@ func TestAverage(t *testing.T) {
 	}
 }
 
+func TestAverage_LargeIntegerCancellation(t *testing.T) {
+	const float64PrecisionLimit = int64(1 << 53)
+	input := []int64{float64PrecisionLimit + 1, -float64PrecisionLimit}
+	if got := Average(FromSlice(input)); got != 0.5 {
+		t.Errorf("Average(%v)=%v; want 0.5", input, got)
+	}
+}
+
+func TestAverage_LargeUnsignedPrecision(t *testing.T) {
+	// Each element is 2^53+1, which is not representable in float64: converting
+	// elements one by one silently drops the +1 three times, while summing in
+	// uint64 first keeps the sum exact.
+	v := uint64(1<<53) + 1
+	input := []uint64{v, v, v}
+	want := float64(v+v+v) / 3
+	if got := Average(FromSlice(input)); got != want {
+		t.Errorf("Average(%v)=%v; want %v", input, got, want)
+	}
+}
+
 func TestAverageForNaN(t *testing.T) {
 	if r := Average(FromSlice([]int{})); !math.IsNaN(r) {
 		t.Errorf("Average(FromSlice([]int{}))=%v expected NaN", r)
