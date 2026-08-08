@@ -343,3 +343,21 @@ func TestToSlice(t *testing.T) {
 		t.Errorf("FromSlice(nil).ToSlice()=%v expected empty", result)
 	}
 }
+
+func TestToSlice_ReturnsNilWhenSourceMapIsCleared(t *testing.T) {
+	source := map[int]int{1: 1}
+	q := FromMap(source)
+	clear(source)
+
+	if out := q.ToSlice(); out != nil {
+		t.Errorf("ToSlice() returned len=%d cap=%d; want nil", len(out), cap(out))
+	}
+}
+
+func TestToSlice_ReturnsNilWhenEmptyWithoutSizeHint(t *testing.T) {
+	// FromString carries no size hint, so this exercises the slices.Collect
+	// path of collect().
+	if out := FromString("").ToSlice(); out != nil {
+		t.Errorf("ToSlice() returned len=%d cap=%d; want nil", len(out), cap(out))
+	}
+}

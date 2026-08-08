@@ -27,11 +27,16 @@ type Query[T any] struct {
 }
 
 // collect gathers all elements into a slice, preallocating when the query
-// carries a size hint.
+// carries a size hint. The hinted allocation is deferred until the first
+// element arrives so that an empty query collects to nil even when a stale
+// hint promises elements, matching slices.Collect on the unhinted path.
 func (q Query[T]) collect() []T {
-	if q.size > 0 {
-		out := make([]T, 0, q.size)
+	if size := q.size; size > 0 {
+		var out []T
 		q.Iterate(func(item T) bool {
+			if out == nil {
+				out = make([]T, 0, size)
+			}
 			out = append(out, item)
 			return true
 		})
