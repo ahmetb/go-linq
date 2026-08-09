@@ -14,16 +14,36 @@ type Query[T any] struct {
 
 	// size hints the exact number of elements the query yields, when that is
 	// cheaply known; zero means unknown. Sources with a known length set it,
-	// and only operators that emit exactly one element per source element may
-	// propagate it. Operators that change cardinality need to do nothing:
-	// they construct a fresh Query without the field, and the hint safely
-	// zeroes out.
+	// and an operator may propagate it only when its output count is a
+	// deterministic function of its inputs' counts: one-per-element
+	// projections pass it through, prefix/suffix slicing and concatenation
+	// compute it. Operators whose count depends on the data (filters, set
+	// ops) need to do nothing: they construct a fresh Query without the
+	// field, and the hint safely zeroes out.
 	//
 	// The hint is consumed only as the capacity of preallocated result
 	// slices, so it can never change what a query produces. A missing hint
 	// forfeits the preallocation; a stale one (e.g., a source map mutated
 	// after the query was built) merely mis-sizes it.
 	size int
+}
+
+// addSize combines two size hints additively; the sum is known only when
+// both parts are known (nonzero).
+func addSize(a, b int) int {
+	if a <= 0 || b <= 0 {
+		return 0
+	}
+	return a + b
+}
+
+// minSize combines two size hints by minimum; the result is known only when
+// both parts are known (nonzero).
+func minSize(a, b int) int {
+	if a <= 0 || b <= 0 {
+		return 0
+	}
+	return min(a, b)
 }
 
 // collect gathers all elements into a slice, preallocating when the query
@@ -55,14 +75,8 @@ type KeyValue[TKey comparable, TValue any] struct {
 // FromSlice initializes a linq query with a passed slice.
 func FromSlice[S ~[]T, T any](source S) Query[T] {
 	return Query[T]{
-		Iterate: func(yield func(T) bool) {
-			for _, item := range source {
-				if !yield(item) {
-					return
-				}
-			}
-		},
-		size: len(source),
+		Iterate: slices.Values(source),
+		size:    len(source),
 	}
 }
 

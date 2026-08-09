@@ -21,7 +21,7 @@ func (q Query[T]) Join[TInner any, TKey comparable, TResult any](inner Query[TIn
 
 	return Query[TResult]{
 		Iterate: func(yield func(TResult) bool) {
-			innerLookup := make(map[TKey][]TInner)
+			innerLookup := make(map[TKey][]TInner, inner.size)
 			inner.Iterate(func(innerItem TInner) bool {
 				innerKey := innerKeySelector(innerItem)
 				innerLookup[innerKey] = append(innerLookup[innerKey], innerItem)

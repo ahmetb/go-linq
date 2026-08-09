@@ -27,6 +27,10 @@ func (q Query[T]) GroupJoin[TInner any, TKey comparable, TResult any](inner Quer
 
 	return Query[TResult]{
 		Iterate: func(yield func(TResult) bool) {
+			// The lookup is deliberately not presized from inner's size hint:
+			// grouping many inner elements per key is this operator's normal
+			// case, so the element count systematically overestimates the
+			// distinct key count and oversizes the map.
 			innerLookup := make(map[TKey][]TInner)
 			inner.Iterate(func(innerItem TInner) bool {
 				innerKey := innerKeySelector(innerItem)

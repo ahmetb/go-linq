@@ -265,7 +265,7 @@ func (q Query[T]) ToChannel(result chan<- T) {
 // populated with them. To populate a map from a collection of other types,
 // use the ToMapBy method.
 func ToMap[TKey comparable, TValue any](q Query[KeyValue[TKey, TValue]]) map[TKey]TValue {
-	result := make(map[TKey]TValue)
+	result := make(map[TKey]TValue, q.size)
 	q.Iterate(func(item KeyValue[TKey, TValue]) bool {
 		result[item.Key] = item.Value
 		return true
@@ -282,7 +282,7 @@ func ToMap[TKey comparable, TValue any](q Query[KeyValue[TKey, TValue]]) map[TKe
 func (q Query[T]) ToMapBy[TKey comparable, TValue any](
 	keySelector func(T) TKey,
 	valueSelector func(T) TValue) map[TKey]TValue {
-	result := make(map[TKey]TValue)
+	result := make(map[TKey]TValue, q.size)
 	q.Iterate(func(item T) bool {
 		result[keySelector(item)] = valueSelector(item)
 		return true

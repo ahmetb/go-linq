@@ -19,6 +19,7 @@ func (q Query[T]) Append(item T) Query[T] {
 				yield(item)
 			}
 		},
+		size: addSize(q.size, 1),
 	}
 }
 
@@ -44,6 +45,7 @@ func (q Query[T]) Concat(q2 Query[T]) Query[T] {
 				q2.Iterate(yield)
 			}
 		},
+		size: addSize(q.size, q2.size),
 	}
 }
 
@@ -58,5 +60,6 @@ func (q Query[T]) Prepend(item T) Query[T] {
 
 			q.Iterate(yield)
 		},
+		size: addSize(q.size, 1),
 	}
 }

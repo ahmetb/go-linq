@@ -15,30 +15,18 @@ func (q Query[T]) Union(q2 Query[T]) Query[T] {
 	return Query[T]{
 		Iterate: func(yield func(T) bool) {
 			set := newSeenSet[T]()
-			stopped := false
-
-			q.Iterate(func(item T) bool {
+			continuing := true
+			emit := func(item T) bool {
 				if set.add(item) {
-					if !yield(item) {
-						stopped = true
-						return false
-					}
+					continuing = yield(item)
 				}
-				return true
-			})
-
-			if stopped {
-				return
+				return continuing
 			}
 
-			q2.Iterate(func(item T) bool {
-				if set.add(item) {
-					if !yield(item) {
-						return false
-					}
-				}
-				return true
-			})
+			q.Iterate(emit)
+			if continuing {
+				q2.Iterate(emit)
+			}
 		},
 	}
 }
@@ -53,34 +41,20 @@ func (q Query[T]) UnionBy[TKey comparable](q2 Query[T], selector func(T) TKey) Q
 	return Query[T]{
 		Iterate: func(yield func(T) bool) {
 			set := make(map[TKey]struct{})
-			stopped := false
-
-			q.Iterate(func(item T) bool {
+			continuing := true
+			emit := func(item T) bool {
 				key := selector(item)
 				if _, seen := set[key]; !seen {
 					set[key] = struct{}{}
-					if !yield(item) {
-						stopped = true
-						return false
-					}
+					continuing = yield(item)
 				}
-				return true
-			})
-
-			if stopped {
-				return
+				return continuing
 			}
 
-			q2.Iterate(func(item T) bool {
-				key := selector(item)
-				if _, seen := set[key]; !seen {
-					set[key] = struct{}{}
-					if !yield(item) {
-						return false
-					}
-				}
-				return true
-			})
+			q.Iterate(emit)
+			if continuing {
+				q2.Iterate(emit)
+			}
 		},
 	}
 }

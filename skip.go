@@ -14,6 +14,7 @@ func (q Query[T]) Skip(count int) Query[T] {
 				return yield(item)
 			})
 		},
+		size: max(q.size-max(count, 0), 0),
 	}
 }
 

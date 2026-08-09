@@ -19,6 +19,9 @@ func (q Query[T]) Take(count int) Query[T] {
 				return n > 0
 			})
 		},
+		// Propagated only from a known source size: count alone is an upper
+		// bound, not a yield count, and would over-allocate collections.
+		size: min(q.size, count),
 	}
 }
 

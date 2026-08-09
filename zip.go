@@ -29,5 +29,8 @@ func (q Query[T]) Zip[TSecond, TResult any](q2 Query[TSecond],
 				return yield(resultSelector(item, item2))
 			})
 		},
+		// Known only when both inputs are known: the shorter side ends the
+		// zip, so min is the exact yield count.
+		size: minSize(q.size, q2.size),
 	}
 }

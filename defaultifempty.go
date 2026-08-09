@@ -24,5 +24,8 @@ func (q Query[T]) DefaultIfEmpty(defaultValue T) Query[T] {
 				yield(defaultValue)
 			}
 		},
+		// A known size is necessarily nonzero, so the source passes through
+		// unchanged; an unknown source stays unknown.
+		size: q.size,
 	}
 }
