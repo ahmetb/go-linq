@@ -188,7 +188,7 @@ interface boxing, type assertions, and reflection. Per-element work in a v5
 chain is just typed closure calls; the only allocations are the fixed closure
 captures made when the query is constructed.
 
-Measured on Apple M5 Pro with go1.27rc2, 1M-element `[]int` (100k structs for
+Measured on Apple M5 Pro with go1.27, 1M-element `[]int` (100k structs for
 the projection case):
 
 | Benchmark | v4 (`any` API) | v4 (`…T` reflection API) | **v5** | hand-written loop |
