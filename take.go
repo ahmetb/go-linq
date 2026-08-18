@@ -19,6 +19,7 @@ func (q Query[T]) Take(count int) Query[T] {
 				return n > 0
 			})
 		},
+		size: min(count, q.size),
 	}
 }
 

@@ -1,5 +1,22 @@
 package linq
 
+import "math"
+
+// concatSize returns the exact size of a query that yields every element of a
+// size-a sequence followed by every element of a size-b one. Both arguments are
+// sizes, never deltas, so zero means unknown and the result is known only when
+// both inputs are and their sum fits in an int.
+//
+// Only the concatenating operators need this. An operator that shifts a size by
+// a constant (Skip, Take) clamps with min or max instead, which already treat
+// the zero sentinel correctly; plain addition does not.
+func concatSize(a, b int) int {
+	if a <= 0 || b <= 0 || a > math.MaxInt-b {
+		return 0
+	}
+	return a + b
+}
+
 // Append inserts an item to the end of a collection, so it becomes the last
 // item.
 func (q Query[T]) Append(item T) Query[T] {
@@ -19,6 +36,7 @@ func (q Query[T]) Append(item T) Query[T] {
 				yield(item)
 			}
 		},
+		size: concatSize(q.size, 1),
 	}
 }
 
@@ -44,6 +62,7 @@ func (q Query[T]) Concat(q2 Query[T]) Query[T] {
 				q2.Iterate(yield)
 			}
 		},
+		size: concatSize(q.size, q2.size),
 	}
 }
 
@@ -58,5 +77,6 @@ func (q Query[T]) Prepend(item T) Query[T] {
 
 			q.Iterate(yield)
 		},
+		size: concatSize(q.size, 1),
 	}
 }

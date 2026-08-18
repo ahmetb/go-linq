@@ -24,5 +24,8 @@ func (q Query[T]) DefaultIfEmpty(defaultValue T) Query[T] {
 				yield(defaultValue)
 			}
 		},
+		// A non-zero hint means the source is non-empty, so the default value
+		// is never yielded and the element count is unchanged.
+		size: q.size,
 	}
 }
