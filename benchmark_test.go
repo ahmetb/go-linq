@@ -59,3 +59,15 @@ func BenchmarkZipSkipTake(b *testing.B) {
 		}).Skip(2).Take(5).Count()
 	}
 }
+
+func BenchmarkChunk(b *testing.B) {
+	const chunkSize = 256
+	source := make([]int, 65536)
+	b.ResetTimer()
+
+	for n := 0; n < b.N; n++ {
+		if got := Chunk(FromSlice(source), chunkSize).Count(); got != len(source)/chunkSize {
+			b.Fatalf("Chunk count=%d expected %d", got, len(source)/chunkSize)
+		}
+	}
+}

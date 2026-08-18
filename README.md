@@ -181,6 +181,16 @@ resulting query is inferred from the argument:
 The runtime-reflection based `From(any)` constructor from v4 has been removed:
 in a fully-typed API the element type must be known at the call site.
 
+## .NET 6 Operators
+
+v5 includes `ElementAt(Index)`, `SkipLast`, `TakeLast`, `TakeRange`, `Zip3`,
+`MinWith`/`MaxWith`, and `MinByWith`/`MaxByWith`. Construct indices with
+`IndexFromStart(n)` or `IndexFromEnd(n)`.
+`Chunk` is a package-level function (`Chunk(query, size)`) because the current
+Go compiler rejects `Query[T].Chunk() Query[[]T]` as an instantiation cycle.
+The .NET explicit-default overloads are represented by Go's existing
+`(value, ok)` return convention instead of separate methods.
+
 ## Performance
 
 v5 eliminates the three taxes the type-erased v4 API paid on every element:
@@ -238,6 +248,8 @@ v5.0.0 (2026-08-21)
     cmp.Ordered (use Sort for custom comparisons).
   - GroupBy yields groups in first-seen key order (deterministic).
   - Added FromSeq to adapt any iter.Seq[T].
+  - Added .NET 6 operators: Chunk, index/range operations, SkipLast, TakeLast,
+    comparer-based extrema, and Zip3.
   - 5-15x faster than v4; allocations drop from O(n) to O(1) per query.
 
 v4.0.0 (2025-10-12)

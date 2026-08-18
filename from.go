@@ -14,16 +14,19 @@ type Query[T any] struct {
 
 	// size hints the exact number of elements the query yields, when that is
 	// cheaply known; zero means unknown. Sources with a known length set it,
-	// and only operators that emit exactly one element per source element may
-	// propagate it. Operators that change cardinality need to do nothing:
-	// they construct a fresh Query without the field, and the hint safely
-	// zeroes out.
+	// and operators may propagate a size that can be derived exactly from their
+	// inputs. Operators whose cardinality is unknown construct a fresh Query
+	// without the field, and the hint safely zeroes out.
 	//
 	// The hint is consumed only as the capacity of preallocated result
 	// slices, so it can never change what a query produces. A missing hint
 	// forfeits the preallocation; a stale one (e.g., a source map mutated
 	// after the query was built) merely mis-sizes it.
 	size int
+}
+
+func emptyQuery[T any]() Query[T] {
+	return Query[T]{Iterate: func(func(T) bool) {}}
 }
 
 // collect gathers all elements into a slice, preallocating when the query

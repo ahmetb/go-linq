@@ -378,6 +378,21 @@ func ExampleQuery_Zip() {
 	// [1=one 2=two 3=three]
 }
 
+func ExampleQuery_Zip3() {
+	query := Range(1, 3).Zip3(
+		FromSlice([]string{"one", "two", "three"}),
+		FromSlice([]string{"I", "II", "III"}),
+		func(n int, word, roman string) string {
+			return fmt.Sprintf("%d=%s=%s", n, word, roman)
+		},
+	)
+
+	fmt.Println(query.ToSlice())
+
+	// Output:
+	// [1=one=I 2=two=II 3=three=III]
+}
+
 func ExampleQuery_Aggregate() {
 	fruits := []string{"apple", "mango", "orange", "passionfruit", "grape"}
 
@@ -481,6 +496,13 @@ func ExampleQuery_Take() {
 	// [1 2 3]
 }
 
+func ExampleQuery_TakeRange() {
+	fmt.Println(Range(0, 10).TakeRange(IndexFromEnd(4), IndexFromEnd(1)).ToSlice())
+
+	// Output:
+	// [6 7 8]
+}
+
 func ExampleQuery_TakeWhile() {
 	fruits := []string{"apple", "banana", "mango", "orange", "passionfruit", "grape"}
 
@@ -546,6 +568,21 @@ func ExampleQuery_IndexOf() {
 
 	// Output:
 	// 1
+}
+
+func ExampleQuery_ElementAt() {
+	value, ok := FromSlice([]string{"a", "b", "c"}).ElementAt(IndexFromEnd(1))
+	fmt.Println(value, ok)
+
+	// Output:
+	// c true
+}
+
+func ExampleChunk() {
+	fmt.Println(Chunk(Range(1, 5), 2).ToSlice())
+
+	// Output:
+	// [[1 2] [3 4] [5]]
 }
 
 func ExampleQuery_ToMapBy() {

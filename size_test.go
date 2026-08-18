@@ -3,8 +3,8 @@ package linq
 import "testing"
 
 // The size hint carried by Query is an invariant the compiler cannot check:
-// it may be propagated only by operators that emit exactly one element per
-// source element. These tests pin it in both directions.
+// it may be propagated only when an operator can derive its output count
+// exactly. These tests pin it in both directions.
 
 // TestSizeHint_ExactPreallocation catches an operator losing the hint: append
 // growth never lands on an arbitrary exact size (collecting 1000 elements by
@@ -37,4 +37,22 @@ func TestSizeHint_DroppedByFilters(t *testing.T) {
 	if cap(out) >= 100_000 {
 		t.Errorf("cap=%d: filtered query inherited the source's size hint", cap(out))
 	}
+}
+
+func checkSizeHint[T any](t *testing.T, name string, q Query[T], want int) {
+	t.Helper()
+	if got := q.size; got != want {
+		t.Errorf("%s size=%d expected %d", name, got, want)
+	}
+}
+
+func TestDerivedSizeHints(t *testing.T) {
+	q := FromSlice(make([]int, 10))
+	checkSizeHint(t, "SkipLast", q.SkipLast(3), 7)
+	checkSizeHint(t, "TakeLast", q.TakeLast(3), 3)
+	checkSizeHint(t, "TakeRange", q.TakeRange(IndexFromEnd(7), IndexFromStart(8)), 5)
+	checkSizeHint(t, "Zip3", q.Zip3(Range(0, 8), Range(0, 6), func(a, b, c int) int {
+		return a + b + c
+	}), 6)
+	checkSizeHint(t, "Chunk", Chunk(q, 3), 4)
 }
