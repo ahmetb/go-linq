@@ -88,7 +88,7 @@ func (q Query[T]) TakeLast(count int) Query[T] {
 // (exclusive). Out-of-range bounds are clipped; a reversed range is empty. A
 // start counted from the end consumes the entire source before yielding its
 // first element.
-func (q Query[T]) TakeRange(start, end Index) Query[T] {
+func (q Query[T]) TakeRange(start, end Position) Query[T] {
 	resultSize := max(end.offset(q.size)-start.offset(q.size), 0)
 
 	if !start.fromEnd {

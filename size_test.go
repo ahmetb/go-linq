@@ -50,7 +50,8 @@ func TestDerivedSizeHints(t *testing.T) {
 	q := FromSlice(make([]int, 10))
 	checkSizeHint(t, "SkipLast", q.SkipLast(3), 7)
 	checkSizeHint(t, "TakeLast", q.TakeLast(3), 3)
-	checkSizeHint(t, "TakeRange", q.TakeRange(IndexFromEnd(7), IndexFromStart(8)), 5)
+	checkSizeHint(t, "TakeRange", q.TakeRange(PositionFromEnd(7), PositionFromStart(8)), 5)
+	checkSizeHint(t, "Index", Index(q), 10)
 	checkSizeHint(t, "Zip3", q.Zip3(Range(0, 8), Range(0, 6), func(a, b, c int) int {
 		return a + b + c
 	}), 6)

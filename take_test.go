@@ -73,22 +73,22 @@ func TestTakeLastConsumesSourceBeforeYielding(t *testing.T) {
 func TestTakeRange(t *testing.T) {
 	input := []int{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
 	tests := []struct {
-		start Index
-		end   Index
+		start Position
+		end   Position
 		want  []int
 	}{
-		{IndexFromStart(2), IndexFromStart(7), []int{2, 3, 4, 5, 6}},
-		{IndexFromStart(2), IndexFromEnd(3), []int{2, 3, 4, 5, 6}},
-		{IndexFromEnd(7), IndexFromEnd(3), []int{3, 4, 5, 6}},
-		{IndexFromEnd(7), IndexFromStart(8), []int{3, 4, 5, 6, 7}},
-		{IndexFromStart(0), IndexFromEnd(0), input},
-		{IndexFromStart(20), IndexFromEnd(0), nil},
-		{IndexFromEnd(20), IndexFromEnd(0), input},
-		{IndexFromEnd(2), IndexFromEnd(5), nil},
-		{IndexFromStart(7), IndexFromStart(2), nil},
-		{IndexFromStart(2), IndexFromStart(20), []int{2, 3, 4, 5, 6, 7, 8, 9}},
-		{IndexFromStart(2), IndexFromEnd(20), nil},
-		{IndexFromEnd(20), IndexFromStart(3), []int{0, 1, 2}},
+		{PositionFromStart(2), PositionFromStart(7), []int{2, 3, 4, 5, 6}},
+		{PositionFromStart(2), PositionFromEnd(3), []int{2, 3, 4, 5, 6}},
+		{PositionFromEnd(7), PositionFromEnd(3), []int{3, 4, 5, 6}},
+		{PositionFromEnd(7), PositionFromStart(8), []int{3, 4, 5, 6, 7}},
+		{PositionFromStart(0), PositionFromEnd(0), input},
+		{PositionFromStart(20), PositionFromEnd(0), nil},
+		{PositionFromEnd(20), PositionFromEnd(0), input},
+		{PositionFromEnd(2), PositionFromEnd(5), nil},
+		{PositionFromStart(7), PositionFromStart(2), nil},
+		{PositionFromStart(2), PositionFromStart(20), []int{2, 3, 4, 5, 6, 7, 8, 9}},
+		{PositionFromStart(2), PositionFromEnd(20), nil},
+		{PositionFromEnd(20), PositionFromStart(3), []int{0, 1, 2}},
 	}
 
 	sources := []Query[int]{
@@ -112,10 +112,10 @@ func TestTakeRangeFromStartStopsAtEnd(t *testing.T) {
 	q := FromSlice([]int{0, 1, 2, 3, 4, 5}).Where(func(int) bool {
 		pulled++
 		return true
-	}).TakeRange(IndexFromStart(2), IndexFromStart(5))
+	}).TakeRange(PositionFromStart(2), PositionFromStart(5))
 
 	if got := q.ToSlice(); !slices.Equal(got, []int{2, 3, 4}) {
-		t.Errorf("TakeRange(IndexFromStart(2), IndexFromStart(5))=%v expected [2 3 4]", got)
+		t.Errorf("TakeRange(PositionFromStart(2), PositionFromStart(5))=%v expected [2 3 4]", got)
 	}
 	if pulled != 5 {
 		t.Errorf("source pulled %d elements expected 5", pulled)

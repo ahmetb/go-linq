@@ -71,3 +71,46 @@ func BenchmarkChunk(b *testing.B) {
 		}
 	}
 }
+
+func BenchmarkCountBy(b *testing.B) {
+	const keys = 1024
+	source := make([]int, 65536)
+	for i := range source {
+		source[i] = i % keys
+	}
+	q := FromSlice(source)
+	b.ResetTimer()
+
+	for n := 0; n < b.N; n++ {
+		if got := q.CountBy(func(i int) int { return i }).Count(); got != keys {
+			b.Fatalf("CountBy count=%d expected %d", got, keys)
+		}
+	}
+}
+
+func BenchmarkAggregateBy(b *testing.B) {
+	const keys = 1024
+	source := make([]int, 65536)
+	for i := range source {
+		source[i] = i % keys
+	}
+	q := FromSlice(source)
+	keySelector := func(i int) int { return i }
+	seedSelector := func(int) int { return 0 }
+	accumulate := func(total, item int) int { return total + item }
+
+	b.Run("Seed", func(b *testing.B) {
+		for n := 0; n < b.N; n++ {
+			if got := q.AggregateBy(keySelector, 0, accumulate).Count(); got != keys {
+				b.Fatalf("AggregateBy count=%d expected %d", got, keys)
+			}
+		}
+	})
+	b.Run("SeedSelector", func(b *testing.B) {
+		for n := 0; n < b.N; n++ {
+			if got := q.AggregateByWithSeedSelector(keySelector, seedSelector, accumulate).Count(); got != keys {
+				b.Fatalf("AggregateByWithSeedSelector count=%d expected %d", got, keys)
+			}
+		}
+	})
+}

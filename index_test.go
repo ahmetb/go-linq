@@ -29,18 +29,18 @@ func TestIndexOf(t *testing.T) {
 func TestElementAt(t *testing.T) {
 	input := []int{10, 20, 30, 40, 50}
 	tests := []struct {
-		index  Index
+		index  Position
 		want   int
 		wantOK bool
 	}{
-		{IndexFromStart(0), 10, true},
-		{IndexFromStart(2), 30, true},
-		{IndexFromStart(5), 0, false},
-		{IndexFromEnd(1), 50, true},
-		{IndexFromEnd(3), 30, true},
-		{IndexFromEnd(5), 10, true},
-		{IndexFromEnd(6), 0, false},
-		{IndexFromEnd(0), 0, false},
+		{PositionFromStart(0), 10, true},
+		{PositionFromStart(2), 30, true},
+		{PositionFromStart(5), 0, false},
+		{PositionFromEnd(1), 50, true},
+		{PositionFromEnd(3), 30, true},
+		{PositionFromEnd(5), 10, true},
+		{PositionFromEnd(6), 0, false},
+		{PositionFromEnd(0), 0, false},
 	}
 
 	for _, test := range tests {
@@ -59,23 +59,51 @@ func TestElementAtStopsAtRequestedIndex(t *testing.T) {
 		return true
 	})
 
-	got, ok := q.ElementAt(IndexFromStart(2))
+	got, ok := q.ElementAt(PositionFromStart(2))
 	if !ok || got != 30 {
-		t.Fatalf("ElementAt(IndexFromStart(2))=%v,%v expected 30,true", got, ok)
+		t.Fatalf("ElementAt(PositionFromStart(2))=%v,%v expected 30,true", got, ok)
 	}
 	if pulled != 3 {
 		t.Errorf("source pulled %d elements expected 3", pulled)
 	}
 }
 
-func TestIndexNegativeValuePanics(t *testing.T) {
+func TestPositionNegativeValuePanics(t *testing.T) {
 	constructors := []func(){
-		func() { NewIndex(-1, false) },
-		func() { NewIndex(-1, true) },
-		func() { IndexFromStart(-1) },
-		func() { IndexFromEnd(-1) },
+		func() { NewPosition(-1, false) },
+		func() { NewPosition(-1, true) },
+		func() { PositionFromStart(-1) },
+		func() { PositionFromEnd(-1) },
 	}
 	for _, constructor := range constructors {
 		mustPanic(t, constructor)
+	}
+}
+
+func TestIndex(t *testing.T) {
+	want := []KeyValue[int, string]{
+		{Key: 0, Value: "zero"},
+		{Key: 1, Value: "one"},
+		{Key: 2, Value: "two"},
+	}
+
+	if q := Index(FromSlice([]string{"zero", "one", "two"})); !testQueryIteration(q, want) {
+		t.Errorf("Index()=%v expected %v", q.ToSlice(), want)
+	}
+	if got := Index(FromSlice([]string{})).ToSlice(); got != nil {
+		t.Errorf("Index(empty)=%v expected nil", got)
+	}
+}
+
+func TestIndexStopsWithConsumer(t *testing.T) {
+	pulled := 0
+	q := Index(FromSlice([]int{10, 20, 30}).Where(func(int) bool {
+		pulled++
+		return true
+	}))
+
+	q.Iterate(func(KeyValue[int, int]) bool { return false })
+	if pulled != 1 {
+		t.Errorf("Index pulled %d elements expected 1", pulled)
 	}
 }

@@ -48,8 +48,8 @@ func (q Query[T]) collect() []T {
 	return slices.Collect(q.Iterate)
 }
 
-// KeyValue is a type used to iterate over a map. This type is also used by
-// the ToMap function to output the result of a query into a map.
+// KeyValue pairs a key with a value. Map queries and keyed operators yield
+// KeyValue elements, which ToMap can collect into a map.
 type KeyValue[TKey comparable, TValue any] struct {
 	Key   TKey
 	Value TValue

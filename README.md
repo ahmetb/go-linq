@@ -183,13 +183,22 @@ in a fully-typed API the element type must be known at the call site.
 
 ## .NET 6 Operators
 
-v5 includes `ElementAt(Index)`, `SkipLast`, `TakeLast`, `TakeRange`, `Zip3`,
+v5 includes `ElementAt(Position)`, `SkipLast`, `TakeLast`, `TakeRange`, `Zip3`,
 `MinWith`/`MaxWith`, and `MinByWith`/`MaxByWith`. Construct indices with
-`IndexFromStart(n)` or `IndexFromEnd(n)`.
+`PositionFromStart(n)` or `PositionFromEnd(n)`.
 `Chunk` is a package-level function (`Chunk(query, size)`) because the current
 Go compiler rejects `Query[T].Chunk() Query[[]T]` as an instantiation cycle.
 The .NET explicit-default overloads are represented by Go's existing
 `(value, ok)` return convention instead of separate methods.
+
+## .NET 9 Operators
+
+v5 includes `CountBy`, `AggregateBy`, `AggregateByWithSeedSelector`, and
+`Index`. The first three yield `KeyValue` results in the order each key first
+appears. `Index(query)` yields `KeyValue` values whose `Key` is the index and
+`Value` is the item; like `Chunk`, it is a package-level function because a
+direct `Query[T].Index() Query[KeyValue[int, T]]` method causes an
+instantiation cycle in the current Go compiler.
 
 ## Performance
 
@@ -250,6 +259,9 @@ v5.0.0 (2026-08-21)
   - Added FromSeq to adapt any iter.Seq[T].
   - Added .NET 6 operators: Chunk, index/range operations, SkipLast, TakeLast,
     comparer-based extrema, and Zip3.
+  - Added .NET 9 operators: CountBy, both AggregateBy seed forms, and Index.
+  - Renamed the range/index helper and constructors from Index to Position to
+    make room for the Index operator.
   - 5-15x faster than v4; allocations drop from O(n) to O(1) per query.
 
 v4.0.0 (2025-10-12)

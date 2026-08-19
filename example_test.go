@@ -423,6 +423,42 @@ func ExampleQuery_AggregateWithSeed() {
 	// 16
 }
 
+func ExampleQuery_AggregateBy() {
+	type score struct {
+		id    string
+		value int
+	}
+	scores := []score{{"0", 42}, {"1", 5}, {"1", 10}, {"0", 25}}
+
+	totals := FromSlice(scores).AggregateBy(
+		func(score score) string { return score.id },
+		0,
+		func(total int, score score) int { return total + score.value },
+	)
+	fmt.Println(totals.ToSlice())
+
+	// Output:
+	// [{0 67} {1 15}]
+}
+
+func ExampleQuery_AggregateByWithSeedSelector() {
+	type sale struct {
+		region string
+		amount int
+	}
+	sales := []sale{{"EU", 1}, {"APAC", 5}, {"EU", 2}}
+
+	totals := FromSlice(sales).AggregateByWithSeedSelector(
+		func(sale sale) string { return sale.region },
+		func(region string) int { return len(region) },
+		func(total int, sale sale) int { return total + sale.amount },
+	)
+	fmt.Println(totals.ToSlice())
+
+	// Output:
+	// [{EU 5} {APAC 9}]
+}
+
 func ExampleQuery_All() {
 	pets := map[string]int{"Barley": 10}
 
@@ -452,6 +488,14 @@ func ExampleQuery_CountWith() {
 
 	// Output:
 	// 5
+}
+
+func ExampleQuery_CountBy() {
+	counts := FromString("abracadabra").CountBy(func(r rune) string { return string(r) })
+	fmt.Println(counts.ToSlice())
+
+	// Output:
+	// [{a 5} {b 2} {r 2} {c 1} {d 1}]
 }
 
 func ExampleQuery_First() {
@@ -497,7 +541,7 @@ func ExampleQuery_Take() {
 }
 
 func ExampleQuery_TakeRange() {
-	fmt.Println(Range(0, 10).TakeRange(IndexFromEnd(4), IndexFromEnd(1)).ToSlice())
+	fmt.Println(Range(0, 10).TakeRange(PositionFromEnd(4), PositionFromEnd(1)).ToSlice())
 
 	// Output:
 	// [6 7 8]
@@ -571,11 +615,18 @@ func ExampleQuery_IndexOf() {
 }
 
 func ExampleQuery_ElementAt() {
-	value, ok := FromSlice([]string{"a", "b", "c"}).ElementAt(IndexFromEnd(1))
+	value, ok := FromSlice([]string{"a", "b", "c"}).ElementAt(PositionFromEnd(1))
 	fmt.Println(value, ok)
 
 	// Output:
 	// c true
+}
+
+func ExampleIndex() {
+	fmt.Println(Index(FromSlice([]string{"zero", "one"})).ToSlice())
+
+	// Output:
+	// [{0 zero} {1 one}]
 }
 
 func ExampleChunk() {
