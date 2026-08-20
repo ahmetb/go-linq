@@ -176,7 +176,7 @@ resulting query is inferred from the argument:
 - `FromString` — creates a `Query[rune]` from a string.
 - `FromSeq` — creates a query from any standard `iter.Seq[T]` iterator,
   including custom collections that expose an iterator method.
-- `Range`, `Repeat` — generate sequences.
+- `Range`, `Repeat`, `Sequence`, `InfiniteSequence` — generate sequences.
 
 The runtime-reflection based `From(any)` constructor from v4 has been removed:
 in a fully-typed API the element type must be known at the call site.
@@ -200,12 +200,28 @@ appears. `Index(query)` yields `KeyValue` values whose `Key` is the index and
 direct `Query[T].Index() Query[KeyValue[int, T]]` method causes an
 instantiation cycle in the current Go compiler.
 
+## .NET 10 Operators
+
+v5 includes `LeftJoin`, `RightJoin`, `Sequence`, `InfiniteSequence`, and
+`Shuffle`. `Sequence` and `InfiniteSequence` support every type in the existing
+`Number` constraint. Outer joins pass the zero value for an unmatched element.
+`Shuffle` uses a non-cryptographically-secure random source and reshuffles on
+each iteration.
+
+All four joins follow .NET in ignoring nil keys: a nil key never matches, not
+even another nil key. `LeftJoin` and `RightJoin` still emit a nil-key element
+when it belongs to the retained side; `GroupJoin` emits a nil-key outer element
+with an empty group.
+
 ## Performance
 
 v5 eliminates the three taxes the type-erased v4 API paid on every element:
 interface boxing, type assertions, and reflection. Per-element work in a v5
 chain is just typed closure calls; the only allocations are the fixed closure
 captures made when the query is constructed.
+The lone exception is a join keyed on an interface type: separating a typed
+nil pointer from a nil interface needs the dynamic value, so that key type
+alone pays for reflection per element.
 
 Measured on Apple M5 Pro with go1.27, 1M-element `[]int` (100k structs for
 the projection case):
@@ -260,6 +276,10 @@ v5.0.0 (2026-08-21)
   - Added .NET 6 operators: Chunk, index/range operations, SkipLast, TakeLast,
     comparer-based extrema, and Zip3.
   - Added .NET 9 operators: CountBy, both AggregateBy seed forms, and Index.
+  - Added .NET 10 operators: LeftJoin, RightJoin, Sequence, InfiniteSequence,
+    and Shuffle.
+  - Changed Join and GroupJoin to ignore nil keys, matching .NET and the new
+    outer joins. Elements with a nil key previously matched each other.
   - Renamed the range/index helper and constructors from Index to Position to
     make room for the Index operator.
   - 5-15x faster than v4; allocations drop from O(n) to O(1) per query.

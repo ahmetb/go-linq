@@ -94,6 +94,20 @@ func ExampleRange() {
 	// [1 2 3 4 5]
 }
 
+func ExampleSequence() {
+	fmt.Println(Sequence(2, 10, 3).ToSlice())
+
+	// Output:
+	// [2 5 8]
+}
+
+func ExampleInfiniteSequence() {
+	fmt.Println(InfiniteSequence(10, -2).Take(4).ToSlice())
+
+	// Output:
+	// [10 8 6 4]
+}
+
 func ExampleRepeat() {
 	fmt.Println(Repeat("go", 3).ToSlice())
 
@@ -239,6 +253,44 @@ func ExampleQuery_Join() {
 	// Terry - Barley
 	// Terry - Boots
 	// Charlotte - Whiskers
+}
+
+func ExampleQuery_LeftJoin() {
+	query := FromSlice([]string{"apple", "banana"}).LeftJoin(
+		FromSlice([]string{"apricot"}),
+		func(s string) byte { return s[0] },
+		func(s string) byte { return s[0] },
+		func(left, right string) string {
+			if right == "" {
+				right = "<none>"
+			}
+			return left + " - " + right
+		},
+	)
+
+	fmt.Println(query.ToSlice())
+
+	// Output:
+	// [apple - apricot banana - <none>]
+}
+
+func ExampleQuery_RightJoin() {
+	query := FromSlice([]string{"apple"}).RightJoin(
+		FromSlice([]string{"apricot", "banana"}),
+		func(s string) byte { return s[0] },
+		func(s string) byte { return s[0] },
+		func(left, right string) string {
+			if left == "" {
+				left = "<none>"
+			}
+			return left + " - " + right
+		},
+	)
+
+	fmt.Println(query.ToSlice())
+
+	// Output:
+	// [apple - apricot <none> - banana]
 }
 
 func ExampleQuery_GroupJoin() {

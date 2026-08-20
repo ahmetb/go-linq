@@ -3,6 +3,7 @@ package linq
 import (
 	"context"
 	"iter"
+	"math"
 	"slices"
 )
 
@@ -156,6 +157,99 @@ func Range(start, count int) Query[int] {
 			}
 		},
 		size: max(count, 0),
+	}
+}
+
+// Sequence generates a numeric sequence from start towards endInclusive by
+// repeatedly adding step. It panics if any argument is NaN, if step is zero
+// while the bounds differ, or if step points away from endInclusive.
+//
+// endInclusive is yielded only when the sum lands on it exactly, so
+// Sequence(0, 5, 2) stops at 4. A step that would overflow T instead of
+// reaching the bound also ends the sequence: Sequence(int8(126), 127, 2)
+// yields 126 alone.
+func Sequence[T Number](start, endInclusive, step T) Query[T] {
+	if start != start {
+		panic("linq: sequence start must not be NaN")
+	}
+	if endInclusive != endInclusive {
+		panic("linq: sequence end must not be NaN")
+	}
+	if step != step {
+		panic("linq: sequence step must not be NaN")
+	}
+
+	if start == endInclusive {
+		return Repeat(start, 1)
+	}
+	if step == 0 {
+		panic("linq: sequence step must not be zero unless the bounds are equal")
+	}
+
+	increasing := step > 0
+	if increasing != (endInclusive > start) {
+		panic("linq: sequence step points away from end")
+	}
+
+	return Query[T]{
+		Iterate: func(yield func(T) bool) {
+			for current := start; yield(current); {
+				next := current + step
+				// Stop once next passes the bound, or once overflow wrapped it
+				// back the way it came.
+				if increasing {
+					if next > endInclusive || next <= current {
+						return
+					}
+				} else if next < endInclusive || next >= current {
+					return
+				}
+
+				current = next
+			}
+		},
+		size: sequenceSize(start, endInclusive, step),
+	}
+}
+
+// sequenceSize returns the exact number of elements Sequence yields, or zero
+// when that count is not cheaply derivable: a floating point step accumulates
+// rounding, and a count wider than an int cannot be a capacity anyway.
+//
+// The span is measured in uint64 rather than in T so that it survives bounds a
+// signed T cannot hold (int8 spans -128..127 as 255), and so that negating the
+// most negative step stays correct.
+//
+// It expects what Sequence has already validated: a nonzero step pointing from
+// start towards endInclusive. A zero step would divide by zero below.
+func sequenceSize[T Number](start, endInclusive, step T) int {
+	// Integer division truncates to zero; only a floating point T keeps a half.
+	if half := T(1) / 2; half != 0 {
+		return 0
+	}
+
+	var span, magnitude uint64
+	if step > 0 {
+		span, magnitude = uint64(endInclusive)-uint64(start), uint64(step)
+	} else {
+		span, magnitude = uint64(start)-uint64(endInclusive), -uint64(step)
+	}
+
+	steps := span / magnitude
+	if steps >= uint64(math.MaxInt) {
+		return 0
+	}
+	return int(steps) + 1
+}
+
+// InfiniteSequence generates an unbounded numeric sequence by repeatedly
+// adding step to start. Iteration ends only when the consumer stops it.
+func InfiniteSequence[T Number](start, step T) Query[T] {
+	return Query[T]{
+		Iterate: func(yield func(T) bool) {
+			for current := start; yield(current); current += step {
+			}
+		},
 	}
 }
 

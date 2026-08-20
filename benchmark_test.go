@@ -114,3 +114,47 @@ func BenchmarkAggregateBy(b *testing.B) {
 		}
 	})
 }
+
+func BenchmarkJoin(b *testing.B) {
+	const keys = 1024
+	source := make([]int, 65536)
+	for i := range source {
+		source[i] = i % keys
+	}
+	outer, inner := FromSlice(source), Range(0, keys)
+	identity := func(i int) int { return i }
+	pair := func(a, b int) int { return a + b }
+
+	b.Run("Join", func(b *testing.B) {
+		for n := 0; n < b.N; n++ {
+			if got := outer.Join(inner, identity, identity, pair).Count(); got != len(source) {
+				b.Fatalf("Join count=%d expected %d", got, len(source))
+			}
+		}
+	})
+	b.Run("LeftJoin", func(b *testing.B) {
+		for n := 0; n < b.N; n++ {
+			if got := outer.LeftJoin(inner, identity, identity, pair).Count(); got != len(source) {
+				b.Fatalf("LeftJoin count=%d expected %d", got, len(source))
+			}
+		}
+	})
+	b.Run("RightJoin", func(b *testing.B) {
+		for n := 0; n < b.N; n++ {
+			if got := inner.RightJoin(outer, identity, identity, pair).Count(); got != len(source) {
+				b.Fatalf("RightJoin count=%d expected %d", got, len(source))
+			}
+		}
+	})
+}
+
+func BenchmarkSequence(b *testing.B) {
+	const count = 65536
+	q := Sequence(0, count-1, 1)
+
+	for n := 0; n < b.N; n++ {
+		if got := Sum(q); got != count*(count-1)/2 {
+			b.Fatalf("Sequence sum=%d expected %d", got, count*(count-1)/2)
+		}
+	}
+}
