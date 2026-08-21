@@ -192,6 +192,19 @@ Go compiler rejects `Query[T].Chunk() Query[[]T]` as an instantiation cycle.
 The .NET explicit-default overloads are represented by Go's existing
 `(value, ok)` return convention instead of separate methods.
 
+## .NET 7 Operators
+
+v5 includes `Order`/`OrderDescending` and `OrderWith`/`OrderDescendingWith`.
+`Order` and `OrderDescending` are package-level functions (`Order(query)`)
+because they constrain the element type to `cmp.Ordered`. The comparer
+overloads become the `OrderWith`/`OrderDescendingWith` methods instead, which
+place no constraint on the element type; their `compare` argument follows the
+`cmp.Compare` convention, like `MinWith`/`MaxWith`.
+
+All four are stable and return an `OrderedQuery` that `ThenBy` and
+`ThenByDescending` can refine further. `Sort` also takes arbitrary comparison
+logic, but it is unstable and does not chain.
+
 ## .NET 9 Operators
 
 v5 includes `CountBy`, `AggregateBy`, `AggregateByWithSeedSelector`, and
@@ -249,8 +262,8 @@ highlights:
   methods are now just as clean and much faster.
 * Element-returning terminals (`First`, `Last`, `Single`, `Aggregate`,
   `Min`, `Max`, …) return `(T, bool)` instead of a nil-able `any`.
-* `Min`, `Max`, `Sum`, `Average`, `ToMap`, and `ToHashSet` are package-level
-  functions
+* `Min`, `Max`, `Sum`, `Average`, `Order`, `OrderDescending`, `ToMap`, and
+  `ToHashSet` are package-level functions
   (their constraints depend on the element type); chainable `MinBy`,
   `MaxBy`, `SumBy`, `AverageBy`, `ToMapBy` methods are available.
 * `ToSlice()` returns `[]T` instead of filling a pointer argument.
@@ -272,12 +285,17 @@ v5.0.0 (2026-08-21)
     MinBy/MaxBy/SumBy/AverageBy/ToMapBy/UnionBy methods.
   - ToSlice() returns []T; ToMap/ToMapBy return maps.
   - Removed Comparable interface; OrderBy/ThenBy keys must satisfy
-    cmp.Ordered (use Sort for custom comparisons).
+    cmp.Ordered (use OrderWith for custom comparisons).
   - GroupBy yields groups in first-seen key order (deterministic).
   - Added FromSeq to adapt any iter.Seq[T].
   - Added Empty and ToHashSet.
   - Added .NET 6 operators: Chunk, index/range operations, SkipLast, TakeLast,
     comparer-based extrema, and Zip3.
+  - Added .NET 7 operators: Order/OrderDescending and the comparer-based
+    OrderWith/OrderDescendingWith variants. All four are stable and chainable
+    with ThenBy.
+  - OrderBy, OrderByDescending, ThenBy and ThenByDescending are now stable,
+    matching .NET LINQ; Sort keeps its existing unstable behavior.
   - Added .NET 9 operators: CountBy, both AggregateBy seed forms, and Index.
   - Added .NET 10 operators: LeftJoin, RightJoin, Sequence, InfiniteSequence,
     and Shuffle.

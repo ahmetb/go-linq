@@ -19,7 +19,7 @@ already typed and usually work as-is on the base method name.
 | `KeyValue` (`Key`, `Value` are `any`) | `KeyValue[TKey comparable, TValue any]` |
 | `Group` (`Key any`, `Group []any`) | `Group[TKey comparable, TElement any]` |
 | `Iterable` (`Iterate() iter.Seq[any]`) | *removed* — pass your collection's iterator to `FromSeq(c.Iterate())` |
-| `Comparable` (`CompareTo`) | *removed* — `OrderBy`/`ThenBy` keys must satisfy `cmp.Ordered`; use `Sort(less)` for custom comparison logic |
+| `Comparable` (`CompareTo`) | *removed* — `OrderBy`/`ThenBy` keys must satisfy `cmp.Ordered`; use `OrderWith(compare)` for custom comparison logic, which like v4 still chains into `ThenBy`. `Sort(less)` is unstable and does not chain |
 
 ## Constructors
 
