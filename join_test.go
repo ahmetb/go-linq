@@ -95,6 +95,82 @@ func TestRightJoin(t *testing.T) {
 	}
 }
 
+func TestFullJoin(t *testing.T) {
+	type pair struct {
+		outer int
+		inner int
+	}
+
+	q := FromSlice([]int{0, 1, 2, 3, 4}).FullJoin(
+		FromSlice([]int{1, 2, 1, 4, 7, 6, 7, 2}),
+		func(i int) int { return i },
+		func(i int) int { return i },
+		func(outer, inner int) pair { return pair{outer, inner} },
+	)
+	want := []pair{
+		{0, 0}, {1, 1}, {1, 1}, {2, 2}, {2, 2}, {3, 0}, {4, 4},
+		{0, 7}, {0, 7}, {0, 6},
+	}
+	if !testQueryIteration(q, want) {
+		t.Errorf("FullJoin()=%v expected %v", q.ToSlice(), want)
+	}
+}
+
+func TestFullJoinWithEmptySide(t *testing.T) {
+	type pair struct {
+		outer int
+		inner int
+	}
+	tests := []struct {
+		name         string
+		outer, inner []int
+		want         []pair
+	}{
+		{name: "both", want: nil},
+		{name: "inner", inner: []int{1, 2}, want: []pair{{0, 1}, {0, 2}}},
+		{name: "outer", outer: []int{1, 2}, want: []pair{{1, 0}, {2, 0}}},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			q := FromSlice(test.outer).FullJoin(
+				FromSlice(test.inner),
+				func(i int) int { return i },
+				func(i int) int { return i },
+				func(outer, inner int) pair { return pair{outer, inner} },
+			)
+			if !testQueryIteration(q, test.want) {
+				t.Errorf("FullJoin()=%v expected %v", q.ToSlice(), test.want)
+			}
+		})
+	}
+}
+
+func TestFullJoinKeepsNilKeyOrder(t *testing.T) {
+	type item struct {
+		key   *int
+		value string
+	}
+	key := 1
+	inner := FromSlice([]item{
+		{value: "nilA"},
+		{key: &key, value: "keyed"},
+		{value: "nilB"},
+	})
+
+	// A nil key never matches, not even another nil key, so the two nil-key
+	// elements stay where they were seen instead of batching together.
+	q := FromSlice([]item{}).FullJoin(inner,
+		func(item item) *int { return item.key },
+		func(item item) *int { return item.key },
+		func(_ item, inner item) string { return inner.value },
+	)
+	want := []string{"nilA", "keyed", "nilB"}
+	if !testQueryIteration(q, want) {
+		t.Errorf("FullJoin(mixed nil keys)=%v expected %v", q.ToSlice(), want)
+	}
+}
+
 func TestJoinsIgnoreNilKeys(t *testing.T) {
 	type item struct {
 		key   *int
@@ -122,6 +198,29 @@ func TestJoinsIgnoreNilKeys(t *testing.T) {
 		t.Errorf("RightJoin(nil keys)=%v expected unmatched outer", q.ToSlice())
 	}
 
+	fullWant := []string{"outer:", ":inner"}
+	if q := outer.FullJoin(inner, key, key, func(outer, inner item) string {
+		return outer.value + ":" + inner.value
+	}); !testQueryIteration(q, fullWant) {
+		t.Errorf("FullJoin(nil keys)=%v expected %v", q.ToSlice(), fullWant)
+	}
+	if q := outer.FullJoin(
+		inner,
+		func(item item) any { return item.key },
+		func(item item) any { return item.key },
+		func(outer, inner item) string { return outer.value + ":" + inner.value },
+	); !testQueryIteration(q, fullWant) {
+		t.Errorf("FullJoin(typed nil interface keys)=%v expected %v", q.ToSlice(), fullWant)
+	}
+	if q := outer.FullJoin(
+		inner,
+		func(item) any { return nil },
+		func(item) any { return nil },
+		func(outer, inner item) string { return outer.value + ":" + inner.value },
+	); !testQueryIteration(q, fullWant) {
+		t.Errorf("FullJoin(untyped nil interface keys)=%v expected %v", q.ToSlice(), fullWant)
+	}
+
 	if q := outer.GroupJoin(inner, key, key, func(_ item, inner []item) int {
 		return len(inner)
 	}); !testQueryIteration(q, []int{0}) {
@@ -131,6 +230,21 @@ func TestJoinsIgnoreNilKeys(t *testing.T) {
 	interfaceLookup := buildJoinLookup(inner, func(item item) any { return item.key })
 	if len(interfaceLookup) != 0 {
 		t.Errorf("join lookup with a typed nil interface key=%v expected empty", interfaceLookup)
+	}
+
+	type boxedItem struct {
+		key   any
+		value string
+	}
+	boxedOuter := FromSlice([]boxedItem{{key: []int(nil), value: "outer"}})
+	boxedInner := FromSlice([]boxedItem{{key: map[string]int(nil), value: "inner"}})
+	if q := boxedOuter.FullJoin(
+		boxedInner,
+		func(item boxedItem) any { return item.key },
+		func(item boxedItem) any { return item.key },
+		func(outer, inner boxedItem) string { return outer.value + ":" + inner.value },
+	); !testQueryIteration(q, fullWant) {
+		t.Errorf("FullJoin(non-comparable typed nil interface keys)=%v expected %v", q.ToSlice(), fullWant)
 	}
 }
 
@@ -183,6 +297,33 @@ func TestLeftJoinStopsWithConsumer(t *testing.T) {
 
 	if outerPulled != 1 || innerPulled != 3 {
 		t.Errorf("LeftJoin pulled outer=%d inner=%d expected 1,3", outerPulled, innerPulled)
+	}
+}
+
+func TestFullJoinStopsWithConsumer(t *testing.T) {
+	outerPulled, innerPulled, results := 0, 0, 0
+	outer := FromSlice([]int{1, 2, 3}).Where(func(int) bool {
+		outerPulled++
+		return true
+	})
+	inner := FromSlice([]int{1, 2, 3}).Where(func(int) bool {
+		innerPulled++
+		return true
+	})
+
+	outer.FullJoin(
+		inner,
+		func(i int) int { return i },
+		func(i int) int { return i },
+		func(outer, inner int) int {
+			results++
+			return outer + inner
+		},
+	).Iterate(func(int) bool { return false })
+
+	if outerPulled != 1 || innerPulled != 3 || results != 1 {
+		t.Errorf("FullJoin pulled outer=%d inner=%d results=%d expected 1,3,1",
+			outerPulled, innerPulled, results)
 	}
 }
 

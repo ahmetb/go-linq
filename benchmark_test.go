@@ -146,6 +146,13 @@ func BenchmarkJoin(b *testing.B) {
 			}
 		}
 	})
+	b.Run("FullJoin", func(b *testing.B) {
+		for n := 0; n < b.N; n++ {
+			if got := outer.FullJoin(inner, identity, identity, pair).Count(); got != len(source) {
+				b.Fatalf("FullJoin count=%d expected %d", got, len(source))
+			}
+		}
+	})
 }
 
 func BenchmarkSequence(b *testing.B) {

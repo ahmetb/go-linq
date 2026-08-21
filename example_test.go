@@ -293,6 +293,28 @@ func ExampleQuery_RightJoin() {
 	// [apple - apricot <none> - banana]
 }
 
+func ExampleQuery_FullJoin() {
+	query := FromSlice([]string{"apple", "banana"}).FullJoin(
+		FromSlice([]string{"apricot", "cherry"}),
+		func(s string) byte { return s[0] },
+		func(s string) byte { return s[0] },
+		func(left, right string) string {
+			if left == "" {
+				left = "<none>"
+			}
+			if right == "" {
+				right = "<none>"
+			}
+			return left + " - " + right
+		},
+	)
+
+	fmt.Println(query.ToSlice())
+
+	// Output:
+	// [apple - apricot banana - <none> <none> - cherry]
+}
+
 func ExampleQuery_GroupJoin() {
 	fruits := []string{"apple", "banana", "apricot", "cherry", "clementine"}
 

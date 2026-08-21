@@ -222,10 +222,20 @@ v5 includes `LeftJoin`, `RightJoin`, `Sequence`, `InfiniteSequence`, and
 `Shuffle` uses a non-cryptographically-secure random source and reshuffles on
 each iteration.
 
-All four joins follow .NET in ignoring nil keys: a nil key never matches, not
+All five joins follow .NET in ignoring nil keys: a nil key never matches, not
 even another nil key. `LeftJoin` and `RightJoin` still emit a nil-key element
 when it belongs to the retained side; `GroupJoin` emits a nil-key outer element
 with an empty group.
+
+## .NET 11 Operators
+
+v5 includes `FullJoin`. It emits matches and unmatched outer elements in outer
+order, then unmatched inner groups in first-seen key order. The missing side is
+passed to the result selector as its zero value. Nil-key elements never match
+but are retained as unmatched elements from both sides.
+
+The .NET 11 overloads that omit the result selector and return tuples have no
+Go equivalent, so they are not included.
 
 ## Performance
 
@@ -299,6 +309,7 @@ v5.0.0 (2026-08-21)
   - Added .NET 9 operators: CountBy, both AggregateBy seed forms, and Index.
   - Added .NET 10 operators: LeftJoin, RightJoin, Sequence, InfiniteSequence,
     and Shuffle.
+  - Added the .NET 11 FullJoin operator.
   - Changed Join and GroupJoin to ignore nil keys, matching .NET and the new
     outer joins. Elements with a nil key previously matched each other.
   - Renamed the range/index helper and constructors from Index to Position to
