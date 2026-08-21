@@ -106,6 +106,19 @@ func TestFromSeq(t *testing.T) {
 	}
 }
 
+func TestEmptyQuery(t *testing.T) {
+	q := Empty[int]()
+	if !testQueryIteration(q, nil) {
+		t.Error("Empty[int]() yielded elements")
+	}
+	if q.Any() || q.Count() != 0 {
+		t.Error("Empty[int]() is not empty")
+	}
+	if appended := q.Append(1); !testQueryIteration(appended, []int{1}) {
+		t.Errorf("Empty[int]().Append(1)=%v expected [1]", appended.ToSlice())
+	}
+}
+
 func TestRange(t *testing.T) {
 	w := []int{-2, -1, 0, 1, 2}
 

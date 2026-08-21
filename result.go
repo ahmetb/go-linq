@@ -273,6 +273,17 @@ func ToMap[TKey comparable, TValue any](q Query[KeyValue[TKey, TValue]]) map[TKe
 	return result
 }
 
+// ToHashSet iterates over a collection and returns its distinct elements as a
+// map-backed set.
+func ToHashSet[T comparable](q Query[T]) map[T]struct{} {
+	result := make(map[T]struct{})
+	q.Iterate(func(item T) bool {
+		result[item] = struct{}{}
+		return true
+	})
+	return result
+}
+
 // ToMapBy iterates over a collection and returns a map populated with
 // elements. Functions keySelector and valueSelector are executed for each
 // element of the collection to generate the key and value for the map.

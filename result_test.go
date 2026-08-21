@@ -289,6 +289,22 @@ func TestToMap(t *testing.T) {
 	}
 }
 
+func TestToHashSet(t *testing.T) {
+	type key struct {
+		id   int
+		name string
+	}
+
+	input := []key{{1, "one"}, {2, "two"}, {1, "one"}}
+	want := map[key]struct{}{{1, "one"}: {}, {2, "two"}: {}}
+	if got := ToHashSet(FromSlice(input)); !reflect.DeepEqual(got, want) {
+		t.Errorf("ToHashSet(%v)=%v expected %v", input, got, want)
+	}
+	if got := ToHashSet(Empty[key]()); got == nil || len(got) != 0 {
+		t.Errorf("ToHashSet(Empty[key]())=%v expected initialized empty map", got)
+	}
+}
+
 func TestToMapBy(t *testing.T) {
 	input := make(map[int]bool)
 	input[1] = true

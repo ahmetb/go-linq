@@ -166,9 +166,10 @@ for v := range q.Iterate {
 
 ## Data Source Constructors
 
-Each constructor is typed for its specific input, and the element type of the
-resulting query is inferred from the argument:
+Each constructor is typed. `Empty` takes an explicit type argument; the other
+constructors take their element type from their arguments:
 
+- `Empty[T]` — creates an empty query of the specified element type.
 - `FromSlice` — creates a query from a slice.
 - `FromMap` — creates a `Query[KeyValue[TKey, TValue]]` from a map.
 - `FromChannel` — creates a query from a channel.
@@ -248,7 +249,8 @@ highlights:
   methods are now just as clean and much faster.
 * Element-returning terminals (`First`, `Last`, `Single`, `Aggregate`,
   `Min`, `Max`, …) return `(T, bool)` instead of a nil-able `any`.
-* `Min`, `Max`, `Sum`, `Average`, `ToMap` are package-level functions
+* `Min`, `Max`, `Sum`, `Average`, `ToMap`, and `ToHashSet` are package-level
+  functions
   (their constraints depend on the element type); chainable `MinBy`,
   `MaxBy`, `SumBy`, `AverageBy`, `ToMapBy` methods are available.
 * `ToSlice()` returns `[]T` instead of filling a pointer argument.
@@ -273,6 +275,7 @@ v5.0.0 (2026-08-21)
     cmp.Ordered (use Sort for custom comparisons).
   - GroupBy yields groups in first-seen key order (deterministic).
   - Added FromSeq to adapt any iter.Seq[T].
+  - Added Empty and ToHashSet.
   - Added .NET 6 operators: Chunk, index/range operations, SkipLast, TakeLast,
     comparer-based extrema, and Zip3.
   - Added .NET 9 operators: CountBy, both AggregateBy seed forms, and Index.

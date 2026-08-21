@@ -7,7 +7,7 @@ import "slices"
 // been yielded.
 func (q Query[T]) Take(count int) Query[T] {
 	if count <= 0 {
-		return emptyQuery[T]()
+		return Empty[T]()
 	}
 
 	return Query[T]{
@@ -68,7 +68,7 @@ func lastItems[T any](q Query[T], count int) ([]T, int) {
 // order. It consumes the source before yielding its first element.
 func (q Query[T]) TakeLast(count int) Query[T] {
 	if count <= 0 {
-		return emptyQuery[T]()
+		return Empty[T]()
 	}
 
 	return Query[T]{
@@ -93,7 +93,7 @@ func (q Query[T]) TakeRange(start, end Position) Query[T] {
 
 	if !start.fromEnd {
 		if !end.fromEnd && start.value >= end.value {
-			return emptyQuery[T]()
+			return Empty[T]()
 		}
 
 		result := q.Skip(start.value)
@@ -109,7 +109,7 @@ func (q Query[T]) TakeRange(start, end Position) Query[T] {
 	if start.value == 0 ||
 		(end.fromEnd && end.value >= start.value) ||
 		(!end.fromEnd && end.value == 0) {
-		return emptyQuery[T]()
+		return Empty[T]()
 	}
 
 	return Query[T]{

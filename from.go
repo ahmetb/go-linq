@@ -26,7 +26,8 @@ type Query[T any] struct {
 	size int
 }
 
-func emptyQuery[T any]() Query[T] {
+// Empty returns an empty query of the specified element type.
+func Empty[T any]() Query[T] {
 	return Query[T]{Iterate: func(func(T) bool) {}}
 }
 
