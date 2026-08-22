@@ -53,13 +53,14 @@ func TestDerivedSizeHints(t *testing.T) {
 	q := FromSlice(make([]int, 10))
 	checkSizeHint(t, "SkipLast", q.SkipLast(3), 7)
 	checkSizeHint(t, "TakeLast", q.TakeLast(3), 3)
-	checkSizeHint(t, "TakeRange", q.TakeRange(PositionFromEnd(7), PositionFromStart(8)), 5)
+	checkSizeHint(t, "TakeRange", q.TakeRange(FromEnd(7), FromStart(8)), 5)
 	checkSizeHint(t, "Index", Index(q), 10)
 	checkSizeHint(t, "Shuffle", q.Shuffle(), 10)
 	checkSizeHint(t, "Zip3", q.Zip3(Range(0, 8), Range(0, 6), func(a, b, c int) int {
 		return a + b + c
 	}), 6)
 	checkSizeHint(t, "Chunk", Chunk(q, 3), 4)
+	checkSizeHint(t, "ChunkBy", q.ChunkBy(3, func(c []int) int { return len(c) }), 4)
 }
 
 // TestSequenceSizeHint pins Sequence's hint against the sequence it describes
@@ -111,10 +112,10 @@ func TestPresizeIsBoundedBySource(t *testing.T) {
 	if q := three().TakeLast(math.MaxInt); !testQueryIteration(q, all) {
 		t.Errorf("TakeLast(MaxInt)=%v expected %v", q.ToSlice(), all)
 	}
-	if q := three().TakeRange(PositionFromEnd(math.MaxInt), PositionFromEnd(1)); !testQueryIteration(q, []int{1, 2}) {
+	if q := three().TakeRange(FromEnd(math.MaxInt), FromEnd(1)); !testQueryIteration(q, []int{1, 2}) {
 		t.Errorf("TakeRange(FromEnd(MaxInt), FromEnd(1))=%v expected [1 2]", q.ToSlice())
 	}
-	if _, ok := three().ElementAt(PositionFromEnd(math.MaxInt)); ok {
+	if _, ok := three().ElementAt(FromEnd(math.MaxInt)); ok {
 		t.Error("ElementAt(FromEnd(MaxInt)) reported a hit")
 	}
 }

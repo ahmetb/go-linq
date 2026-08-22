@@ -20,10 +20,8 @@ func TestShuffle(t *testing.T) {
 			t.Errorf("Shuffle()=%v expected permutation of %v", orders[i], original)
 		}
 	}
-	// A Shuffle that does nothing, and one that shuffles once and caches the
-	// result, both hold the order fixed across iterations. Two distinct orders
-	// rule out both. With 360 distinguishable permutations of the source, a
-	// false failure here runs at (1/360)^19.
+	// Repeated identical output catches both a no-op and a cached shuffle;
+	// the false-failure probability is (1/360)^19.
 	if !slices.ContainsFunc(orders, func(o []int) bool { return !slices.Equal(o, orders[0]) }) {
 		t.Errorf("Shuffle yielded %v on all 20 iterations; expected the order to vary", orders[0])
 	}

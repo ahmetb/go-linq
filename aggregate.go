@@ -90,8 +90,7 @@ func (q Query[T]) AggregateWithSeedBy[TAccumulate, TResult any](seed TAccumulate
 // CountBy is a generic method: the key type TKey is inferred from the
 // keySelector function. The key type TKey must be comparable.
 func (q Query[T]) CountBy[TKey comparable](keySelector func(T) TKey) Query[KeyValue[TKey, int]] {
-	// Keep this loop specialized: delegating to aggregateBy adds a closure call
-	// per element and two allocations per query.
+	// Keep this loop specialized to avoid an extra closure call per element.
 	return Query[KeyValue[TKey, int]]{
 		Iterate: func(yield func(KeyValue[TKey, int]) bool) {
 			index := make(map[TKey]int)

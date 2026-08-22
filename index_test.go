@@ -33,14 +33,14 @@ func TestElementAt(t *testing.T) {
 		want   int
 		wantOK bool
 	}{
-		{PositionFromStart(0), 10, true},
-		{PositionFromStart(2), 30, true},
-		{PositionFromStart(5), 0, false},
-		{PositionFromEnd(1), 50, true},
-		{PositionFromEnd(3), 30, true},
-		{PositionFromEnd(5), 10, true},
-		{PositionFromEnd(6), 0, false},
-		{PositionFromEnd(0), 0, false},
+		{FromStart(0), 10, true},
+		{FromStart(2), 30, true},
+		{FromStart(5), 0, false},
+		{FromEnd(1), 50, true},
+		{FromEnd(3), 30, true},
+		{FromEnd(5), 10, true},
+		{FromEnd(6), 0, false},
+		{FromEnd(0), 0, false},
 	}
 
 	for _, test := range tests {
@@ -59,9 +59,9 @@ func TestElementAtStopsAtRequestedIndex(t *testing.T) {
 		return true
 	})
 
-	got, ok := q.ElementAt(PositionFromStart(2))
+	got, ok := q.ElementAt(FromStart(2))
 	if !ok || got != 30 {
-		t.Fatalf("ElementAt(PositionFromStart(2))=%v,%v expected 30,true", got, ok)
+		t.Fatalf("ElementAt(FromStart(2))=%v,%v expected 30,true", got, ok)
 	}
 	if pulled != 3 {
 		t.Errorf("source pulled %d elements expected 3", pulled)
@@ -72,8 +72,8 @@ func TestPositionNegativeValuePanics(t *testing.T) {
 	constructors := []func(){
 		func() { NewPosition(-1, false) },
 		func() { NewPosition(-1, true) },
-		func() { PositionFromStart(-1) },
-		func() { PositionFromEnd(-1) },
+		func() { FromStart(-1) },
+		func() { FromEnd(-1) },
 	}
 	for _, constructor := range constructors {
 		mustPanic(t, constructor)

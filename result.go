@@ -301,6 +301,21 @@ func (q Query[T]) ToMapBy[TKey comparable, TValue any](
 	return result
 }
 
+// ToHashSetBy iterates over a collection and returns the distinct keys
+// obtained by invoking the selector function on each element, as a map-backed
+// set. Unlike ToHashSet it places no constraint on the element type.
+//
+// ToHashSetBy is a generic method: the key type TKey is inferred from the
+// selector function. The key type TKey must be comparable.
+func (q Query[T]) ToHashSetBy[TKey comparable](selector func(T) TKey) map[TKey]struct{} {
+	result := make(map[TKey]struct{})
+	q.Iterate(func(item T) bool {
+		result[selector(item)] = struct{}{}
+		return true
+	})
+	return result
+}
+
 // ToSlice iterates over a collection and returns the results as a slice.
 // When the query's element count is known up front (e.g. a slice source
 // transformed only by length-preserving operators), the result slice is

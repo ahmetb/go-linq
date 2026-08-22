@@ -77,18 +77,18 @@ func TestTakeRange(t *testing.T) {
 		end   Position
 		want  []int
 	}{
-		{PositionFromStart(2), PositionFromStart(7), []int{2, 3, 4, 5, 6}},
-		{PositionFromStart(2), PositionFromEnd(3), []int{2, 3, 4, 5, 6}},
-		{PositionFromEnd(7), PositionFromEnd(3), []int{3, 4, 5, 6}},
-		{PositionFromEnd(7), PositionFromStart(8), []int{3, 4, 5, 6, 7}},
-		{PositionFromStart(0), PositionFromEnd(0), input},
-		{PositionFromStart(20), PositionFromEnd(0), nil},
-		{PositionFromEnd(20), PositionFromEnd(0), input},
-		{PositionFromEnd(2), PositionFromEnd(5), nil},
-		{PositionFromStart(7), PositionFromStart(2), nil},
-		{PositionFromStart(2), PositionFromStart(20), []int{2, 3, 4, 5, 6, 7, 8, 9}},
-		{PositionFromStart(2), PositionFromEnd(20), nil},
-		{PositionFromEnd(20), PositionFromStart(3), []int{0, 1, 2}},
+		{FromStart(2), FromStart(7), []int{2, 3, 4, 5, 6}},
+		{FromStart(2), FromEnd(3), []int{2, 3, 4, 5, 6}},
+		{FromEnd(7), FromEnd(3), []int{3, 4, 5, 6}},
+		{FromEnd(7), FromStart(8), []int{3, 4, 5, 6, 7}},
+		{FromStart(0), FromEnd(0), input},
+		{FromStart(20), FromEnd(0), nil},
+		{FromEnd(20), FromEnd(0), input},
+		{FromEnd(2), FromEnd(5), nil},
+		{FromStart(7), FromStart(2), nil},
+		{FromStart(2), FromStart(20), []int{2, 3, 4, 5, 6, 7, 8, 9}},
+		{FromStart(2), FromEnd(20), nil},
+		{FromEnd(20), FromStart(3), []int{0, 1, 2}},
 	}
 
 	sources := []Query[int]{
@@ -112,10 +112,10 @@ func TestTakeRangeFromStartStopsAtEnd(t *testing.T) {
 	q := FromSlice([]int{0, 1, 2, 3, 4, 5}).Where(func(int) bool {
 		pulled++
 		return true
-	}).TakeRange(PositionFromStart(2), PositionFromStart(5))
+	}).TakeRange(FromStart(2), FromStart(5))
 
 	if got := q.ToSlice(); !slices.Equal(got, []int{2, 3, 4}) {
-		t.Errorf("TakeRange(PositionFromStart(2), PositionFromStart(5))=%v expected [2 3 4]", got)
+		t.Errorf("TakeRange(FromStart(2), FromStart(5))=%v expected [2 3 4]", got)
 	}
 	if pulled != 5 {
 		t.Errorf("source pulled %d elements expected 5", pulled)

@@ -46,7 +46,8 @@ func (q Query[T]) Join[TInner any, TKey comparable, TResult any](inner Query[TIn
 // LeftJoin correlates two collections by key while retaining every element of
 // the outer collection. When an outer element has no match — a nil key never
 // matches, not even another nil key — resultSelector is called with the zero
-// value of TInner.
+// value of TInner, which it cannot tell apart from a matched element that is
+// itself the zero value.
 //
 // Inner is indexed from the first outer element, so an empty outer never reads
 // inner. An empty inner has no such shortcut: every outer element still owes a
@@ -85,7 +86,8 @@ func (q Query[T]) LeftJoin[TInner any, TKey comparable, TResult any](inner Query
 // RightJoin correlates two collections by key while retaining every element
 // of the inner collection. When an inner element has no match — a nil key never
 // matches, not even another nil key — resultSelector is called with the zero
-// value of T.
+// value of T, which it cannot tell apart from a matched element that is itself
+// the zero value.
 //
 // Outer is indexed from the first inner element, so an empty inner never reads
 // outer. An empty outer has no such shortcut: every inner element still owes a
@@ -94,8 +96,7 @@ func (q Query[T]) RightJoin[TInner any, TKey comparable, TResult any](inner Quer
 	outerKeySelector func(T) TKey,
 	innerKeySelector func(TInner) TKey,
 	resultSelector func(outer T, inner TInner) TResult) Query[TResult] {
-	// ponytail: Delegating to LeftJoin is shorter but adds an argument-swapping
-	// call per result (~10% in paired benchmarks); collapse if that call becomes free.
+	// Keep the mirrored implementation to avoid an argument-swapping call per result.
 	return Query[TResult]{
 		Iterate: func(yield func(TResult) bool) {
 			var outerLookup map[TKey][]T
@@ -126,7 +127,8 @@ func (q Query[T]) RightJoin[TInner any, TKey comparable, TResult any](inner Quer
 // FullJoin correlates two collections by key while retaining every element of
 // both collections. When an element has no match — a nil key never matches,
 // not even another nil key — resultSelector is called with the zero value for
-// the missing side.
+// the missing side, which it cannot tell apart from a matched element that is
+// itself the zero value.
 //
 // Inner is indexed before outer is read. Results for outer elements come
 // first, followed by unmatched inner groups in first-seen key order.

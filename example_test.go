@@ -615,7 +615,7 @@ func ExampleQuery_Take() {
 }
 
 func ExampleQuery_TakeRange() {
-	fmt.Println(Range(0, 10).TakeRange(PositionFromEnd(4), PositionFromEnd(1)).ToSlice())
+	fmt.Println(Range(0, 10).TakeRange(FromEnd(4), FromEnd(1)).ToSlice())
 
 	// Output:
 	// [6 7 8]
@@ -689,7 +689,7 @@ func ExampleQuery_IndexOf() {
 }
 
 func ExampleQuery_ElementAt() {
-	value, ok := FromSlice([]string{"a", "b", "c"}).ElementAt(PositionFromEnd(1))
+	value, ok := FromSlice([]string{"a", "b", "c"}).ElementAt(FromEnd(1))
 	fmt.Println(value, ok)
 
 	// Output:

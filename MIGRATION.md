@@ -50,7 +50,7 @@ than the `…T` API was.
 | `GroupJoin(...)` | `GroupJoin(inner Query[TInner], func(T) TKey, func(TInner) TKey, func(T, []TInner) TResult) Query[TResult]` |
 | `GroupBy(keySel, elemSel)` | `GroupBy(func(T) TKey, func(T) TElement) Query[Group[TKey, TElement]]`; groups now come out in first-seen key order (was unspecified map order) |
 | `Zip(q2, result)` | `Zip(q2 Query[TSecond], func(T, TSecond) TResult) Query[TResult]` |
-| `OrderBy(func(any) any)` | `OrderBy(func(T) TKey)` with `TKey cmp.Ordered` — same for `OrderByDescending`, `ThenBy`, `ThenByDescending`. Each level may use a different key type. `bool` keys are no longer supported: map them to `int` |
+| `OrderBy(func(any) any)` | `OrderBy(func(T) TKey)` with `TKey cmp.Ordered` — same for `OrderByDescending`, `ThenBy`, `ThenByDescending`. Each level may use a different key type. `bool` keys are no longer supported: map them to `int`. The sort is now stable, matching .NET: elements with equal keys keep their input order, at the cost of O(n log²n) comparisons in the worst case |
 | `Sort(less func(i, j any) bool)` | `Sort(less func(i, j T) bool)` |
 | `Distinct()`, `Union(q2)`, `Except(q2)`, `Intersect(q2)`, `Contains(v)`, `SequenceEqual(q2)` | unchanged shape; elements of basic comparable kinds (integers, floats, complex, strings, booleans) are tracked and compared through strongly-typed sets with no boxing. Other element types fall back to boxed comparison at runtime (as in v4) — for those, the `By` variants with a `comparable` key remain the typed fast path |
 | `DistinctBy(func(any) any)` | `DistinctBy(func(T) TKey)` with `TKey comparable` — same for `ExceptBy`, `IntersectBy`, and **new** `UnionBy` |

@@ -140,8 +140,6 @@ func TestOrderingIsStable(t *testing.T) {
 }
 
 func TestOrderWith(t *testing.T) {
-	// Input order puts "erin" before "dave" so that stable length ordering and
-	// alphabetical ordering disagree, making the ThenBy case below meaningful.
 	names := []string{"erin", "al", "dave", "bo", "cy", "frank"}
 	byLen := func(a, b string) int { return cmp.Compare(len(a), len(b)) }
 
@@ -156,8 +154,7 @@ func TestOrderWith(t *testing.T) {
 		t.Errorf("OrderDescendingWith(byLen)=%v expected %v", got.ToSlice(), wantDesc)
 	}
 
-	// The point of returning OrderedQuery: ThenBy refines the comparison, so
-	// the equal-length pair flips from input order to alphabetical.
+	// ThenBy orders equal-length names alphabetically instead of preserving input order.
 	wantThen := []string{"al", "bo", "cy", "dave", "erin", "frank"}
 	if got := q.OrderWith(byLen).ThenBy(func(s string) string { return s }); !testQueryIteration(got.Query, wantThen) {
 		t.Errorf("OrderWith(byLen).ThenBy(self)=%v expected %v", got.ToSlice(), wantThen)

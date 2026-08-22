@@ -1,15 +1,16 @@
 package linq
 
 // Position represents a position counted from the start or end of a sequence.
-// Its zero value is PositionFromStart(0).
-// PositionFromEnd(0) points just past the sequence and does not identify an element.
+// Its zero value is FromStart(0).
+// FromEnd(0) points just past the sequence and does not identify an element.
 type Position struct {
 	value   int
 	fromEnd bool
 }
 
-// NewPosition returns a Position counted from the end of a sequence when fromEnd is
-// true, or from the start otherwise. It panics if value is negative.
+// NewPosition returns a Position counted from the end of a sequence when
+// fromEnd is true, or from the start otherwise. It panics if value is
+// negative.
 func NewPosition(value int, fromEnd bool) Position {
 	if value < 0 {
 		panic("linq: position must be non-negative")
@@ -17,16 +18,16 @@ func NewPosition(value int, fromEnd bool) Position {
 	return Position{value: value, fromEnd: fromEnd}
 }
 
-// PositionFromStart returns a Position counted from the start of a sequence. It
-// panics if value is negative.
-func PositionFromStart(value int) Position {
+// FromStart returns a Position counted from the start of a sequence. It panics
+// if value is negative.
+func FromStart(value int) Position {
 	return NewPosition(value, false)
 }
 
-// PositionFromEnd returns a Position counted from the end of a sequence.
-// PositionFromEnd(1) identifies the last element; PositionFromEnd(0) identifies the
-// position immediately after it. It panics if value is negative.
-func PositionFromEnd(value int) Position {
+// FromEnd returns a Position counted from the end of a sequence. FromEnd(1)
+// identifies the last element; FromEnd(0) identifies the position immediately
+// after it. It panics if value is negative.
+func FromEnd(value int) Position {
 	return NewPosition(value, true)
 }
 

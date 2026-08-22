@@ -182,71 +182,55 @@ constructors take their element type from their arguments:
 The runtime-reflection based `From(any)` constructor from v4 has been removed:
 in a fully-typed API the element type must be known at the call site.
 
-## .NET 6 Operators
+## Go API notes
 
-v5 includes `ElementAt(Position)`, `SkipLast`, `TakeLast`, `TakeRange`, `Zip3`,
-`MinWith`/`MaxWith`, and `MinByWith`/`MaxByWith`. Construct indices with
-`PositionFromStart(n)` or `PositionFromEnd(n)`.
-`Chunk` is a package-level function (`Chunk(query, size)`) because the current
-Go compiler rejects `Query[T].Chunk() Query[[]T]` as an instantiation cycle.
-The .NET explicit-default overloads are represented by Go's existing
-`(value, ok)` return convention instead of separate methods.
+Where a direct translation from .NET was not possible:
 
-## .NET 7 Operators
+- Comparer overloads become `…With` methods (`OrderWith`, `MinWith`,
+  `MaxByWith`, …), whose `compare` argument follows the `cmp.Compare`
+  convention. The explicit-default overloads need no counterpart: Go's
+  `(value, ok)` return already covers them.
+- Index and range arguments are a `Position`, built with `FromStart(n)` or
+  `FromEnd(n)`: `q.ElementAt(FromEnd(1))`,
+  `q.TakeRange(FromStart(2), FromEnd(1))`.
+- Joins ignore nil keys, matching .NET: a nil key never matches, not even
+  another nil key. An `any` key holding a typed nil counts as nil; one holding
+  a non-comparable value panics, as any Go map key would.
 
-v5 includes `Order`/`OrderDescending` and `OrderWith`/`OrderDescendingWith`.
-`Order` and `OrderDescending` are package-level functions (`Order(query)`)
-because they constrain the element type to `cmp.Ordered`. The comparer
-overloads become the `OrderWith`/`OrderDescendingWith` methods instead, which
-place no constraint on the element type; their `compare` argument follows the
-`cmp.Compare` convention, like `MinWith`/`MaxWith`.
+Some operators are package-level functions rather than methods. Each has a
+chainable equivalent:
 
-All four are stable and return an `OrderedQuery` that `ThenBy` and
-`ThenByDescending` can refine further. `Sort` also takes arbitrary comparison
-logic, but it is unstable and does not chain.
+| package-level | chainable |
+|---|---|
+| `Min(q)`, `Max(q)` | `MinBy`/`MaxBy`, `MinWith`/`MaxWith`, `MinByWith`/`MaxByWith` |
+| `Sum(q)`, `Average(q)` | `SumBy`, `AverageBy` |
+| `Order(q)`, `OrderDescending(q)` | `OrderBy`/`OrderByDescending`, `OrderWith`/`OrderDescendingWith` |
+| `ToMap(q)` | `ToMapBy` |
+| `ToHashSet(q)` | `ToHashSetBy` |
+| `Chunk(q, size)` | `ChunkBy` |
+| `Index(q)` | `SelectIndexed` |
 
-## .NET 9 Operators
-
-v5 includes `CountBy`, `AggregateBy`, `AggregateByWithSeedSelector`, and
-`Index`. The first three yield `KeyValue` results in the order each key first
-appears. `Index(query)` yields `KeyValue` values whose `Key` is the index and
-`Value` is the item; like `Chunk`, it is a package-level function because a
-direct `Query[T].Index() Query[KeyValue[int, T]]` method causes an
-instantiation cycle in the current Go compiler.
-
-## .NET 10 Operators
-
-v5 includes `LeftJoin`, `RightJoin`, `Sequence`, `InfiniteSequence`, and
-`Shuffle`. `Sequence` and `InfiniteSequence` support every type in the existing
-`Number` constraint. Outer joins pass the zero value for an unmatched element.
-`Shuffle` uses a non-cryptographically-secure random source and reshuffles on
-each iteration.
-
-All five joins follow .NET in ignoring nil keys: a nil key never matches, not
-even another nil key. `LeftJoin` and `RightJoin` still emit a nil-key element
-when it belongs to the retained side; `GroupJoin` emits a nil-key outer element
-with an empty group. An `any` key may hold a typed nil, which joins treat as nil;
-other non-comparable dynamic values may panic when used as lookup keys.
-
-## .NET 11 Operators
-
-v5 includes `FullJoin`. It emits matches and unmatched outer elements in outer
-order, then unmatched inner groups in first-seen key order. The missing side is
-passed to the result selector as its zero value. Nil-key elements never match
-but are retained as unmatched elements from both sides.
-
-The .NET 11 overloads that omit the result selector and return tuples have no
-Go equivalent, so they are not included.
+The first five rows constrain the element type — ordered, numeric, `KeyValue`,
+comparable — and a method cannot add a constraint to its receiver's type
+parameter. The last two would return `Query[[]T]` and `Query[KeyValue[int, T]]`,
+which the compiler rejects as a recursive instantiation. Either way the method
+form needs a selector or comparator argument to pin its type parameter, which is
+what the right-hand column supplies.
 
 ## Performance
 
-v5 eliminates the three taxes the type-erased v4 API paid on every element:
-interface boxing, type assertions, and reflection. Per-element work in a v5
-chain is just typed closure calls; the only allocations are the fixed closure
-captures made when the query is constructed.
-The lone exception is a join keyed on an interface type: separating a typed
-nil pointer from a nil interface needs the dynamic value, so that key type
-alone pays for reflection per element.
+v5 removes interface boxing, type assertions, and reflection from ordinary
+typed pipelines. Stateless streaming operators process each element through
+typed closure calls without per-element allocations in the library.
+
+Stateful operators allocate working storage during iteration. `Distinct`,
+`Union`, `Except`, `Intersect`, and their `By` variants keep sets of seen keys;
+the variants without a key selector may also box non-basic element types.
+`SkipLast` and `Chunk` keep bounded buffers. The ordering operators, `Reverse`,
+`Shuffle`, `TakeLast`, `GroupBy`, `CountBy`, `AggregateBy`, and the joins buffer
+the data they need before or while yielding results. A join keyed on an
+interface type also uses reflection per element to distinguish a typed nil
+pointer from a nil interface.
 
 Measured on Apple M5 Pro with go1.27, 1M-element `[]int` (100k structs for
 the projection case):
@@ -273,15 +257,32 @@ highlights:
   methods are now just as clean and much faster.
 * Element-returning terminals (`First`, `Last`, `Single`, `Aggregate`,
   `Min`, `Max`, …) return `(T, bool)` instead of a nil-able `any`.
-* `Min`, `Max`, `Sum`, `Average`, `Order`, `OrderDescending`, `ToMap`, and
-  `ToHashSet` are package-level functions
-  (their constraints depend on the element type); chainable `MinBy`,
-  `MaxBy`, `SumBy`, `AverageBy`, `ToMapBy` methods are available.
+* `Min`, `Max`, `Sum`, `Average`, `ToMap` and several others are package-level
+  functions; [Go API notes](#go-api-notes) lists them all with the chainable
+  equivalent of each.
 * `ToSlice()` returns `[]T` instead of filling a pointer argument.
 
 ## Release Notes
 
 ```text
+v5.1.0 (unreleased)
+* Added Empty, ToHashSet and ToHashSetBy.
+* Added .NET 6 operators: Chunk, SkipLast, TakeLast, position/range operations
+  (ElementAt, TakeRange), comparer-based extrema, and Zip3. ChunkBy projects
+  each chunk, so unlike Chunk it can be a method and stay in a chain.
+* Added .NET 7 operators: Order/OrderDescending and the comparer-based
+  OrderWith/OrderDescendingWith variants. All four are stable and chainable
+  with ThenBy; OrderWith replaces Sort as the way to order by a custom
+  comparison.
+* Added .NET 9 operators: CountBy, both AggregateBy seed forms, and Index.
+* Added .NET 10 operators: LeftJoin, RightJoin, Sequence, InfiniteSequence,
+  and Shuffle.
+* Added the .NET 11 FullJoin operator.
+* OrderBy, OrderByDescending, ThenBy and ThenByDescending are now stable,
+  matching .NET LINQ; Sort keeps its existing unstable behavior.
+* Fixed Join and GroupJoin matching nil keys against each other. Like .NET and
+  the new outer joins, a nil key now takes no part in a join.
+
 v5.0.0 (2026-08-21)
 * Breaking change: COMPLETE REWRITE on Go 1.27 generic methods.
   - Query is now the generic Query[T]; operator callbacks are fully typed.
@@ -296,25 +297,9 @@ v5.0.0 (2026-08-21)
     MinBy/MaxBy/SumBy/AverageBy/ToMapBy/UnionBy methods.
   - ToSlice() returns []T; ToMap/ToMapBy return maps.
   - Removed Comparable interface; OrderBy/ThenBy keys must satisfy
-    cmp.Ordered (use OrderWith for custom comparisons).
+    cmp.Ordered (use Sort for custom comparisons).
   - GroupBy yields groups in first-seen key order (deterministic).
   - Added FromSeq to adapt any iter.Seq[T].
-  - Added Empty and ToHashSet.
-  - Added .NET 6 operators: Chunk, index/range operations, SkipLast, TakeLast,
-    comparer-based extrema, and Zip3.
-  - Added .NET 7 operators: Order/OrderDescending and the comparer-based
-    OrderWith/OrderDescendingWith variants. All four are stable and chainable
-    with ThenBy.
-  - OrderBy, OrderByDescending, ThenBy and ThenByDescending are now stable,
-    matching .NET LINQ; Sort keeps its existing unstable behavior.
-  - Added .NET 9 operators: CountBy, both AggregateBy seed forms, and Index.
-  - Added .NET 10 operators: LeftJoin, RightJoin, Sequence, InfiniteSequence,
-    and Shuffle.
-  - Added the .NET 11 FullJoin operator.
-  - Changed Join and GroupJoin to ignore nil keys, matching .NET and the new
-    outer joins. Elements with a nil key previously matched each other.
-  - Renamed the range/index helper and constructors from Index to Position to
-    make room for the Index operator.
   - 5-15x faster than v4; allocations drop from O(n) to O(1) per query.
 
 v4.0.0 (2025-10-12)
