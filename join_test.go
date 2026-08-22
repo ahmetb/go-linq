@@ -146,7 +146,7 @@ func TestFullJoinWithEmptySide(t *testing.T) {
 	}
 }
 
-func TestFullJoinKeepsNilKeyOrder(t *testing.T) {
+func TestFullJoinGroupsNilKeys(t *testing.T) {
 	type item struct {
 		key   *int
 		value string
@@ -158,14 +158,13 @@ func TestFullJoinKeepsNilKeyOrder(t *testing.T) {
 		{value: "nilB"},
 	})
 
-	// A nil key never matches, not even another nil key, so the two nil-key
-	// elements stay where they were seen instead of batching together.
+	// Nil keys never match, but unmatched inner nils share one first-seen group.
 	q := FromSlice([]item{}).FullJoin(inner,
 		func(item item) *int { return item.key },
 		func(item item) *int { return item.key },
 		func(_ item, inner item) string { return inner.value },
 	)
-	want := []string{"nilA", "keyed", "nilB"}
+	want := []string{"nilA", "nilB", "keyed"}
 	if !testQueryIteration(q, want) {
 		t.Errorf("FullJoin(mixed nil keys)=%v expected %v", q.ToSlice(), want)
 	}

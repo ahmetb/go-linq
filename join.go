@@ -237,8 +237,8 @@ func buildJoinLookup[T any, TKey comparable](source Query[T], keySelector func(T
 	return lookup
 }
 
-// buildFullJoinGroups groups elements in first-seen key order. Nil keys remain
-// separate unmatched groups and stay out of the index.
+// buildFullJoinGroups groups elements in first-seen key order. Nil keys share
+// one unmatched group and stay out of the index.
 func buildFullJoinGroups[T any, TKey comparable](source Query[T],
 	keySelector func(T) TKey) ([][]T, map[TKey]int) {
 	keyKind := reflect.TypeFor[TKey]().Kind()
@@ -248,10 +248,15 @@ func buildFullJoinGroups[T any, TKey comparable](source Query[T],
 
 	var groups [][]T
 	index := make(map[TKey]int)
+	nilGroupIndex := -1
 	source.Iterate(func(item T) bool {
 		key := keySelector(item)
 		if (zeroIsNil && key == zeroKey) || (interfaceKey && isNilInterfaceKey(key)) {
-			groups = append(groups, []T{item})
+			if nilGroupIndex < 0 {
+				nilGroupIndex = len(groups)
+				groups = append(groups, nil)
+			}
+			groups[nilGroupIndex] = append(groups[nilGroupIndex], item)
 			return true
 		}
 
