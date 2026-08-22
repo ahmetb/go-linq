@@ -1,5 +1,7 @@
 package linq
 
+import "reflect"
+
 // GroupJoin correlates the elements of two collections based on key equality
 // and groups the results.
 //
@@ -20,6 +22,9 @@ package linq
 //
 // GroupJoin preserves the order of the elements of outer, and for each element
 // of outer, the order of the matching elements from inner.
+//
+// Elements whose key is nil take no part in the join: like .NET LINQ, GroupJoin
+// never matches a nil key, not even against another nil key.
 func (q Query[T]) GroupJoin[TInner any, TKey comparable, TResult any](inner Query[TInner],
 	outerKeySelector func(T) TKey,
 	innerKeySelector func(TInner) TKey,
@@ -27,17 +32,12 @@ func (q Query[T]) GroupJoin[TInner any, TKey comparable, TResult any](inner Quer
 
 	return Query[TResult]{
 		Iterate: func(yield func(TResult) bool) {
-			innerLookup := make(map[TKey][]TInner)
-			inner.Iterate(func(innerItem TInner) bool {
-				innerKey := innerKeySelector(innerItem)
-				innerLookup[innerKey] = append(innerLookup[innerKey], innerItem)
-				return true
-			})
+			innerLookup := buildJoinLookup(inner, innerKeySelector)
+			interfaceKey := reflect.TypeFor[TKey]().Kind() == reflect.Interface
 
 			q.Iterate(func(outerItem T) bool {
-				outerKey := outerKeySelector(outerItem)
-				innerGroup, ok := innerLookup[outerKey]
-				if !ok {
+				innerGroup := joinGroupFor(innerLookup, outerKeySelector(outerItem), interfaceKey)
+				if innerGroup == nil {
 					innerGroup = []TInner{}
 				}
 

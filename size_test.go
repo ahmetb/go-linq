@@ -1,10 +1,13 @@
 package linq
 
-import "testing"
+import (
+	"math"
+	"testing"
+)
 
 // The size hint carried by Query is an invariant the compiler cannot check:
-// it may be propagated only by operators that emit exactly one element per
-// source element. These tests pin it in both directions.
+// it may be propagated only when an operator can derive its output count
+// exactly. These tests pin it in both directions.
 
 // TestSizeHint_ExactPreallocation catches an operator losing the hint: append
 // growth never lands on an arbitrary exact size (collecting 1000 elements by
@@ -36,5 +39,83 @@ func TestSizeHint_DroppedByFilters(t *testing.T) {
 	}
 	if cap(out) >= 100_000 {
 		t.Errorf("cap=%d: filtered query inherited the source's size hint", cap(out))
+	}
+}
+
+func checkSizeHint[T any](t *testing.T, name string, q Query[T], want int) {
+	t.Helper()
+	if got := q.size; got != want {
+		t.Errorf("%s size=%d expected %d", name, got, want)
+	}
+}
+
+func TestDerivedSizeHints(t *testing.T) {
+	q := FromSlice(make([]int, 10))
+	checkSizeHint(t, "SkipLast", q.SkipLast(3), 7)
+	checkSizeHint(t, "TakeLast", q.TakeLast(3), 3)
+	checkSizeHint(t, "TakeRange", q.TakeRange(FromEnd(7), FromStart(8)), 5)
+	checkSizeHint(t, "Index", Index(q), 10)
+	checkSizeHint(t, "Shuffle", q.Shuffle(), 10)
+	checkSizeHint(t, "Zip3", q.Zip3(Range(0, 8), Range(0, 6), func(a, b, c int) int {
+		return a + b + c
+	}), 6)
+	checkSizeHint(t, "Chunk", Chunk(q, 3), 4)
+	checkSizeHint(t, "ChunkBy", q.ChunkBy(3, func(c []int) int { return len(c) }), 4)
+}
+
+// TestSequenceSizeHint pins Sequence's hint against the sequence it describes
+// rather than against literals, so the count stays honest for the cases that
+// stop early on overflow. Floats get no hint: an accumulated step lands where
+// arithmetic on the bounds cannot predict.
+func TestSequenceSizeHint(t *testing.T) {
+	checkExactSizeHint(t, "increasing", Sequence(1, 10, 1))
+	checkExactSizeHint(t, "bound not reached", Sequence(0, 5, 2))
+	checkExactSizeHint(t, "decreasing", Sequence(10, 1, -3))
+	checkExactSizeHint(t, "equal bounds", Sequence(3, 3, 1))
+	checkExactSizeHint(t, "int8 stopping on overflow", Sequence(int8(126), int8(127), int8(2)))
+	checkExactSizeHint(t, "int8 full span", Sequence(int8(-128), int8(127), int8(1)))
+	checkExactSizeHint(t, "uint8 stopping on overflow", Sequence(uint8(254), uint8(255), uint8(2)))
+	checkExactSizeHint(t, "most negative step", Sequence(int8(127), int8(-128), int8(-128)))
+
+	checkSizeHint(t, "Sequence(float64)", Sequence(0.5, 1.25, 0.25), 0)
+
+	// Counts too wide to be a capacity, checked by hint alone: collecting
+	// either sequence would be the OOM the missing hint is there to avoid.
+	// The second one carries the count past uint64 and wraps it.
+	checkSizeHint(t, "Sequence(count past int)",
+		Sequence(int64(0), int64(math.MaxInt64), int64(1)), 0)
+	checkSizeHint(t, "Sequence(count past uint64)",
+		Sequence(int64(math.MinInt64), int64(math.MaxInt64), int64(1)), 0)
+}
+
+func checkExactSizeHint[T any](t *testing.T, name string, q Query[T]) {
+	t.Helper()
+	if got, want := q.size, len(q.ToSlice()); got != want {
+		t.Errorf("Sequence(%s) size=%d expected %d", name, got, want)
+	}
+}
+
+// TestPresizeIsBoundedBySource catches a buffer preallocated from a caller's
+// count rather than from what the source can supply. MaxInt is a capacity no
+// make can serve, so a reserving operator panics with "cap out of range"
+// instead of quietly wasting memory the way a merely large count would.
+func TestPresizeIsBoundedBySource(t *testing.T) {
+	// Where drops the size hint, leaving the length unknown.
+	three := func() Query[int] {
+		return FromSlice([]int{1, 2, 3}).Where(func(int) bool { return true })
+	}
+	all := []int{1, 2, 3}
+
+	if q := three().SkipLast(math.MaxInt); !testQueryIteration(q, nil) {
+		t.Errorf("SkipLast(MaxInt)=%v expected nothing", q.ToSlice())
+	}
+	if q := three().TakeLast(math.MaxInt); !testQueryIteration(q, all) {
+		t.Errorf("TakeLast(MaxInt)=%v expected %v", q.ToSlice(), all)
+	}
+	if q := three().TakeRange(FromEnd(math.MaxInt), FromEnd(1)); !testQueryIteration(q, []int{1, 2}) {
+		t.Errorf("TakeRange(FromEnd(MaxInt), FromEnd(1))=%v expected [1 2]", q.ToSlice())
+	}
+	if _, ok := three().ElementAt(FromEnd(math.MaxInt)); ok {
+		t.Error("ElementAt(FromEnd(MaxInt)) reported a hit")
 	}
 }

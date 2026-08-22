@@ -211,6 +211,42 @@ func Min[T cmp.Ordered](q Query[T]) (T, bool) {
 	return r, found
 }
 
+// MaxWith returns the maximum element according to compare and a boolean
+// reporting whether the collection was non-empty. compare follows the same
+// convention as cmp.Compare: a negative result means the first value is less
+// than the second. If multiple elements compare equal, MaxWith returns the
+// first one.
+func (q Query[T]) MaxWith(compare func(T, T) int) (T, bool) {
+	var result T
+	found := false
+	q.Iterate(func(item T) bool {
+		if !found || compare(item, result) > 0 {
+			result = item
+			found = true
+		}
+		return true
+	})
+	return result, found
+}
+
+// MinWith returns the minimum element according to compare and a boolean
+// reporting whether the collection was non-empty. compare follows the same
+// convention as cmp.Compare: a negative result means the first value is less
+// than the second. If multiple elements compare equal, MinWith returns the
+// first one.
+func (q Query[T]) MinWith(compare func(T, T) int) (T, bool) {
+	var result T
+	found := false
+	q.Iterate(func(item T) bool {
+		if !found || compare(item, result) < 0 {
+			result = item
+			found = true
+		}
+		return true
+	})
+	return result, found
+}
+
 // MaxBy returns the element of a collection with the maximum key, where the
 // key is obtained by invoking the selector function on each element, and a
 // boolean reporting whether the collection was non-empty.
@@ -251,4 +287,42 @@ func (q Query[T]) MinBy[TKey cmp.Ordered](selector func(T) TKey) (T, bool) {
 		return true
 	})
 	return r, found
+}
+
+// MaxByWith returns the element with the maximum selected key according to
+// compare and a boolean reporting whether the collection was non-empty. It
+// returns the first element when multiple keys compare equal.
+func (q Query[T]) MaxByWith[TKey any](selector func(T) TKey,
+	compare func(TKey, TKey) int) (T, bool) {
+	var result T
+	var resultKey TKey
+	found := false
+	q.Iterate(func(item T) bool {
+		key := selector(item)
+		if !found || compare(key, resultKey) > 0 {
+			result, resultKey = item, key
+			found = true
+		}
+		return true
+	})
+	return result, found
+}
+
+// MinByWith returns the element with the minimum selected key according to
+// compare and a boolean reporting whether the collection was non-empty. It
+// returns the first element when multiple keys compare equal.
+func (q Query[T]) MinByWith[TKey any](selector func(T) TKey,
+	compare func(TKey, TKey) int) (T, bool) {
+	var result T
+	var resultKey TKey
+	found := false
+	q.Iterate(func(item T) bool {
+		key := selector(item)
+		if !found || compare(key, resultKey) < 0 {
+			result, resultKey = item, key
+			found = true
+		}
+		return true
+	})
+	return result, found
 }

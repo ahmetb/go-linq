@@ -273,6 +273,17 @@ func ToMap[TKey comparable, TValue any](q Query[KeyValue[TKey, TValue]]) map[TKe
 	return result
 }
 
+// ToHashSet iterates over a collection and returns its distinct elements as a
+// map-backed set.
+func ToHashSet[T comparable](q Query[T]) map[T]struct{} {
+	result := make(map[T]struct{})
+	q.Iterate(func(item T) bool {
+		result[item] = struct{}{}
+		return true
+	})
+	return result
+}
+
 // ToMapBy iterates over a collection and returns a map populated with
 // elements. Functions keySelector and valueSelector are executed for each
 // element of the collection to generate the key and value for the map.
@@ -285,6 +296,21 @@ func (q Query[T]) ToMapBy[TKey comparable, TValue any](
 	result := make(map[TKey]TValue)
 	q.Iterate(func(item T) bool {
 		result[keySelector(item)] = valueSelector(item)
+		return true
+	})
+	return result
+}
+
+// ToHashSetBy iterates over a collection and returns the distinct keys
+// obtained by invoking the selector function on each element, as a map-backed
+// set. Unlike ToHashSet it places no constraint on the element type.
+//
+// ToHashSetBy is a generic method: the key type TKey is inferred from the
+// selector function. The key type TKey must be comparable.
+func (q Query[T]) ToHashSetBy[TKey comparable](selector func(T) TKey) map[TKey]struct{} {
+	result := make(map[TKey]struct{})
+	q.Iterate(func(item T) bool {
+		result[selector(item)] = struct{}{}
 		return true
 	})
 	return result

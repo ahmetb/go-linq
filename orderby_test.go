@@ -1,6 +1,7 @@
 package linq
 
 import (
+	"cmp"
 	"iter"
 	"testing"
 )
@@ -71,6 +72,92 @@ func TestOrderByDescending(t *testing.T) {
 		}
 
 		j--
+	}
+}
+
+func TestOrder(t *testing.T) {
+	type score int
+	input := []score{3, 1, 2, 1}
+
+	if q := Order(FromSlice(input)); !testQueryIteration(q.Query, []score{1, 1, 2, 3}) {
+		t.Errorf("Order()=%v expected [1 1 2 3]", q.ToSlice())
+	}
+	if q := OrderDescending(FromSlice(input)); !testQueryIteration(q.Query, []score{3, 2, 1, 1}) {
+		t.Errorf("OrderDescending()=%v expected [3 2 1 1]", q.ToSlice())
+	}
+}
+
+func TestOrderingIsStable(t *testing.T) {
+	type entry struct {
+		primary   int
+		secondary int
+		position  int
+	}
+
+	input := make([]entry, 64)
+	for i := range input {
+		input[i] = entry{primary: i % 4, secondary: (i / 4) % 2, position: i}
+	}
+
+	assertStable := func(name string, q Query[entry], key func(entry) int) {
+		t.Helper()
+		last := make(map[int]int)
+		for _, e := range q.ToSlice() {
+			k := key(e)
+			if previous, ok := last[k]; ok && e.position < previous {
+				t.Errorf("%s reordered equal keys: position %d after %d", name, e.position, previous)
+			}
+			last[k] = e.position
+		}
+	}
+
+	q := FromSlice(input)
+	assertStable("OrderBy", q.OrderBy(func(e entry) int {
+		return e.primary
+	}).Query, func(e entry) int {
+		return e.primary
+	})
+	assertStable("OrderByDescending", q.OrderByDescending(func(e entry) int {
+		return e.primary
+	}).Query, func(e entry) int {
+		return e.primary
+	})
+	assertStable("ThenBy", q.OrderBy(func(e entry) int {
+		return e.primary
+	}).ThenBy(func(e entry) int {
+		return e.secondary
+	}).Query, func(e entry) int {
+		return e.primary*10 + e.secondary
+	})
+
+	byPrimary := func(a, b entry) int { return cmp.Compare(a.primary, b.primary) }
+	assertStable("OrderWith", q.OrderWith(byPrimary).Query, func(e entry) int {
+		return e.primary
+	})
+	assertStable("OrderDescendingWith", q.OrderDescendingWith(byPrimary).Query, func(e entry) int {
+		return e.primary
+	})
+}
+
+func TestOrderWith(t *testing.T) {
+	names := []string{"erin", "al", "dave", "bo", "cy", "frank"}
+	byLen := func(a, b string) int { return cmp.Compare(len(a), len(b)) }
+
+	q := FromSlice(names)
+	want := []string{"al", "bo", "cy", "erin", "dave", "frank"}
+	if got := q.OrderWith(byLen); !testQueryIteration(got.Query, want) {
+		t.Errorf("OrderWith(byLen)=%v expected %v", got.ToSlice(), want)
+	}
+
+	wantDesc := []string{"frank", "erin", "dave", "al", "bo", "cy"}
+	if got := q.OrderDescendingWith(byLen); !testQueryIteration(got.Query, wantDesc) {
+		t.Errorf("OrderDescendingWith(byLen)=%v expected %v", got.ToSlice(), wantDesc)
+	}
+
+	// ThenBy orders equal-length names alphabetically instead of preserving input order.
+	wantThen := []string{"al", "bo", "cy", "dave", "erin", "frank"}
+	if got := q.OrderWith(byLen).ThenBy(func(s string) string { return s }); !testQueryIteration(got.Query, wantThen) {
+		t.Errorf("OrderWith(byLen).ThenBy(self)=%v expected %v", got.ToSlice(), wantThen)
 	}
 }
 

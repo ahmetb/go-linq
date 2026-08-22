@@ -94,6 +94,20 @@ func ExampleRange() {
 	// [1 2 3 4 5]
 }
 
+func ExampleSequence() {
+	fmt.Println(Sequence(2, 10, 3).ToSlice())
+
+	// Output:
+	// [2 5 8]
+}
+
+func ExampleInfiniteSequence() {
+	fmt.Println(InfiniteSequence(10, -2).Take(4).ToSlice())
+
+	// Output:
+	// [10 8 6 4]
+}
+
 func ExampleRepeat() {
 	fmt.Println(Repeat("go", 3).ToSlice())
 
@@ -241,6 +255,66 @@ func ExampleQuery_Join() {
 	// Charlotte - Whiskers
 }
 
+func ExampleQuery_LeftJoin() {
+	query := FromSlice([]string{"apple", "banana"}).LeftJoin(
+		FromSlice([]string{"apricot"}),
+		func(s string) byte { return s[0] },
+		func(s string) byte { return s[0] },
+		func(left, right string) string {
+			if right == "" {
+				right = "<none>"
+			}
+			return left + " - " + right
+		},
+	)
+
+	fmt.Println(query.ToSlice())
+
+	// Output:
+	// [apple - apricot banana - <none>]
+}
+
+func ExampleQuery_RightJoin() {
+	query := FromSlice([]string{"apple"}).RightJoin(
+		FromSlice([]string{"apricot", "banana"}),
+		func(s string) byte { return s[0] },
+		func(s string) byte { return s[0] },
+		func(left, right string) string {
+			if left == "" {
+				left = "<none>"
+			}
+			return left + " - " + right
+		},
+	)
+
+	fmt.Println(query.ToSlice())
+
+	// Output:
+	// [apple - apricot <none> - banana]
+}
+
+func ExampleQuery_FullJoin() {
+	query := FromSlice([]string{"apple", "banana"}).FullJoin(
+		FromSlice([]string{"apricot", "cherry"}),
+		func(s string) byte { return s[0] },
+		func(s string) byte { return s[0] },
+		func(left, right string) string {
+			if left == "" {
+				left = "<none>"
+			}
+			if right == "" {
+				right = "<none>"
+			}
+			return left + " - " + right
+		},
+	)
+
+	fmt.Println(query.ToSlice())
+
+	// Output:
+	// [apple - apricot banana - <none> <none> - cherry]
+}
+
 func ExampleQuery_GroupJoin() {
 	fruits := []string{"apple", "banana", "apricot", "cherry", "clementine"}
 
@@ -378,6 +452,21 @@ func ExampleQuery_Zip() {
 	// [1=one 2=two 3=three]
 }
 
+func ExampleQuery_Zip3() {
+	query := Range(1, 3).Zip3(
+		FromSlice([]string{"one", "two", "three"}),
+		FromSlice([]string{"I", "II", "III"}),
+		func(n int, word, roman string) string {
+			return fmt.Sprintf("%d=%s=%s", n, word, roman)
+		},
+	)
+
+	fmt.Println(query.ToSlice())
+
+	// Output:
+	// [1=one=I 2=two=II 3=three=III]
+}
+
 func ExampleQuery_Aggregate() {
 	fruits := []string{"apple", "mango", "orange", "passionfruit", "grape"}
 
@@ -406,6 +495,42 @@ func ExampleQuery_AggregateWithSeed() {
 
 	// Output:
 	// 16
+}
+
+func ExampleQuery_AggregateBy() {
+	type score struct {
+		id    string
+		value int
+	}
+	scores := []score{{"0", 42}, {"1", 5}, {"1", 10}, {"0", 25}}
+
+	totals := FromSlice(scores).AggregateBy(
+		func(score score) string { return score.id },
+		0,
+		func(total int, score score) int { return total + score.value },
+	)
+	fmt.Println(totals.ToSlice())
+
+	// Output:
+	// [{0 67} {1 15}]
+}
+
+func ExampleQuery_AggregateByWithSeedSelector() {
+	type sale struct {
+		region string
+		amount int
+	}
+	sales := []sale{{"EU", 1}, {"APAC", 5}, {"EU", 2}}
+
+	totals := FromSlice(sales).AggregateByWithSeedSelector(
+		func(sale sale) string { return sale.region },
+		func(region string) int { return len(region) },
+		func(total int, sale sale) int { return total + sale.amount },
+	)
+	fmt.Println(totals.ToSlice())
+
+	// Output:
+	// [{EU 5} {APAC 9}]
 }
 
 func ExampleQuery_All() {
@@ -437,6 +562,14 @@ func ExampleQuery_CountWith() {
 
 	// Output:
 	// 5
+}
+
+func ExampleQuery_CountBy() {
+	counts := FromString("abracadabra").CountBy(func(r rune) string { return string(r) })
+	fmt.Println(counts.ToSlice())
+
+	// Output:
+	// [{a 5} {b 2} {r 2} {c 1} {d 1}]
 }
 
 func ExampleQuery_First() {
@@ -479,6 +612,13 @@ func ExampleQuery_Take() {
 
 	// Output:
 	// [1 2 3]
+}
+
+func ExampleQuery_TakeRange() {
+	fmt.Println(Range(0, 10).TakeRange(FromEnd(4), FromEnd(1)).ToSlice())
+
+	// Output:
+	// [6 7 8]
 }
 
 func ExampleQuery_TakeWhile() {
@@ -546,6 +686,28 @@ func ExampleQuery_IndexOf() {
 
 	// Output:
 	// 1
+}
+
+func ExampleQuery_ElementAt() {
+	value, ok := FromSlice([]string{"a", "b", "c"}).ElementAt(FromEnd(1))
+	fmt.Println(value, ok)
+
+	// Output:
+	// c true
+}
+
+func ExampleIndex() {
+	fmt.Println(Index(FromSlice([]string{"zero", "one"})).ToSlice())
+
+	// Output:
+	// [{0 zero} {1 one}]
+}
+
+func ExampleChunk() {
+	fmt.Println(Chunk(Range(1, 5), 2).ToSlice())
+
+	// Output:
+	// [[1 2] [3 4] [5]]
 }
 
 func ExampleQuery_ToMapBy() {
