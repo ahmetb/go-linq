@@ -93,3 +93,28 @@ func checkExactSizeHint[T any](t *testing.T, name string, q Query[T]) {
 		t.Errorf("Sequence(%s) size=%d expected %d", name, got, want)
 	}
 }
+
+// TestPresizeIsBoundedBySource catches a buffer preallocated from a caller's
+// count rather than from what the source can supply. MaxInt is a capacity no
+// make can serve, so a reserving operator panics with "cap out of range"
+// instead of quietly wasting memory the way a merely large count would.
+func TestPresizeIsBoundedBySource(t *testing.T) {
+	// Where drops the size hint, leaving the length unknown.
+	three := func() Query[int] {
+		return FromSlice([]int{1, 2, 3}).Where(func(int) bool { return true })
+	}
+	all := []int{1, 2, 3}
+
+	if q := three().SkipLast(math.MaxInt); !testQueryIteration(q, nil) {
+		t.Errorf("SkipLast(MaxInt)=%v expected nothing", q.ToSlice())
+	}
+	if q := three().TakeLast(math.MaxInt); !testQueryIteration(q, all) {
+		t.Errorf("TakeLast(MaxInt)=%v expected %v", q.ToSlice(), all)
+	}
+	if q := three().TakeRange(PositionFromEnd(math.MaxInt), PositionFromEnd(1)); !testQueryIteration(q, []int{1, 2}) {
+		t.Errorf("TakeRange(FromEnd(MaxInt), FromEnd(1))=%v expected [1 2]", q.ToSlice())
+	}
+	if _, ok := three().ElementAt(PositionFromEnd(math.MaxInt)); ok {
+		t.Error("ElementAt(FromEnd(MaxInt)) reported a hit")
+	}
+}

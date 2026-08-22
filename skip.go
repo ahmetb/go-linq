@@ -26,11 +26,7 @@ func (q Query[T]) SkipLast(count int) Query[T] {
 
 	return Query[T]{
 		Iterate: func(yield func(T) bool) {
-			capacity := q.size
-			if capacity == 0 || capacity > count {
-				capacity = count
-			}
-			items := make([]T, 0, capacity)
+			items := make([]T, 0, min(count, q.size))
 			head := 0
 			q.Iterate(func(item T) bool {
 				if len(items) < count {
