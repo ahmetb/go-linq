@@ -1,5 +1,7 @@
 package linq
 
+import "reflect"
+
 // GroupJoin correlates the elements of two collections based on key equality
 // and groups the results.
 //
@@ -31,11 +33,11 @@ func (q Query[T]) GroupJoin[TInner any, TKey comparable, TResult any](inner Quer
 	return Query[TResult]{
 		Iterate: func(yield func(TResult) bool) {
 			innerLookup := buildJoinLookup(inner, innerKeySelector)
+			interfaceKey := reflect.TypeFor[TKey]().Kind() == reflect.Interface
 
 			q.Iterate(func(outerItem T) bool {
-				outerKey := outerKeySelector(outerItem)
-				innerGroup, ok := innerLookup[outerKey]
-				if !ok {
+				innerGroup := joinGroupFor(innerLookup, outerKeySelector(outerItem), interfaceKey)
+				if innerGroup == nil {
 					innerGroup = []TInner{}
 				}
 

@@ -248,6 +248,38 @@ func TestJoinsIgnoreNilKeys(t *testing.T) {
 	}
 }
 
+func TestJoinsIgnoreNonHashableNilKeys(t *testing.T) {
+	type item struct {
+		key   any
+		value string
+	}
+	key := func(item item) any { return item.key }
+	// The searched side must hold a real key: on an empty lookup Go answers
+	// before it hashes, which hides an unhashable key.
+	keyed := FromSlice([]item{{key: 1, value: "keyed"}})
+	boxedNil := FromSlice([]item{{key: []int(nil), value: "nil"}})
+	pair := func(outer, inner item) string { return outer.value + ":" + inner.value }
+
+	if got := boxedNil.Join(keyed, key, key, pair).ToSlice(); got != nil {
+		t.Errorf("Join(boxed nil key)=%v expected nil", got)
+	}
+	if q := boxedNil.LeftJoin(keyed, key, key, pair); !testQueryIteration(q, []string{"nil:"}) {
+		t.Errorf("LeftJoin(boxed nil key)=%v expected [nil:]", q.ToSlice())
+	}
+	if q := keyed.RightJoin(boxedNil, key, key, pair); !testQueryIteration(q, []string{":nil"}) {
+		t.Errorf("RightJoin(boxed nil key)=%v expected [:nil]", q.ToSlice())
+	}
+	if q := boxedNil.GroupJoin(keyed, key, key, func(_ item, inner []item) int {
+		return len(inner)
+	}); !testQueryIteration(q, []int{0}) {
+		t.Errorf("GroupJoin(boxed nil key)=%v expected [0]", q.ToSlice())
+	}
+	want := []string{"nil:", ":keyed"}
+	if q := boxedNil.FullJoin(keyed, key, key, pair); !testQueryIteration(q, want) {
+		t.Errorf("FullJoin(boxed nil key)=%v expected %v", q.ToSlice(), want)
+	}
+}
+
 func TestOuterJoinDoesNotReadOtherSideWhenRetainedSideIsEmpty(t *testing.T) {
 	leftPulled, rightPulled := 0, 0
 	left := FromSlice([]int{1}).Where(func(int) bool {

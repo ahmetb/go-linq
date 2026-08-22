@@ -225,7 +225,8 @@ each iteration.
 All five joins follow .NET in ignoring nil keys: a nil key never matches, not
 even another nil key. `LeftJoin` and `RightJoin` still emit a nil-key element
 when it belongs to the retained side; `GroupJoin` emits a nil-key outer element
-with an empty group.
+with an empty group. An `any` key may hold a typed nil, which joins treat as nil;
+other non-comparable dynamic values may panic when used as lookup keys.
 
 ## .NET 11 Operators
 
