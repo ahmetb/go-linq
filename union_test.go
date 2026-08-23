@@ -53,24 +53,38 @@ func TestUnion_Abort(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			q := FromSlice(input1).Union(FromSlice(input2))
+	// UnionBy with an identity selector must abort exactly like Union: both
+	// carry the stop across the two source iterations through one closure.
+	unions := []struct {
+		name string
+		fn   func(Query[int], Query[int]) Query[int]
+	}{
+		{"Union", Query[int].Union},
+		{"UnionBy", func(q, q2 Query[int]) Query[int] {
+			return q.UnionBy(q2, func(v int) int { return v })
+		}},
+	}
 
-			var results []int
-			i := 0
-			q.Iterate(func(v int) bool {
-				results = append(results, v)
-				i++
-				if i >= tt.abortIndex {
-					return false // simulate early termination
+	for _, u := range unions {
+		for _, tt := range tests {
+			t.Run(u.name+"/"+tt.name, func(t *testing.T) {
+				q := u.fn(FromSlice(input1), FromSlice(input2))
+
+				var results []int
+				i := 0
+				q.Iterate(func(v int) bool {
+					results = append(results, v)
+					i++
+					if i >= tt.abortIndex {
+						return false // simulate early termination
+					}
+					return true
+				})
+
+				if !slices.Equal(results, tt.want) {
+					t.Errorf("got %v, want %v", results, tt.want)
 				}
-				return true
 			})
-
-			if !slices.Equal(results, tt.want) {
-				t.Errorf("%s: got %v, want %v", tt.name, results, tt.want)
-			}
-		})
+		}
 	}
 }

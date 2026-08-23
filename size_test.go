@@ -50,9 +50,9 @@ func checkSizeHint[T any](t *testing.T, name string, q Query[T], want int) {
 	}
 }
 
-// TestDerivedSizeHints pins the operators whose output count follows exactly
+// TestSizeHint_Derived pins the operators whose output count follows exactly
 // from their input sizes.
-func TestDerivedSizeHints(t *testing.T) {
+func TestSizeHint_Derived(t *testing.T) {
 	q := FromSlice(make([]int, 10))
 	checkSizeHint(t, "Take", q.Take(3), 3)
 	checkSizeHint(t, "Take past end", q.Take(50), 10)
@@ -68,9 +68,9 @@ func TestDerivedSizeHints(t *testing.T) {
 	}), 4)
 }
 
-// TestUnknownSizeHints pins the other direction: no operator may invent a size
+// TestSizeHint_Unknown pins the other direction: no operator may invent a size
 // for an input that carries none.
-func TestUnknownSizeHints(t *testing.T) {
+func TestSizeHint_Unknown(t *testing.T) {
 	sized := FromSlice(make([]int, 10))
 	unsized := FromSeq(slices.Values(make([]int, 10)))
 

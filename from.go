@@ -54,14 +54,8 @@ type KeyValue[TKey comparable, TValue any] struct {
 // FromSlice initializes a linq query with a passed slice.
 func FromSlice[S ~[]T, T any](source S) Query[T] {
 	return Query[T]{
-		Iterate: func(yield func(T) bool) {
-			for _, item := range source {
-				if !yield(item) {
-					return
-				}
-			}
-		},
-		size: len(source),
+		Iterate: slices.Values(source),
+		size:    len(source),
 	}
 }
 
