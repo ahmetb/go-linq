@@ -24,5 +24,6 @@ func (q Query[T]) DefaultIfEmpty(defaultValue T) Query[T] {
 				yield(defaultValue)
 			}
 		},
+		size: q.size,
 	}
 }

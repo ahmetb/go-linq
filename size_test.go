@@ -1,10 +1,14 @@
 package linq
 
-import "testing"
+import (
+	"math"
+	"slices"
+	"testing"
+)
 
 // The size hint carried by Query is an invariant the compiler cannot check:
-// it may be propagated only by operators that emit exactly one element per
-// source element. These tests pin it in both directions.
+// it may be propagated only when an operator can derive its output count
+// exactly. These tests pin it in both directions.
 
 // TestSizeHint_ExactPreallocation catches an operator losing the hint: append
 // growth never lands on an arbitrary exact size (collecting 1000 elements by
@@ -37,4 +41,49 @@ func TestSizeHint_DroppedByFilters(t *testing.T) {
 	if cap(out) >= 100_000 {
 		t.Errorf("cap=%d: filtered query inherited the source's size hint", cap(out))
 	}
+}
+
+func checkSizeHint[T any](t *testing.T, name string, q Query[T], want int) {
+	t.Helper()
+	if got := q.size; got != want {
+		t.Errorf("%s size=%d expected %d", name, got, want)
+	}
+}
+
+func TestSizeHint_Derived(t *testing.T) {
+	q := FromSlice(make([]int, 10))
+	checkSizeHint(t, "Take", q.Take(3), 3)
+	checkSizeHint(t, "Take past end", q.Take(50), 10)
+	checkSizeHint(t, "Skip", q.Skip(3), 7)
+	checkSizeHint(t, "Skip negative", q.Skip(-5), 10)
+	checkSizeHint(t, "Concat", q.Concat(Range(0, 5)), 15)
+	checkSizeHint(t, "Append", q.Append(1), 11)
+	checkSizeHint(t, "Prepend", q.Prepend(1), 11)
+	checkSizeHint(t, "DefaultIfEmpty", q.DefaultIfEmpty(0), 10)
+	checkSizeHint(t, "Zip", q.Zip(Range(0, 4), func(a, b int) int {
+		return a + b
+	}), 4)
+}
+
+func TestSizeHint_Unknown(t *testing.T) {
+	sized := FromSlice(make([]int, 10))
+	unsized := FromSeq(slices.Values(make([]int, 10)))
+
+	checkSizeHint(t, "unsized source", unsized, 0)
+	checkSizeHint(t, "Concat unsized right", sized.Concat(unsized), 0)
+	checkSizeHint(t, "Concat unsized left", unsized.Concat(sized), 0)
+	checkSizeHint(t, "Append unsized", unsized.Append(1), 0)
+	checkSizeHint(t, "Append overflow", Repeat(0, math.MaxInt).Append(0), 0)
+	checkSizeHint(t, "Prepend unsized", unsized.Prepend(1), 0)
+	checkSizeHint(t, "Take unsized", unsized.Take(3), 0)
+	checkSizeHint(t, "Skip unsized", unsized.Skip(3), 0)
+	// Zero cannot distinguish a known-empty result from an unknown size.
+	checkSizeHint(t, "Skip past end", sized.Skip(50), 0)
+	checkSizeHint(t, "DefaultIfEmpty unsized", unsized.DefaultIfEmpty(0), 0)
+	checkSizeHint(t, "Zip unsized", sized.Zip(unsized, func(a, b int) int {
+		return a + b
+	}), 0)
+	checkSizeHint(t, "Where", sized.Where(func(int) bool {
+		return true
+	}), 0)
 }

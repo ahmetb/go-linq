@@ -44,5 +44,6 @@ func (q Query[T]) GroupJoin[TInner any, TKey comparable, TResult any](inner Quer
 				return yield(resultSelector(outerItem, innerGroup))
 			})
 		},
+		size: q.size,
 	}
 }

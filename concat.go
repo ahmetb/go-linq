@@ -1,5 +1,15 @@
 package linq
 
+import "math"
+
+// concatSize adds known size hints, returning zero for an unknown input or overflow.
+func concatSize(a, b int) int {
+	if a <= 0 || b <= 0 || a > math.MaxInt-b {
+		return 0
+	}
+	return a + b
+}
+
 // Append inserts an item to the end of a collection, so it becomes the last
 // item.
 func (q Query[T]) Append(item T) Query[T] {
@@ -19,6 +29,7 @@ func (q Query[T]) Append(item T) Query[T] {
 				yield(item)
 			}
 		},
+		size: concatSize(q.size, 1),
 	}
 }
 
@@ -44,6 +55,7 @@ func (q Query[T]) Concat(q2 Query[T]) Query[T] {
 				q2.Iterate(yield)
 			}
 		},
+		size: concatSize(q.size, q2.size),
 	}
 }
 
@@ -58,5 +70,6 @@ func (q Query[T]) Prepend(item T) Query[T] {
 
 			q.Iterate(yield)
 		},
+		size: concatSize(q.size, 1),
 	}
 }

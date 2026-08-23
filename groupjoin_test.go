@@ -18,6 +18,7 @@ func TestGroupJoin(t *testing.T) {
 		func(outer int, inners []int) KeyValue[int, int] {
 			return KeyValue[int, int]{outer, len(inners)}
 		})
+	checkSizeHint(t, "GroupJoin", q, len(outer))
 
 	if !testQueryIteration(q, want) {
 		t.Errorf("FromSlice().GroupJoin()=%v expected %v", toSlice(q), want)
