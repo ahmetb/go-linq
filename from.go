@@ -12,16 +12,11 @@ import (
 type Query[T any] struct {
 	Iterate iter.Seq[T]
 
-	// size hints the exact number of elements the query yields, when that is
-	// cheaply known; zero means unknown. Sources with a known length set it,
-	// and operators may propagate a size that can be derived exactly from their
-	// inputs. Operators whose cardinality is unknown construct a fresh Query
-	// without the field, and the hint safely zeroes out.
+	// size is the exact number of yielded elements when cheaply known; zero means
+	// unknown. Operators may propagate it only when they can derive an exact count.
 	//
-	// The hint is consumed only as the capacity of preallocated result
-	// slices, so it can never change what a query produces. A missing hint
-	// forfeits the preallocation; a stale one (e.g., a source map mutated
-	// after the query was built) merely mis-sizes it.
+	// It is used only for preallocation, so missing or stale hints affect
+	// allocations, not the elements yielded.
 	size int
 }
 

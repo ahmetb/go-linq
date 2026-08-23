@@ -2,14 +2,7 @@ package linq
 
 import "math"
 
-// concatSize returns the exact size of a query that yields every element of a
-// size-a sequence followed by every element of a size-b one. Both arguments are
-// sizes, never deltas, so zero means unknown and the result is known only when
-// both inputs are and their sum fits in an int.
-//
-// Only the concatenating operators need this. An operator that shifts a size by
-// a constant (Skip, Take) clamps with min or max instead, which already treat
-// the zero sentinel correctly; plain addition does not.
+// concatSize adds known size hints, returning zero for an unknown input or overflow.
 func concatSize(a, b int) int {
 	if a <= 0 || b <= 0 || a > math.MaxInt-b {
 		return 0

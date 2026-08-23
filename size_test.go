@@ -50,14 +50,11 @@ func checkSizeHint[T any](t *testing.T, name string, q Query[T], want int) {
 	}
 }
 
-// TestSizeHint_Derived pins the operators whose output count follows exactly
-// from their input sizes.
 func TestSizeHint_Derived(t *testing.T) {
 	q := FromSlice(make([]int, 10))
 	checkSizeHint(t, "Take", q.Take(3), 3)
 	checkSizeHint(t, "Take past end", q.Take(50), 10)
 	checkSizeHint(t, "Skip", q.Skip(3), 7)
-	checkSizeHint(t, "Skip past end", q.Skip(50), 0)
 	checkSizeHint(t, "Skip negative", q.Skip(-5), 10)
 	checkSizeHint(t, "Concat", q.Concat(Range(0, 5)), 15)
 	checkSizeHint(t, "Append", q.Append(1), 11)
@@ -68,8 +65,6 @@ func TestSizeHint_Derived(t *testing.T) {
 	}), 4)
 }
 
-// TestSizeHint_Unknown pins the other direction: no operator may invent a size
-// for an input that carries none.
 func TestSizeHint_Unknown(t *testing.T) {
 	sized := FromSlice(make([]int, 10))
 	unsized := FromSeq(slices.Values(make([]int, 10)))
@@ -82,6 +77,8 @@ func TestSizeHint_Unknown(t *testing.T) {
 	checkSizeHint(t, "Prepend unsized", unsized.Prepend(1), 0)
 	checkSizeHint(t, "Take unsized", unsized.Take(3), 0)
 	checkSizeHint(t, "Skip unsized", unsized.Skip(3), 0)
+	// Zero cannot distinguish a known-empty result from an unknown size.
+	checkSizeHint(t, "Skip past end", sized.Skip(50), 0)
 	checkSizeHint(t, "DefaultIfEmpty unsized", unsized.DefaultIfEmpty(0), 0)
 	checkSizeHint(t, "Zip unsized", sized.Zip(unsized, func(a, b int) int {
 		return a + b

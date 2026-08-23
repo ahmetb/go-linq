@@ -53,8 +53,6 @@ func TestUnion_Abort(t *testing.T) {
 		},
 	}
 
-	// UnionBy with an identity selector must abort exactly like Union: both
-	// carry the stop across the two source iterations through one closure.
 	unions := []struct {
 		name string
 		fn   func(Query[int], Query[int]) Query[int]
