@@ -1,9 +1,67 @@
 package linq
 
 import (
+	"math"
 	"slices"
 	"testing"
 )
+
+func TestChunkOversizedAndUnknownSource(t *testing.T) {
+	for _, source := range []Query[int]{
+		FromSlice([]int{1, 2, 3}),
+		FromSeq(FromSlice([]int{1, 2, 3}).Iterate),
+	} {
+		want := [][]int{{1, 2, 3}}
+		if q := Chunk(source, math.MaxInt); !testQueryIteration(q, want) {
+			t.Errorf("Chunk oversized result differs")
+		}
+		q := source.ChunkBy(math.MaxInt, func(chunk []int) []int { return chunk })
+		if !testQueryIteration(q, want) {
+			t.Errorf("ChunkBy oversized result differs")
+		}
+	}
+}
+
+func TestChunkGrowsPastStaleHint(t *testing.T) {
+	source := map[int]int{1: 1}
+	q := FromMap(source).Select(func(kv KeyValue[int, int]) int { return kv.Value })
+	for i := 2; i <= 37; i++ {
+		source[i] = i
+	}
+	chunks := Chunk(q, 9).ToSlice()
+	var values []int
+	for _, chunk := range chunks {
+		if len(chunk) > 9 || cap(chunk) != len(chunk) {
+			t.Errorf("invalid chunk len=%d cap=%d", len(chunk), cap(chunk))
+		}
+		values = append(values, chunk...)
+	}
+	slices.Sort(values)
+	if !slices.Equal(values, Range(1, 37).ToSlice()) {
+		t.Errorf("lost elements: %v", values)
+	}
+}
+
+func TestChunkByRetainedSlices(t *testing.T) {
+	chunks := FromSeq(Range(1, 19).Iterate).ChunkBy(9, func(chunk []int) []int { return chunk }).ToSlice()
+	for i, chunk := range chunks {
+		if cap(chunk) != len(chunk) {
+			t.Errorf("chunk %d len=%d cap=%d", i, len(chunk), cap(chunk))
+		}
+		for j, v := range chunk {
+			if v != i*9+j+1 {
+				t.Errorf("chunk %d overwritten: %v", i, chunk)
+			}
+		}
+	}
+	if len(chunks) < 3 {
+		t.Fatalf("got %d chunks expected 3", len(chunks))
+	}
+	chunks[0][0] = -1
+	if chunks[1][0] != 10 || chunks[2][0] != 19 {
+		t.Errorf("chunks share storage")
+	}
+}
 
 func TestChunk(t *testing.T) {
 	tests := []struct {
@@ -128,7 +186,8 @@ func TestChunkByStopsPullingAfterConsumerStops(t *testing.T) {
 	})
 
 	if len(got) != 1 {
-		t.Fatalf("got %v expected one chunk", got)
+		t.Errorf("got %v expected one chunk", got)
+		return
 	}
 	if pulled != 3 {
 		t.Errorf("source pulled %d elements expected 3", pulled)

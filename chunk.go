@@ -48,26 +48,45 @@ func (q Query[T]) ChunkBy[TResult any](size int, selector func([]T) TResult) Que
 	}
 }
 
+// chunkBuffer holds the current chunk and the next buffer's initial capacity.
+type chunkBuffer[T any] struct {
+	items    []T
+	capacity int
+}
+
 // chunked yields independent chunks without constructing Query[[]T], which
 // would cause a recursive instantiation inside ChunkBy.
 func chunked[T any](q Query[T], size int) iter.Seq[[]T] {
 	return func(yield func([]T) bool) {
-		var chunk []T
+		// Unknown sources start small. A hint bounds the initial reservation,
+		// but never limits how many elements we actually read.
+		buffer := chunkBuffer[T]{capacity: min(size, 4)}
+		if q.size > 0 {
+			buffer.capacity = min(size, q.size)
+		}
 		q.Iterate(func(item T) bool {
-			if chunk == nil {
-				chunk = make([]T, 0, size)
+			if buffer.items == nil {
+				buffer.items = make([]T, 0, buffer.capacity)
 			}
-			chunk = append(chunk, item)
-			if len(chunk) < size {
+			buffer.items = append(buffer.items, item)
+			if len(buffer.items) < size {
 				return true
 			}
 
-			current := chunk
-			chunk = nil
-			return yield(current)
+			current := buffer.items
+			buffer.items = nil
+			buffer.capacity = size // a full chunk established that this size is useful
+			if cap(current) > len(current) {
+				current = slices.Clone(current)
+			}
+			return yield(slices.Clip(current))
 		})
 
-		if len(chunk) > 0 {
+		if chunk := buffer.items; len(chunk) > 0 {
+			if len(chunk) < cap(chunk) {
+				// Clip alone retains the entire backing allocation.
+				chunk = slices.Clone(chunk)
+			}
 			yield(slices.Clip(chunk))
 		}
 	}
