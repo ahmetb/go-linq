@@ -4,6 +4,7 @@ import (
 	"context"
 	"iter"
 	"math"
+	"reflect"
 	"slices"
 )
 
@@ -24,11 +25,20 @@ type Query[T any] struct {
 	// forfeits the preallocation; a stale one (e.g., a source map mutated
 	// after the query was built) merely mis-sizes it.
 	size int
+
+	// emptyIteratorID identifies only a source made by Empty or empty
+	// FromSlice. It also lets FullJoin detect a replaced public Iterate field.
+	emptyIteratorID uintptr
 }
+
+// emptyIterator is a stateless sentinel for immutable empty sources. Keeping
+// emptiness on the iterator itself avoids stale metadata if Iterate is replaced.
+func emptyIterator[T any](func(T) bool) {}
 
 // Empty returns an empty query of the specified element type.
 func Empty[T any]() Query[T] {
-	return Query[T]{Iterate: func(func(T) bool) {}}
+	iterate := iter.Seq[T](emptyIterator[T])
+	return Query[T]{Iterate: iterate, emptyIteratorID: reflect.ValueOf(iterate).Pointer()}
 }
 
 // collect gathers all elements into a slice, preallocating when the query
@@ -59,6 +69,9 @@ type KeyValue[TKey comparable, TValue any] struct {
 
 // FromSlice initializes a linq query with a passed slice.
 func FromSlice[S ~[]T, T any](source S) Query[T] {
+	if len(source) == 0 {
+		return Empty[T]()
+	}
 	return Query[T]{
 		Iterate: func(yield func(T) bool) {
 			for _, item := range source {

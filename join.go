@@ -2,6 +2,12 @@ package linq
 
 import "reflect"
 
+// Only recognize the marked empty iterator, never a zero size hint, a copied
+// iterator without its marker, or a source whose public Iterate was replaced.
+func (q Query[T]) isKnownEmpty() bool {
+	return q.emptyIteratorID != 0 && reflect.ValueOf(q.Iterate).Pointer() == q.emptyIteratorID
+}
+
 // Join correlates the elements of two collections based on matching keys.
 //
 // A join refers to the operation of correlating the elements of two sources of
@@ -132,10 +138,24 @@ func (q Query[T]) RightJoin[TInner any, TKey comparable, TResult any](inner Quer
 //
 // Inner is indexed before outer is read. Results for outer elements come
 // first, followed by unmatched inner groups in first-seen key order.
+// When either source is Empty or an empty FromSlice, the other source is
+// streamed in its original order without evaluating either key selector.
 func (q Query[T]) FullJoin[TInner any, TKey comparable, TResult any](inner Query[TInner],
 	outerKeySelector func(T) TKey,
 	innerKeySelector func(TInner) TKey,
 	resultSelector func(outer T, inner TInner) TResult) Query[TResult] {
+	if q.isKnownEmpty() {
+		return inner.Select(func(item TInner) TResult {
+			var zero T
+			return resultSelector(zero, item)
+		})
+	}
+	if inner.isKnownEmpty() {
+		return q.Select(func(item T) TResult {
+			var zero TInner
+			return resultSelector(item, zero)
+		})
+	}
 	return Query[TResult]{
 		Iterate: func(yield func(TResult) bool) {
 			innerGroups, innerLookup := buildFullJoinGroups(inner, innerKeySelector)

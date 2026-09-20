@@ -1,6 +1,9 @@
 package linq
 
-import "testing"
+import (
+	"slices"
+	"testing"
+)
 
 func TestJoin(t *testing.T) {
 	outer := []int{0, 1, 2, 3, 4, 5, 8}
@@ -159,7 +162,8 @@ func TestFullJoinGroupsNilKeys(t *testing.T) {
 	})
 
 	// Nil keys never match, but unmatched inner nils share one first-seen group.
-	q := FromSlice([]item{}).FullJoin(inner,
+	// An unknown empty iterator exercises the general grouping path.
+	q := FromSeq(Empty[item]().Iterate).FullJoin(inner,
 		func(item item) *int { return item.key },
 		func(item item) *int { return item.key },
 		func(_ item, inner item) string { return inner.value },
@@ -167,6 +171,88 @@ func TestFullJoinGroupsNilKeys(t *testing.T) {
 	want := []string{"nilA", "nilB", "keyed"}
 	if !testQueryIteration(q, want) {
 		t.Errorf("FullJoin(mixed nil keys)=%v expected %v", q.ToSlice(), want)
+	}
+}
+
+func TestFullJoinKnownEmptyStreamsOtherSide(t *testing.T) {
+	for _, empty := range []Query[int]{Empty[int](), FromSlice([]int{}), FromSlice([]int(nil)), Range(0, 5).Take(0)} {
+		for _, emptyOuter := range []bool{true, false} {
+			pulled, selected := 0, 0
+			source := FromSeq(func(yield func(int) bool) {
+				for i := 1; ; i++ {
+					pulled++
+					if pulled > 1 {
+						t.Errorf("FullJoin read past consumer stop")
+						return
+					}
+					if !yield(i) {
+						return
+					}
+				}
+			})
+			key := func(int) int { t.Errorf("empty-side join evaluated key selector"); return 0 }
+			outer, inner := empty, source
+			if !emptyOuter {
+				outer, inner = source, empty
+			}
+			q := outer.FullJoin(inner, key, key, func(a, b int) [2]int {
+				selected++
+				return [2]int{a, b}
+			})
+			if pulled != 0 || selected != 0 {
+				t.Errorf("FullJoin is not deferred")
+			}
+			got := q.Take(1).ToSlice()
+			want := [2]int{0, 1}
+			if !emptyOuter {
+				want = [2]int{1, 0}
+			}
+			if !slices.Equal(got, [][2]int{want}) || pulled != 1 || selected != 1 {
+				t.Errorf("got %v pulled=%d selected=%d", got, pulled, selected)
+			}
+		}
+	}
+}
+
+func TestFullJoinKnownEmptyPreservesOrder(t *testing.T) {
+	key := func(*int) *int { t.Errorf("key selector called"); return nil }
+	a, b := 1, 2
+	items := []*int{nil, &a, &b, &a, nil}
+	q := Empty[*int]().FullJoin(FromSlice(items), key, key, func(_, item *int) *int { return item })
+	if !testQueryIteration(q, items) {
+		t.Errorf("empty outer reordered inner")
+	}
+	q = FromSlice(items).FullJoin(Empty[*int](), key, key, func(item, _ *int) *int { return item })
+	if !testQueryIteration(q, items) {
+		t.Errorf("empty inner reordered outer")
+	}
+}
+
+func TestFullJoinDoesNotTreatUnknownSizeAsEmpty(t *testing.T) {
+	key := func(v int) int { return v }
+	pair := func(a, b int) [2]int { return [2]int{a, b} }
+	source := map[int]int{}
+	q := FromMap(source).Select(func(kv KeyValue[int, int]) int { return kv.Value })
+	joined := q.FullJoin(FromSeq(Range(1, 1).Iterate), key, key, pair)
+	source[1] = 1 // the original zero size hint is now stale
+	if got := joined.ToSlice(); !slices.Equal(got, [][2]int{{1, 1}}) {
+		t.Errorf("lost match: %v", got)
+	}
+	keyCalls := 0
+	unknownEmpty := FromSeq(func(func(int) bool) {})
+	unknownEmpty.FullJoin(Range(1, 2), key, func(v int) int { keyCalls++; return v }, pair).ToSlice()
+	if keyCalls != 2 {
+		t.Errorf("unknown source skipped grouping: %d key calls", keyCalls)
+	}
+}
+
+func TestFullJoinEmptyIteratorCanBeReplaced(t *testing.T) {
+	q := Empty[int]()
+	q.Iterate = FromSlice([]int{1, 2}).Iterate
+	key := func(v int) int { return v }
+	joined := q.FullJoin(FromSlice([]int{1}), key, key, func(a, b int) [2]int { return [2]int{a, b} })
+	if got := joined.ToSlice(); !slices.Equal(got, [][2]int{{1, 1}, {2, 0}}) {
+		t.Errorf("stale emptiness after replacing Iterate: %v", got)
 	}
 }
 
