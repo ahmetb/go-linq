@@ -145,9 +145,8 @@ func FromSeq[T any](source iter.Seq[T]) Query[T] {
 func Range(start, count int) Query[int] {
 	return Query[int]{
 		Iterate: func(yield func(int) bool) {
-			end := start + count
-			for i := start; i < end; i++ {
-				if !yield(i) {
+			for i := 0; i < count; i++ {
+				if !yield(start + i) {
 					return
 				}
 			}

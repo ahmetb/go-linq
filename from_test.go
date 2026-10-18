@@ -2,9 +2,23 @@ package linq
 
 import (
 	"context"
+	"math"
 	"testing"
 	"time"
 )
+
+func TestRangeAtMaxInt(t *testing.T) {
+	for _, count := range []int{1, 2} {
+		start := math.MaxInt - count + 1
+		want := []int{math.MaxInt}
+		if count == 2 {
+			want = []int{math.MaxInt - 1, math.MaxInt}
+		}
+		if !testQueryIteration(Range(start, count), want) {
+			t.Errorf("Range(%d, %d) did not yield %v", start, count, want)
+		}
+	}
+}
 
 func TestFromSlice(t *testing.T) {
 	s := [3]int{1, 2, 3}
