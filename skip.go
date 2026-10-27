@@ -17,6 +17,36 @@ func (q Query[T]) Skip(count int) Query[T] {
 	}
 }
 
+// SkipLast returns all elements of a collection except its last count
+// elements. It buffers at most count elements and otherwise streams results.
+func (q Query[T]) SkipLast(count int) Query[T] {
+	if count <= 0 {
+		return q
+	}
+
+	return Query[T]{
+		Iterate: func(yield func(T) bool) {
+			items := make([]T, 0, min(count, q.size))
+			head := 0
+			q.Iterate(func(item T) bool {
+				if len(items) < count {
+					items = append(items, item)
+					return true
+				}
+
+				result := items[head]
+				items[head] = item
+				head++
+				if head == len(items) {
+					head = 0
+				}
+				return yield(result)
+			})
+		},
+		size: max(q.size-count, 0),
+	}
+}
+
 // SkipWhile bypasses elements in a collection as long as a specified condition
 // is true and then returns the remaining elements.
 //

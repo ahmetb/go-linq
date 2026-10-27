@@ -25,3 +25,85 @@ func TestIndexOf(t *testing.T) {
 		t.Errorf("IndexOf() expected -1 received %v", index)
 	}
 }
+
+func TestElementAt(t *testing.T) {
+	input := []int{10, 20, 30, 40, 50}
+	tests := []struct {
+		index  Position
+		want   int
+		wantOK bool
+	}{
+		{FromStart(0), 10, true},
+		{FromStart(2), 30, true},
+		{FromStart(5), 0, false},
+		{FromEnd(1), 50, true},
+		{FromEnd(3), 30, true},
+		{FromEnd(5), 10, true},
+		{FromEnd(6), 0, false},
+		{FromEnd(0), 0, false},
+	}
+
+	for _, test := range tests {
+		got, ok := FromSlice(input).ElementAt(test.index)
+		if got != test.want || ok != test.wantOK {
+			t.Errorf("ElementAt(%v)=%v,%v expected %v,%v",
+				test.index, got, ok, test.want, test.wantOK)
+		}
+	}
+}
+
+func TestElementAtStopsAtRequestedIndex(t *testing.T) {
+	pulled := 0
+	q := FromSlice([]int{10, 20, 30, 40}).Where(func(int) bool {
+		pulled++
+		return true
+	})
+
+	got, ok := q.ElementAt(FromStart(2))
+	if !ok || got != 30 {
+		t.Fatalf("ElementAt(FromStart(2))=%v,%v expected 30,true", got, ok)
+	}
+	if pulled != 3 {
+		t.Errorf("source pulled %d elements expected 3", pulled)
+	}
+}
+
+func TestPositionNegativeValuePanics(t *testing.T) {
+	constructors := []func(){
+		func() { NewPosition(-1, false) },
+		func() { NewPosition(-1, true) },
+		func() { FromStart(-1) },
+		func() { FromEnd(-1) },
+	}
+	for _, constructor := range constructors {
+		mustPanic(t, constructor)
+	}
+}
+
+func TestIndex(t *testing.T) {
+	want := []KeyValue[int, string]{
+		{Key: 0, Value: "zero"},
+		{Key: 1, Value: "one"},
+		{Key: 2, Value: "two"},
+	}
+
+	if q := Index(FromSlice([]string{"zero", "one", "two"})); !testQueryIteration(q, want) {
+		t.Errorf("Index()=%v expected %v", q.ToSlice(), want)
+	}
+	if got := Index(FromSlice([]string{})).ToSlice(); got != nil {
+		t.Errorf("Index(empty)=%v expected nil", got)
+	}
+}
+
+func TestIndexStopsWithConsumer(t *testing.T) {
+	pulled := 0
+	q := Index(FromSlice([]int{10, 20, 30}).Where(func(int) bool {
+		pulled++
+		return true
+	}))
+
+	q.Iterate(func(KeyValue[int, int]) bool { return false })
+	if pulled != 1 {
+		t.Errorf("Index pulled %d elements expected 1", pulled)
+	}
+}

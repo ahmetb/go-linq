@@ -289,6 +289,22 @@ func TestToMap(t *testing.T) {
 	}
 }
 
+func TestToHashSet(t *testing.T) {
+	type key struct {
+		id   int
+		name string
+	}
+
+	input := []key{{1, "one"}, {2, "two"}, {1, "one"}}
+	want := map[key]struct{}{{1, "one"}: {}, {2, "two"}: {}}
+	if got := ToHashSet(FromSlice(input)); !reflect.DeepEqual(got, want) {
+		t.Errorf("ToHashSet(%v)=%v expected %v", input, got, want)
+	}
+	if got := ToHashSet(Empty[key]()); got == nil || len(got) != 0 {
+		t.Errorf("ToHashSet(Empty[key]())=%v expected initialized empty map", got)
+	}
+}
+
 func TestToMapBy(t *testing.T) {
 	input := make(map[int]bool)
 	input[1] = true
@@ -318,6 +334,25 @@ func TestToMapBy_TypeChanging(t *testing.T) {
 
 	if !reflect.DeepEqual(result, want) {
 		t.Errorf("ToMapBy()=%v expected %v", result, want)
+	}
+}
+
+func TestToHashSetBy(t *testing.T) {
+	// A slice element is not comparable, so ToHashSet cannot take this query
+	// at all; only the selected key can key the set.
+	type record struct {
+		name string
+		tags []string
+	}
+
+	input := []record{{"a", []string{"x"}}, {"b", nil}, {"a", []string{"y"}}}
+	want := map[string]struct{}{"a": {}, "b": {}}
+	got := FromSlice(input).ToHashSetBy(func(r record) string { return r.name })
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("ToHashSetBy(%v)=%v expected %v", input, got, want)
+	}
+	if got := Empty[record]().ToHashSetBy(func(r record) string { return r.name }); got == nil || len(got) != 0 {
+		t.Errorf("ToHashSetBy(empty)=%v expected initialized empty map", got)
 	}
 }
 

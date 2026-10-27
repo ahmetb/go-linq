@@ -166,9 +166,10 @@ for v := range q.Iterate {
 
 ## Data Source Constructors
 
-Each constructor is typed for its specific input, and the element type of the
-resulting query is inferred from the argument:
+Each constructor is typed. `Empty` takes an explicit type argument; the other
+constructors take their element type from their arguments:
 
+- `Empty[T]` — creates an empty query of the specified element type.
 - `FromSlice` — creates a query from a slice.
 - `FromMap` — creates a `Query[KeyValue[TKey, TValue]]` from a map.
 - `FromChannel` — creates a query from a channel.
@@ -176,17 +177,60 @@ resulting query is inferred from the argument:
 - `FromString` — creates a `Query[rune]` from a string.
 - `FromSeq` — creates a query from any standard `iter.Seq[T]` iterator,
   including custom collections that expose an iterator method.
-- `Range`, `Repeat` — generate sequences.
+- `Range`, `Repeat`, `Sequence`, `InfiniteSequence` — generate sequences.
 
 The runtime-reflection based `From(any)` constructor from v4 has been removed:
 in a fully-typed API the element type must be known at the call site.
 
+## Go API notes
+
+Where a direct translation from .NET was not possible:
+
+- Comparer overloads become `…With` methods (`OrderWith`, `MinWith`,
+  `MaxByWith`, …), whose `compare` argument follows the `cmp.Compare`
+  convention. The explicit-default overloads need no counterpart: Go's
+  `(value, ok)` return already covers them.
+- Index and range arguments are a `Position`, built with `FromStart(n)` or
+  `FromEnd(n)`: `q.ElementAt(FromEnd(1))`,
+  `q.TakeRange(FromStart(2), FromEnd(1))`.
+- Joins ignore nil keys, matching .NET: a nil key never matches, not even
+  another nil key. An `any` key holding a typed nil counts as nil; one holding
+  a non-comparable value panics, as any Go map key would.
+
+Some operators are package-level functions rather than methods. Each has a
+chainable equivalent:
+
+| package-level | chainable |
+|---|---|
+| `Min(q)`, `Max(q)` | `MinBy`/`MaxBy`, `MinWith`/`MaxWith`, `MinByWith`/`MaxByWith` |
+| `Sum(q)`, `Average(q)` | `SumBy`, `AverageBy` |
+| `Order(q)`, `OrderDescending(q)` | `OrderBy`/`OrderByDescending`, `OrderWith`/`OrderDescendingWith` |
+| `ToMap(q)` | `ToMapBy` |
+| `ToHashSet(q)` | `ToHashSetBy` |
+| `Chunk(q, size)` | `ChunkBy` |
+| `Index(q)` | `SelectIndexed` |
+
+The first five rows constrain the element type — ordered, numeric, `KeyValue`,
+comparable — and a method cannot add a constraint to its receiver's type
+parameter. The last two would return `Query[[]T]` and `Query[KeyValue[int, T]]`,
+which the compiler rejects as a recursive instantiation. Either way the method
+form needs a selector or comparator argument to pin its type parameter, which is
+what the right-hand column supplies.
+
 ## Performance
 
-v5 eliminates the three taxes the type-erased v4 API paid on every element:
-interface boxing, type assertions, and reflection. Per-element work in a v5
-chain is just typed closure calls; the only allocations are the fixed closure
-captures made when the query is constructed.
+v5 removes interface boxing, type assertions, and reflection from ordinary
+typed pipelines. Stateless streaming operators process each element through
+typed closure calls without per-element allocations in the library.
+
+Stateful operators allocate working storage during iteration. `Distinct`,
+`Union`, `Except`, `Intersect`, and their `By` variants keep sets of seen keys;
+the variants without a key selector may also box non-basic element types.
+`SkipLast` and `Chunk` keep bounded buffers. The ordering operators, `Reverse`,
+`Shuffle`, `TakeLast`, `GroupBy`, `CountBy`, `AggregateBy`, and the joins buffer
+the data they need before or while yielding results. A join keyed on an
+interface type also uses reflection per element to distinguish a typed nil
+pointer from a nil interface.
 
 Measured on Apple M5 Pro with go1.27, 1M-element `[]int` (100k structs for
 the projection case):
@@ -213,14 +257,32 @@ highlights:
   methods are now just as clean and much faster.
 * Element-returning terminals (`First`, `Last`, `Single`, `Aggregate`,
   `Min`, `Max`, …) return `(T, bool)` instead of a nil-able `any`.
-* `Min`, `Max`, `Sum`, `Average`, `ToMap` are package-level functions
-  (their constraints depend on the element type); chainable `MinBy`,
-  `MaxBy`, `SumBy`, `AverageBy`, `ToMapBy` methods are available.
+* `Min`, `Max`, `Sum`, `Average`, `ToMap` and several others are package-level
+  functions; [Go API notes](#go-api-notes) lists them all with the chainable
+  equivalent of each.
 * `ToSlice()` returns `[]T` instead of filling a pointer argument.
 
 ## Release Notes
 
 ```text
+v5.1.0 (unreleased)
+* Added Empty, ToHashSet and ToHashSetBy.
+* Added .NET 6 operators: Chunk, SkipLast, TakeLast, position/range operations
+  (ElementAt, TakeRange), comparer-based extrema, and Zip3. ChunkBy projects
+  each chunk, so unlike Chunk it can be a method and stay in a chain.
+* Added .NET 7 operators: Order/OrderDescending and the comparer-based
+  OrderWith/OrderDescendingWith variants. All four are stable and chainable
+  with ThenBy; OrderWith replaces Sort as the way to order by a custom
+  comparison.
+* Added .NET 9 operators: CountBy, both AggregateBy seed forms, and Index.
+* Added .NET 10 operators: LeftJoin, RightJoin, Sequence, InfiniteSequence,
+  and Shuffle.
+* Added the .NET 11 FullJoin operator.
+* OrderBy, OrderByDescending, ThenBy and ThenByDescending are now stable,
+  matching .NET LINQ; Sort keeps its existing unstable behavior.
+* Fixed Join and GroupJoin matching nil keys against each other. Like .NET and
+  the new outer joins, a nil key now takes no part in a join.
+
 v5.0.0 (2026-08-21)
 * Breaking change: COMPLETE REWRITE on Go 1.27 generic methods.
   - Query is now the generic Query[T]; operator callbacks are fully typed.

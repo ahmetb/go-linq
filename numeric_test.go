@@ -1,7 +1,9 @@
 package linq
 
 import (
+	"cmp"
 	"math"
+	"slices"
 	"testing"
 )
 
@@ -163,5 +165,60 @@ func TestMinBy(t *testing.T) {
 		return len(s)
 	}); ok || r != "" {
 		t.Errorf("MinBy()=%v,%v expected \"\",false", r, ok)
+	}
+}
+
+func TestMinMaxWith(t *testing.T) {
+	type score struct {
+		name  string
+		value int
+	}
+	input := []score{{"first", 10}, {"low", 2}, {"second", 10}}
+	compare := func(a, b score) int { return cmp.Compare(a.value, b.value) }
+
+	if got, ok := FromSlice(input).MaxWith(compare); !ok || got != input[0] {
+		t.Errorf("MaxWith()=%v,%v expected %v,true", got, ok, input[0])
+	}
+	if got, ok := FromSlice(input).MinWith(compare); !ok || got != input[1] {
+		t.Errorf("MinWith()=%v,%v expected %v,true", got, ok, input[1])
+	}
+	if got, ok := FromSlice([]score{}).MaxWith(compare); ok || got != (score{}) {
+		t.Errorf("empty MaxWith()=%v,%v expected zero,false", got, ok)
+	}
+	if got, ok := FromSlice([]score{}).MinWith(compare); ok || got != (score{}) {
+		t.Errorf("empty MinWith()=%v,%v expected zero,false", got, ok)
+	}
+}
+
+func TestMinMaxByWith(t *testing.T) {
+	type item struct {
+		name string
+		key  []int
+	}
+	input := []item{
+		{"first max", []int{2}},
+		{"min", []int{1}},
+		{"second max", []int{2}},
+	}
+
+	selectorCalls := 0
+	selector := func(item item) []int {
+		selectorCalls++
+		return item.key
+	}
+
+	if got, ok := FromSlice(input).MaxByWith(selector, slices.Compare); !ok || got.name != "first max" {
+		t.Errorf("MaxByWith()=%v,%v expected first max,true", got, ok)
+	}
+	if selectorCalls != len(input) {
+		t.Errorf("MaxByWith selector called %d times expected %d", selectorCalls, len(input))
+	}
+
+	selectorCalls = 0
+	if got, ok := FromSlice(input).MinByWith(selector, slices.Compare); !ok || got.name != "min" {
+		t.Errorf("MinByWith()=%v,%v expected min,true", got, ok)
+	}
+	if selectorCalls != len(input) {
+		t.Errorf("MinByWith selector called %d times expected %d", selectorCalls, len(input))
 	}
 }

@@ -26,6 +26,48 @@ func TestSkip(t *testing.T) {
 	}
 }
 
+func TestSkipLast(t *testing.T) {
+	input := []int{1, 2, 3, 4, 5}
+	tests := []struct {
+		count int
+		want  []int
+	}{
+		{-1, []int{1, 2, 3, 4, 5}},
+		{0, []int{1, 2, 3, 4, 5}},
+		{1, []int{1, 2, 3, 4}},
+		{3, []int{1, 2}},
+		{5, nil},
+		{10, nil},
+	}
+
+	for _, test := range tests {
+		if q := FromSlice(input).SkipLast(test.count); !testQueryIteration(q, test.want) {
+			t.Errorf("SkipLast(%d)=%v expected %v", test.count, toSlice(q), test.want)
+		}
+	}
+}
+
+func TestSkipLastStopsPullingAfterConsumerStops(t *testing.T) {
+	pulled := 0
+	q := FromSlice([]int{1, 2, 3, 4, 5}).Where(func(int) bool {
+		pulled++
+		return true
+	}).SkipLast(2)
+
+	var got []int
+	q.Iterate(func(item int) bool {
+		got = append(got, item)
+		return false
+	})
+
+	if len(got) != 1 || got[0] != 1 {
+		t.Errorf("SkipLast early exit yielded %v expected [1]", got)
+	}
+	if pulled != 3 {
+		t.Errorf("source pulled %d elements expected 3", pulled)
+	}
+}
+
 func TestSkipWhile(t *testing.T) {
 	tests := []struct {
 		input     Query[int]
