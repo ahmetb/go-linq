@@ -3,8 +3,128 @@ package linq
 import (
 	"cmp"
 	"iter"
+	"math"
+	"slices"
+	"sync"
 	"testing"
 )
+
+func TestOrderingCachesKeysPerIteration(t *testing.T) {
+	type entry struct {
+		primary   int
+		secondary string
+		id        int
+	}
+	input := []entry{{2, "b", 0}, {1, "b", 1}, {1, "a", 2}, {1, "a", 3}}
+	primaryCalls, secondaryCalls := make([]int, len(input)), make([]int, len(input))
+	q := FromSlice(input).OrderBy(func(e entry) int {
+		primaryCalls[e.id]++
+		return e.primary
+	}).ThenByDescending(func(e entry) string {
+		secondaryCalls[e.id]++
+		return e.secondary
+	})
+	if primaryCalls[0] != 0 || secondaryCalls[0] != 0 {
+		t.Errorf("selectors called before iteration")
+	}
+	for run := 1; run <= 2; run++ {
+		got := q.ToSlice()
+		want := []entry{input[1], input[2], input[3], input[0]}
+		if !slices.Equal(got, want) {
+			t.Errorf("iteration %d: %v want %v", run, got, want)
+		}
+		for i := range input {
+			if primaryCalls[i] != run || secondaryCalls[i] != run {
+				t.Errorf("item %d: primary=%d secondary=%d want %d each", i, primaryCalls[i], secondaryCalls[i], run)
+			}
+		}
+	}
+	input[0].primary = 0
+	first, ok := q.First()
+	if !ok || first.id != 0 {
+		t.Errorf("cached keys survived into a later iteration")
+	}
+	for i := range input {
+		if primaryCalls[i] != 3 || secondaryCalls[i] != 3 {
+			t.Errorf("early consumption did not compute each key exactly once")
+		}
+	}
+}
+
+func TestOrderingMixedDirectionsAndNaN(t *testing.T) {
+	type entry struct {
+		key    float64
+		second int
+		id     int
+	}
+	input := make([]entry, 128)
+	for i := range input {
+		key := float64(i % 5)
+		if i%7 == 0 {
+			key = math.NaN()
+		}
+		input[i] = entry{key, i % 3, i}
+	}
+	for _, descending := range []bool{false, true} {
+		keyCalls := 0
+		selector := func(e entry) float64 { keyCalls++; return e.key }
+		var q OrderedQuery[entry]
+		if descending {
+			q = FromSlice(input).OrderByDescending(selector)
+		} else {
+			q = FromSlice(input).OrderBy(selector)
+		}
+		q = q.ThenBy(func(e entry) int { return e.second })
+		want := slices.Clone(input)
+		slices.SortStableFunc(want, func(a, b entry) int {
+			c := cmp.Compare(a.key, b.key)
+			if descending {
+				c = -c
+			}
+			if c != 0 {
+				return c
+			}
+			return cmp.Compare(a.second, b.second)
+		})
+		got := q.ToSlice()
+		if !slices.EqualFunc(got, want, func(a, b entry) bool { return a.id == b.id }) {
+			t.Errorf("descending=%v: incorrect or unstable order", descending)
+		}
+		if keyCalls != len(input) {
+			t.Errorf("selector called %d times", keyCalls)
+		}
+		for i, item := range input {
+			if item.id != i {
+				t.Errorf("ordering mutated source")
+			}
+		}
+	}
+}
+
+func TestOrderingBranchesAndConcurrentIteration(t *testing.T) {
+	source := FromSlice([]string{"bb", "aa", "b", "a", "cc"})
+	base := source.OrderWith(func(a, b string) int { return cmp.Compare(len(a), len(b)) })
+	asc := base.ThenBy(func(s string) string { return s })
+	desc := base.ThenByDescending(func(s string) string { return s })
+	var wg sync.WaitGroup
+	for range 4 {
+		wg.Go(func() {
+			for _, tc := range []struct {
+				q    OrderedQuery[string]
+				want []string
+			}{
+				{base, []string{"b", "a", "bb", "aa", "cc"}},
+				{asc, []string{"a", "b", "aa", "bb", "cc"}},
+				{desc, []string{"b", "a", "cc", "bb", "aa"}},
+			} {
+				if got := tc.q.ToSlice(); !slices.Equal(got, tc.want) {
+					t.Errorf("got %v want %v", got, tc.want)
+				}
+			}
+		})
+	}
+	wg.Wait()
+}
 
 func boolToInt(b bool) int {
 	if b {
